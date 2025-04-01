@@ -1,0 +1,36 @@
+plugins {
+  // Add the dependency for the Google services Gradle plugin
+  id 'com.google.gms.google-services' version '4.4.2' apply false
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.buildDir = "../build"
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+subprojects {
+    project.evaluationDependsOn(":app")
+    // afterEvaluate { project ->
+    //     // check only for "com.android.library" to not modify
+    //     // your "app" subproject. All plugins will have "com.android.library" plugin, and only your app "com.android.application"
+    //     // Change your application's namespace in main build.gradle and in main android block.
+
+    //     if (project.plugins.hasPlugin("com.android.library")) {
+    //         project.android {
+    //             if (namespace == null) {
+    //                 namespace project.group
+    //             }
+    //         }
+    //     }
+    // }
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}
