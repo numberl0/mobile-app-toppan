@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:toppan_app/loadingDialog.dart';
 import 'package:toppan_app/visitorService/search/search_model.dart';
 import 'package:toppan_app/visitorService/visitorServiceCenter_controller.dart';
@@ -27,8 +28,7 @@ class SearchFormController {
     try {
       _loadingDialog.show(context);
 
-      DateTime datetime = DateTime.now();
-      // String formatToDay = DateFormat('yyyy-MM-dd').format(datetime);          // Example: 2025-03-14
+      // String formatToDay = DateFormat('yyyy-MM-dd').format(DateTime.now());          // Example: 2025-03-14
       String formatToDay = '2025-03-14';
       list_Request = await searchModule.getRequestFormByDate(formatToDay);
       await Future.delayed(Duration(seconds: 1));

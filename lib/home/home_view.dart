@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import 'package:toppan_app/clearTemporary.dart';
-import 'package:toppan_app/home/controllers/home_controller.dart';
+import 'package:toppan_app/home/home_controller.dart';
 import 'package:toppan_app/service_manager.dart';
 
 

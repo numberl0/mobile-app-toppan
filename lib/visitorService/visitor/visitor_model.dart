@@ -30,7 +30,7 @@ class VisitorformModule {
         Duration(seconds: 10),
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode == ApiConfig.http200) {
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
         var responseDecode = jsonDecode(response.body);
         if(responseDecode['data'] != null){
           data = responseDecode['data'][0];
@@ -61,7 +61,7 @@ class VisitorformModule {
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
 
-      if (response.statusCode == ApiConfig.http200) {
+      if (response.statusCode >= 200 && response.statusCode <= 299) {
         var responseDecode = jsonDecode(response.body);
         if (responseDecode['data'] != null) {
           data = responseDecode['data'];
@@ -91,7 +91,7 @@ class VisitorformModule {
         Duration(seconds: 10),
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode == ApiConfig.http200) {
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
         var responseDecode = jsonDecode(response.body);
         if(responseDecode['data'] != null){
           data = responseDecode['data'];
@@ -120,7 +120,7 @@ class VisitorformModule {
         Duration(seconds: 10),
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode == ApiConfig.http200) {
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
         var responseDecode = jsonDecode(response.body);
         if(responseDecode['data'] != null && responseDecode['data'].length == 1){
           data = responseDecode['data'][0];
@@ -151,7 +151,7 @@ class VisitorformModule {
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode >= 200 && response.statusCode <= 299) {
         final data = jsonDecode(response.body);
         return data["doesNotExist"]; 
       }else{
@@ -180,7 +180,7 @@ class VisitorformModule {
         Duration(seconds: 10),
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode == ApiConfig.http200) {
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
         print('Sequence found, status code: ${response.statusCode}');
         print('Response body: ${response.body}');
       }else{
@@ -208,7 +208,7 @@ class VisitorformModule {
         Duration(seconds: 10),
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode == ApiConfig.http200) {
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
         print('Response body: ${response.body}');
         status = true;
       }else{
@@ -237,7 +237,7 @@ class VisitorformModule {
         Duration(seconds: 10),
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode == ApiConfig.http200) {
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
         print('Response body: ${response.body}');
         status = true;
       }else{
@@ -269,7 +269,7 @@ class VisitorformModule {
         Duration(seconds: 10),
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode == ApiConfig.http200) {
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
         print('Response body: ${response.body}');
         status = true;
       }else{
@@ -300,7 +300,7 @@ class VisitorformModule {
         Duration(seconds: 10),
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode == ApiConfig.http200) {
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
         print('Response body: ${response.body}');
         status = true;
       }else{
@@ -367,7 +367,7 @@ class VisitorformModule {
 
       // Send the request
       var response = await request.send();
-      if(response.statusCode == ApiConfig.http200) {
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
         print("Image uploaded successfully!");
         status = true;
       }else{
@@ -387,7 +387,7 @@ class VisitorformModule {
   Future<Uint8List?> loadImageAsBytes(String imageUrl) async {
     try {
       final response = await http.get(Uri.parse(imageUrl));
-      if (response.statusCode == 200) {
+      if (response.statusCode >= 200 && response.statusCode <= 299) {
         return response.bodyBytes;
       }else{
         throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
@@ -403,7 +403,7 @@ class VisitorformModule {
   Future<File?> loadImageToFile(String imageUrl) async {
   try {
     final response = await http.get(Uri.parse(imageUrl));
-    if (response.statusCode == 200) {
+    if (response.statusCode >= 200 && response.statusCode <= 299) {
       final directory = await getTemporaryDirectory();
 
       // Extract filename from URL

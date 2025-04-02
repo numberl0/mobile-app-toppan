@@ -103,7 +103,7 @@ class _SearchPageState extends State<SearchPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
 
-        SizedBox(height: 20,),
+        SizedBox(height: 5,),
 
         //Select Type Search (Dropdown)
         DropdownButtonFormField<String>(
@@ -346,7 +346,6 @@ class _SearchPageState extends State<SearchPage> {
                 color: borderColor,
                 child: InkWell(
                   child: Container(
-                    // padding: EdgeInsets.all(30.0),
                     padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20.0),
@@ -377,7 +376,7 @@ class _SearchPageState extends State<SearchPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    '${entry['request_type'][0] + entry['request_type'].substring(1).toLowerCase()}',
+                                    'บริษัท : ${entry['company']}',
                                     style: TextStyle(
                                       fontSize: _fontSize + 4,
                                       color: Colors.white,
@@ -387,9 +386,9 @@ class _SearchPageState extends State<SearchPage> {
                                     maxLines: 1,
                                     softWrap: true,
                                   ),
-                                  SizedBox(height: 7),
+                                  SizedBox(height: 3),
                                   Text(
-                                    '${entry['company']}',
+                                    'ประเภท ${entry['request_type'][0] + entry['request_type'].substring(1).toLowerCase()}',
                                     style: TextStyle(
                                         fontSize: _fontSize,
                                         color: Colors.white),
@@ -397,7 +396,7 @@ class _SearchPageState extends State<SearchPage> {
                                     maxLines: 1,
                                     softWrap: true,
                                   ),
-                                  SizedBox(height: 10),
+                                  SizedBox(height: 5),
 
                                   if (MediaQuery.of(context).size.width > 799) ...[
                                     Row(

@@ -4,7 +4,7 @@ import 'package:toppan_app/userEntity.dart';
 import 'package:toppan_app/visitorService/visitorServiceCenter_controller.dart';
 
 
-import '../models/home_model.dart';
+import 'home_model.dart';
 
 class HomeController {
   HomeModel _model = HomeModel();

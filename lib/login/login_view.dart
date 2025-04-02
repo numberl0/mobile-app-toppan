@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../controllers/login_controller.dart';
+import 'login_controller.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -9,7 +9,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  double _fontSize = 16.0;
+  // double _fontSize = 16.0;
 
   LoginController _controller = LoginController();
 
@@ -18,33 +18,29 @@ class _LoginPageState extends State<LoginPage> {
     super.initState();
     loginCheck();
   }
-   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (MediaQuery.of(context).size.width > 799) {
-      setState(() {
-        _fontSize = 24.0;
-      });
-    }else{
-      setState(() {
-        _fontSize = 16.0;
-      });
-    }
-  }
+
+
+  //  @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
+  //   if (MediaQuery.of(context).size.width > 799) {
+  //     setState(() {
+  //       _fontSize = 24.0;
+  //     });
+  //   }else{
+  //     setState(() {
+  //       _fontSize = 16.0;
+  //     });
+  //   }
+  // }
 
   void loginCheck() async {
-    // // Show loading dialog
-    // LoadingDialog.show(context);
     try {
       await _controller.isTokenValid(context);
 
     } catch (err, stacktree) {
-      // Handle error if token is invalid or any error occurs
       print("Error during login check: $err");
       print("Stacktree : $stacktree");
-    } finally {
-      // // Hide loading dialog once the async operation is done
-      // LoadingDialog.hide(context);
     }
   }
 

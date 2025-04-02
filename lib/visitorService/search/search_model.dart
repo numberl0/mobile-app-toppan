@@ -26,7 +26,7 @@ class SearchModule {
         Duration(seconds: 10),
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode == ApiConfig.http200) {
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
         var responseDecode = jsonDecode(response.body);
         if(responseDecode['data'] != null){
           data = responseDecode['data'];

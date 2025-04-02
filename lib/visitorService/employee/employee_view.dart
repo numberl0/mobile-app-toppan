@@ -750,6 +750,9 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                               showTopSnackBar(
                                 Overlay.of(context),
                                 CustomSnackBar.error(
+                                  backgroundColor: Colors.red.shade700,
+                                  icon: Icon(Icons.sentiment_very_satisfied,
+                                  color: Colors.red.shade900, size: 120),
                                   message: valiMessage,
                                 ),
                               );
@@ -759,6 +762,8 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                 showTopSnackBar(
                                     Overlay.of(context),
                                     CustomSnackBar.success(
+                                      backgroundColor: Colors.green.shade500,
+                                      icon: Icon(Icons.sentiment_very_satisfied, color: Colors.green.shade600, size: 120),
                                       message:"กรอกเอกสารสำเร็จ",
                                     ),
                                 );
@@ -769,6 +774,9 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                 showTopSnackBar(
                                   Overlay.of(context),
                                   CustomSnackBar.error(
+                                    backgroundColor: Colors.red.shade700,
+                                    icon: Icon(Icons.sentiment_very_satisfied,
+                                    color: Colors.red.shade900, size: 120),
                                     message: "ส่งเอกสารไม่สำเร็จ",
                                   ),
                                 );
@@ -1223,6 +1231,9 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                     showTopSnackBar(
                                         Overlay.of(context),
                                         CustomSnackBar.error(
+                                          backgroundColor: Colors.red.shade700,
+                                          icon: Icon(Icons.sentiment_very_satisfied,
+                                          color: Colors.red.shade900, size: 120),
                                           message:
                                               "กรุณากรอกข้อมูลให้ครบถ้วน",
                                         ),
@@ -1528,6 +1539,9 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   showTopSnackBar(
                                     Overlay.of(context),
                                     CustomSnackBar.error(
+                                      backgroundColor: Colors.red.shade700,
+                                      icon: Icon(Icons.sentiment_very_satisfied,
+                                      color: Colors.red.shade900, size: 120),
                                       message: 'กรุณากรอกชื่อสิ่งของ',
                                     ),
                                   );
@@ -1758,6 +1772,9 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   showTopSnackBar(
                                     Overlay.of(context),
                                     CustomSnackBar.error(
+                                      backgroundColor: Colors.red.shade700,
+                                      icon: Icon(Icons.sentiment_very_satisfied,
+                                      color: Colors.red.shade900, size: 120),
                                       message: 'กรุณากรอกชื่อสิ่งของ',
                                     ),
                                   );
@@ -2639,6 +2656,9 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   showTopSnackBar(
                                       Overlay.of(context),
                                       CustomSnackBar.error(
+                                        backgroundColor: Colors.red.shade700,
+                                        icon: Icon(Icons.sentiment_very_satisfied,
+                                        color: Colors.red.shade900, size: 120),
                                         message:
                                             "กรุณากรอกข้อมูลให้ครบถ้วน",
                                       ),

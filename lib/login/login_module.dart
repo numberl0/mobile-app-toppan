@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-import '../../config/api_config.dart';
+import '../config/api_config.dart';
 
 class LoginModule {
 
@@ -19,7 +19,7 @@ class LoginModule {
         Duration(seconds: 10),
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode == ApiConfig.http200) {
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
         var responseDecode = jsonDecode(response.body);
         var dataRes = responseDecode['data'];
         responseMapping = {
@@ -34,7 +34,6 @@ class LoginModule {
             'canLogin': false,
             'err': responseDecode['error']
         };
-        // throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
       }
     }catch (err) {
       throw err;

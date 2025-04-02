@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:toppan_app/firebase/firebase_message.dart';
 
-import 'login/views/login_page.dart';
-import 'home/views/home_view.dart';
+import 'login/login_view.dart';
+import 'home/home_view.dart';
 import 'visitorService/visitorServiceCenter_view.dart';
 
 import 'package:responsive_framework/responsive_framework.dart';
@@ -24,7 +24,6 @@ void main() async {
 }
 
 final GoRouter _router =  GoRouter(
-  // initialLocation: isTokenValid()==true? '/home':'/login',
   initialLocation: '/login',
   routes: <RouteBase>[
     GoRoute(

@@ -27,7 +27,7 @@ class VisitorServiceCenterModel {
         Duration(seconds: 10),
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode == ApiConfig.http200) {
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
         print("[SUCCESS] Activity Log Inserted");
       }else{
         throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
@@ -58,7 +58,7 @@ class VisitorServiceCenterModel {
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
 
-      if (response.statusCode == ApiConfig.http200) {
+      if (response.statusCode >= 200 && response.statusCode <= 299) {
         print("[LOG ERROR] Write error logged in file successfully!");
       } else {
          throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
@@ -83,7 +83,7 @@ class VisitorServiceCenterModel {
         Duration(seconds: 10),
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode == ApiConfig.http200) {
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
         var responseDecode = jsonDecode(response.body);
         data = responseDecode['data'];
       }else{
@@ -111,7 +111,7 @@ class VisitorServiceCenterModel {
         Duration(seconds: 10),
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if (response.statusCode >= 200 && response.statusCode < 300) {
+      if (response.statusCode >= 200 && response.statusCode <= 299) {
         print("[SUCCESS] Insert FCM Token Successfully");
       } else {
         throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");

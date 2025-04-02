@@ -5,7 +5,7 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:toppan_app/loadingDialog.dart';
 import 'package:toppan_app/userEntity.dart';
 import 'package:toppan_app/visitorService/visitorServiceCenter_controller.dart';
-import '../models/login_module.dart';
+import 'login_module.dart';
 
 class LoginController {
 
@@ -42,24 +42,18 @@ class LoginController {
 
           //VisitorService
           await visitorService();
-
-          await Future.delayed(Duration(seconds: 1));
-          _loadingDialog.hide();
           GoRouter.of(context).push('/home');
         } else {
-          await Future.delayed(Duration(seconds: 1));
-          _loadingDialog.hide();
           _showErrorLoginDialog(context, response['err']);
         }
       } else {
-        await Future.delayed(Duration(seconds: 1));
-        _loadingDialog.hide();
         _showErrorLoginDialog(context, "กรุณากรอก username และ password");
       }
     } catch (err, stackTrace) {
+      _controllerVisistorServiceCenter.logError(err.toString(), stackTrace.toString());
+    } finally {
       await Future.delayed(Duration(seconds: 1));
       _loadingDialog.hide();
-      _controllerVisistorServiceCenter.logError(err.toString(), stackTrace.toString());
     }
   }
 
@@ -103,13 +97,14 @@ class LoginController {
       UserEntity userEntity = UserEntity();
       final token = await userEntity.getUserPerfer(userEntity.token);
       
-      await Future.delayed(Duration(seconds: 2)); // Simulate API call
-      _loadingDialog.hide(); // Hide loading
       if (token != null && !JwtDecoder.isExpired(token)) {
         GoRouter.of(context).push('/home');
       }
     } catch (err, stackTrace) {
       _controllerVisistorServiceCenter.logError(err.toString(), stackTrace.toString());
+    } finally {
+      await Future.delayed(Duration(seconds: 2));
+      _loadingDialog.hide();
     }
   }
 

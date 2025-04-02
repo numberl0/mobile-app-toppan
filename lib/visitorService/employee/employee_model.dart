@@ -28,7 +28,7 @@ class EmployeeModel {
         Duration(seconds: 10),
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode == ApiConfig.http200) {
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
         var responseDecode = jsonDecode(response.body);
         if(responseDecode['data'] != null && responseDecode['data'].length == 1){
           data = responseDecode['data'][0];
@@ -57,7 +57,7 @@ class EmployeeModel {
         Duration(seconds: 10),
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode == ApiConfig.http200) {
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
         var responseDecode = jsonDecode(response.body);
         if(responseDecode['data'] != null){
           data = responseDecode['data'];
@@ -126,7 +126,7 @@ class EmployeeModel {
 
       // Send the request
       var response = await request.send();
-      if(response.statusCode == ApiConfig.http200) {
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
         print("Image uploaded successfully!");
         status = true;
       }else{
@@ -157,7 +157,7 @@ class EmployeeModel {
         Duration(seconds: 10),
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode == ApiConfig.http200) {
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
         print('Response body: ${response.body}');
         status = true;
       }else{
@@ -187,7 +187,7 @@ class EmployeeModel {
         Duration(seconds: 10),
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode == ApiConfig.http200) {
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
         print('Response body: ${response.body}');
         status = true;
       }else{
@@ -218,7 +218,7 @@ class EmployeeModel {
         Duration(seconds: 10),
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode == ApiConfig.http200) {
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
         print('Sequence found, status code: ${response.statusCode}');
         print('Response body: ${response.body}');
       }else{
@@ -249,7 +249,7 @@ class EmployeeModel {
         Duration(seconds: 10),
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode == ApiConfig.http200) {
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
         print('Response body: ${response.body}');
         status = true;
       }else{
@@ -280,7 +280,7 @@ class EmployeeModel {
         Duration(seconds: 10),
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode == ApiConfig.http200) {
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
         print('Response body: ${response.body}');
         status = true;
       }else{

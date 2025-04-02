@@ -144,9 +144,9 @@ class _ApprovePageState extends State<ApprovePage> {
                                           showTopSnackBar(
                                               Overlay.of(context),
                                               CustomSnackBar.error(
-                                                // backgroundColor: Colors.green.shade500,
-                                                // icon: Icon(Icons.sentiment_very_satisfied,
-                                                //     color: Colors.green.shade600, size: 120),
+                                                backgroundColor: Colors.red.shade700,
+                                                icon: Icon(Icons.sentiment_very_satisfied,
+                                                color: Colors.red.shade900, size: 120),
                                                 message: 'อนุมัติไม่สำเร็จ',
                                               ),
                                             );
@@ -168,9 +168,9 @@ class _ApprovePageState extends State<ApprovePage> {
                                           showTopSnackBar(
                                               Overlay.of(context),
                                               CustomSnackBar.error(
-                                                // backgroundColor: Colors.green.shade500,
-                                                // icon: Icon(Icons.sentiment_very_satisfied,
-                                                //     color: Colors.green.shade600, size: 120),
+                                                backgroundColor: Colors.red.shade700,
+                                                icon: Icon(Icons.sentiment_very_satisfied,
+                                                color: Colors.red.shade900, size: 120),
                                                 message: 'ไม่มีรายการคำร้อง',
                                               ),
                                             );
@@ -233,7 +233,7 @@ class _ApprovePageState extends State<ApprovePage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
 
-        SizedBox(height: 20),
+        SizedBox(height: 5),
 
         //Select Type Search (Dropdown)
         DropdownButtonFormField<String>(
@@ -520,7 +520,7 @@ class _ApprovePageState extends State<ApprovePage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    '${entry['request_type'][0] + entry['request_type'].substring(1).toLowerCase()}',
+                                    'บริษัท : ${entry['company']}',
                                     style: TextStyle(
                                       fontSize: _fontSize + 4,
                                       color: Colors.white,
@@ -530,9 +530,9 @@ class _ApprovePageState extends State<ApprovePage> {
                                     maxLines: 1,
                                     softWrap: true,
                                   ),
-                                  SizedBox(height: 7),
+                                  SizedBox(height: 3),
                                   Text(
-                                    '${entry['company']}',
+                                    'ประเภท ${entry['request_type'][0] + entry['request_type'].substring(1).toLowerCase()}',
                                     style: TextStyle(
                                         fontSize: _fontSize,
                                         color: Colors.white),
@@ -540,7 +540,7 @@ class _ApprovePageState extends State<ApprovePage> {
                                     maxLines: 1,
                                     softWrap: true,
                                   ),
-                                  SizedBox(height: 10),
+                                  SizedBox(height: 5),
                                   if (MediaQuery.of(context).size.width > 799) ...[
                                     Row(
                                         mainAxisAlignment: MainAxisAlignment.start,
@@ -740,9 +740,9 @@ class _ApprovePageState extends State<ApprovePage> {
                           showTopSnackBar(
                                 Overlay.of(context),
                                 CustomSnackBar.error(
-                                  // backgroundColor: Colors.green.shade500,
-                                  // icon: Icon(Icons.sentiment_very_satisfied,
-                                  //     color: Colors.green.shade600, size: 120),
+                                  backgroundColor: Colors.red.shade700,
+                                  icon: Icon(Icons.sentiment_very_satisfied,
+                                  color: Colors.red.shade900, size: 120),
                                   message: 'อนุมัติไม่สำเร็จ',
                                 ),
                               );

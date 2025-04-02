@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:toppan_app/userEntity.dart';
 
-import '../../config/api_config.dart';
+import '../config/api_config.dart';
 
 class HomeModel {
 
@@ -65,7 +65,7 @@ class HomeModel {
         Duration(seconds: 10),
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode == ApiConfig.http200) {
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
         var responseDecode = jsonDecode(response.body);
         data = responseDecode['data'];
       }else{
@@ -94,7 +94,7 @@ class HomeModel {
         Duration(seconds: 10),
         onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode >= 200 && response.statusCode < 300) {
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
         print("[SUCCESS] FCM Token deleted successfully");
       }else{
         throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
