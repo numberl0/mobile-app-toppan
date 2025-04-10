@@ -14,8 +14,8 @@ class VisitorformModule {
 
   UserEntity userEntity = UserEntity();
 
-  Future<Map<String, dynamic>> getAgreementText(String version) async {
-    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/getAgreement' + '?version=${Uri.encodeComponent(version)}');
+  Future<Map<String, dynamic>> getAgreementText() async {
+    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/getAgreement');
     String token = await userEntity.getUserPerfer(userEntity.token);
     Map<String, dynamic> data = {};
     try {

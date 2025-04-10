@@ -148,10 +148,11 @@ class VisitorFormController {
       // For inset recode
       flagUpdateForm = false;
 
-      // iSO Warning
-      Map<String, dynamic> aggrementText = await visitorformModule.getAgreementText('TM_0.1');
-      agreementEng = aggrementText['content_eng'];
-      agreementThai = aggrementText['content_thai'];
+      // Agreement Warning
+      Map<String, dynamic> aggrementText = await visitorformModule.getAgreementText();
+
+      agreementEng = aggrementText['content_eng'] != null? aggrementText['content_eng'] : '';
+      agreementThai = aggrementText['content_thai'] != null? aggrementText['content_thai'] : '';
 
       //tno
       DateTime now = DateTime.now();
@@ -200,11 +201,10 @@ class VisitorFormController {
       // For update recode
       flagUpdateForm = true;
 
-      // iSO Warning
-      Map<String, dynamic> aggrementText =
-          await visitorformModule.getAgreementText('TM_0.1');
-      agreementEng = aggrementText['content_eng'];
-      agreementThai = aggrementText['content_thai'];
+      // Agreement Warning
+      Map<String, dynamic> aggrementText = await visitorformModule.getAgreementText();
+      agreementEng = aggrementText['content_eng'] != null? aggrementText['content_eng'] : '';
+      agreementThai = aggrementText['content_thai'] != null? aggrementText['content_thai'] : '';
 
       //tno
       tno_pass = data['tno_pass'];
