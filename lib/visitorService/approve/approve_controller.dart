@@ -51,10 +51,11 @@ class ApproveController {
 
       
       list_Request = await approveModel.getRequestApproved(building_card);
-      await Future.delayed(Duration(seconds: 1));
-      _loadingDialog.hide();
     } catch (err, stackTrace) {
       _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+    } finally {
+      await Future.delayed(Duration(seconds: 1));
+      _loadingDialog.hide();
     }
   }
 

@@ -148,10 +148,11 @@ class EmployeeController {
       }
       timeInController.text = formatTime(flagTimeIn!);
 
-      await Future.delayed(Duration(seconds: 1));
-      _loadingDialog.hide();
     } catch (err, stackTrace) {
       _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+    } finally {
+      await Future.delayed(Duration(seconds: 1));
+      _loadingDialog.hide();
     }
   }
 
@@ -299,10 +300,11 @@ class EmployeeController {
             data[fieldMappings[key]![2]]; // Signed by
       }
 
-      await Future.delayed(Duration(seconds: 1));
-      _loadingDialog.hide();
     } catch (err, stackTrace) {
       _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+    } finally {
+      await Future.delayed(Duration(seconds: 1));
+      _loadingDialog.hide();
     }
   }
 

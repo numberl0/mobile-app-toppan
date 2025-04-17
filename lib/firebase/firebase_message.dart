@@ -1,81 +1,104 @@
 import 'dart:math';
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import '../firebase_options.dart';
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
-  print("Handling background message: ${message.messageId}");
-} 
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+}
 
 class FirebaseMessage {
-
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   Future<void> initNotifications() async {
-    await Firebase.initializeApp();
-    await initializeLocalNotifications();
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+    // 🛑 Request permission first BEFORE initializing local notifications
     await setupFCM();
+
+    // ✅ Then initialize local notifications
+    await initializeLocalNotifications();
   }
 
-   /// Initialize local notifications
+  /// Initialize local notifications
   Future<void> initializeLocalNotifications() async {
-    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const AndroidInitializationSettings androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    final InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
-
-    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-
-    const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'high_importance_channel', // ID must match in `AndroidNotificationDetails`
-      'High Importance Notifications', // Name
-      description: 'This channel is used for important notifications.',
-      importance: Importance.high,
+    const DarwinInitializationSettings iosSettings = DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
     );
 
-    final AndroidFlutterLocalNotificationsPlugin? androidImplementation = 
-    flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    const InitializationSettings initializationSettings = InitializationSettings(
+      android: androidSettings,
+      iOS: iosSettings,
+    );
 
-    await androidImplementation?.createNotificationChannel(channel);
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
   }
 
   /// Set up Firebase Cloud Messaging (FCM)
   Future<void> setupFCM() async {
-    // Request permission for notifications (iOS)
+    // // ✅ Ask for iOS permissions
     await FirebaseMessaging.instance.requestPermission(
       alert: true,
       badge: true,
       sound: true,
     );
 
-    // Listen for messages when the app is open
+    // ✅ Tell iOS to show notifications while app is in foreground
+    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    // ✅ Foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print("Foreground message received: ${message.notification?.title}");
-      showLocalNotification(message);
+      print("📲 Foreground message received: ${message.notification?.title}");
+      // ✅ Avoid showing manually if system already shows it
+  if (message.notification != null && message.data.isEmpty) {
+    // This message already shows a system notification — skip manual one
+    return;
+  }
+
+  // ✅ Otherwise show manually (e.g., if it's a data-only message)
+  showLocalNotification(message);
     });
 
-    // Register background message handler
+    // ✅ Background handler
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   }
 
   /// Show local notification
   Future<void> showLocalNotification(RemoteMessage message) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
+    print('🔔 Showing local notification');
+
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
       'high_importance_channel',
       'High Importance Notifications',
       importance: Importance.max,
       priority: Priority.high,
     );
 
-    const NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+    const DarwinNotificationDetails iOSPlatformChannelSpecifics =
+        DarwinNotificationDetails();
+
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+      iOS: iOSPlatformChannelSpecifics,
+    );
 
     await flutterLocalNotificationsPlugin.show(
-      Random().nextInt(100000), // Notification ID
-      message.notification?.title ?? "No Title", // Title
-      message.notification?.body ?? "No Body", // Body
+      Random().nextInt(100000),
+      message.notification?.title ?? "No Title",
+      message.notification?.body ?? "No Body",
       platformChannelSpecifics,
     );
   }
-
 }

@@ -78,6 +78,7 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: Colors.transparent,
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -162,7 +163,7 @@ class _SearchPageState extends State<SearchPage> {
           
         ),
 
-        SizedBox(height: 20),
+        SizedBox(height: 10),
 
         //Select Company Search
         TextField(
@@ -187,7 +188,7 @@ class _SearchPageState extends State<SearchPage> {
           
         ),
         
-        SizedBox(height: 20),
+        SizedBox(height: 10),
 
         //Select Name Search
         TextField(

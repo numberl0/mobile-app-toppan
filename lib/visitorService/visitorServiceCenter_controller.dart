@@ -59,8 +59,11 @@ class VisitorServiceCenterController {
         device_name = iosInfo.utsname.machine;
       }
 
+      print(device_name);
       //token
       String? fcm_token = await FirebaseMessaging.instance.getToken();
+      print("---------");
+      print(fcm_token);
 
       //roles
       List<dynamic> rolesRaw = await _model.getRoleByUser(username);
@@ -83,6 +86,8 @@ class VisitorServiceCenterController {
       await _model.insertFCMToken(data);
 
     } catch (err, stackTrace) {
+      print(err);
+      print(stackTrace);
       userEntity.clearUserPerfer();
       await logError(err.toString(), stackTrace.toString());
     }
