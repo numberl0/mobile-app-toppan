@@ -275,7 +275,7 @@ class _SearchPageState extends State<SearchPage> {
         height: 150,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          color: Colors.white,
+          // color: Colors.white,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.6),
@@ -283,7 +283,8 @@ class _SearchPageState extends State<SearchPage> {
               offset: Offset(0, 5),
             ),
             BoxShadow(
-              color: Colors.white,
+              // color: Colors.white,
+              color: borderColor,
               offset: Offset(-5, 0),
             ),
           ],
@@ -344,7 +345,8 @@ class _SearchPageState extends State<SearchPage> {
               //   ),
               // ]),
               child: Material(
-                color: borderColor,
+                // color: borderColor,
+                color: const Color.fromARGB(185, 255, 255, 255),
                 child: InkWell(
                   child: Container(
                     padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
@@ -361,11 +363,11 @@ class _SearchPageState extends State<SearchPage> {
                               padding: EdgeInsets.all(6),
                               decoration: BoxDecoration(
                                   border: Border.all(
-                                      color: Colors.white, width: 3.0),
+                                      color: borderColor, width: 3.0),
                                   shape: BoxShape.circle),
                               child: Icon(
-                                Icons.assignment_outlined,
-                                color: Colors.white,
+                                Icons.feed,
+                                color: borderColor,
                                 size: 55,
                               ),
                             ),
@@ -380,19 +382,25 @@ class _SearchPageState extends State<SearchPage> {
                                     'บริษัท : ${entry['company']}',
                                     style: TextStyle(
                                       fontSize: _fontSize + 4,
-                                      color: Colors.white,
+                                      color: Colors.black,
                                       fontWeight: FontWeight.bold,
                                     ),
                                     overflow: TextOverflow.ellipsis,
                                     maxLines: 1,
                                     softWrap: true,
                                   ),
+                                  Divider(
+                                      color: borderColor,
+                                      thickness: 2,
+                                    ),
                                   SizedBox(height: 3),
                                   Text(
                                     'ประเภท ${entry['request_type'][0] + entry['request_type'].substring(1).toLowerCase()}',
                                     style: TextStyle(
                                         fontSize: _fontSize,
-                                        color: Colors.white),
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     overflow: TextOverflow.ellipsis,
                                     maxLines: 1,
                                     softWrap: true,
@@ -408,7 +416,9 @@ class _SearchPageState extends State<SearchPage> {
                                               'วันที่: ${formattedDate}',
                                               style: TextStyle(
                                                   fontSize: _fontSize,
-                                                  color: Colors.white),
+                                                  color: Colors.black,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               overflow: TextOverflow.ellipsis,
                                               maxLines: 1,
                                               softWrap: true,
@@ -418,7 +428,9 @@ class _SearchPageState extends State<SearchPage> {
                                               'เวลา: ${timeRanges}',
                                               style: TextStyle(
                                                   fontSize: _fontSize,
-                                                  color: Colors.white),
+                                                  color: Colors.black,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               overflow: TextOverflow.ellipsis,
                                               maxLines: 1,
                                               softWrap: true,
@@ -430,7 +442,9 @@ class _SearchPageState extends State<SearchPage> {
                                       'วันที่: ${formattedDate}',
                                       style: TextStyle(
                                           fontSize: _fontSize,
-                                          color: Colors.white),
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: 1,
                                       softWrap: true,
@@ -440,7 +454,9 @@ class _SearchPageState extends State<SearchPage> {
                                       'เวลา: ${timeRanges}',
                                       style: TextStyle(
                                           fontSize: _fontSize,
-                                          color: Colors.white),
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: 1,
                                       softWrap: true,
@@ -572,10 +588,10 @@ class _SearchPageState extends State<SearchPage> {
                         onPressed: () async {
                           switch (entry['request_type'].toString().toLowerCase()) {
                             case 'visitor':
-                              GoRouter.of(context).go('/visitor?option=visitor', extra: entry);
+                              GoRouter.of(context).pushReplacement('/visitor?option=visitor', extra: entry);
                             break;
                             case 'employee':
-                              GoRouter.of(context).go('/visitor?option=employee', extra: entry);
+                              GoRouter.of(context).pushReplacement('/visitor?option=employee', extra: entry);
                             break;
                           }
                         },

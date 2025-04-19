@@ -41,8 +41,10 @@ class LoginController {
           await userEntity.setUserPerfer(userEntity.token, token);
 
           //VisitorService
-          await visitorService();
-          GoRouter.of(context).push('/home');
+          bool loginSuccess = await visitorService();
+          if(loginSuccess) {
+            GoRouter.of(context).push('/home');
+          }
         } else {
           _showErrorLoginDialog(context, response['err']);
         }
@@ -59,14 +61,16 @@ class LoginController {
 
 
   //VisitorService
-  Future<void> visitorService() async {
+  Future<bool> visitorService() async {
+    bool status = false;
     try {
       String username = await userEntity.getUserPerfer(userEntity.username);
       await _controllerVisistorServiceCenter.insertActvityLog('User ${username} login.');
-      await _controllerVisistorServiceCenter.insertFCMToken();
+      status = await _controllerVisistorServiceCenter.insertFCMToken();
     } catch (err, stackTrace) {
       _controllerVisistorServiceCenter.logError(err.toString(), stackTrace.toString());
     }
+    return status;
   }
 
 

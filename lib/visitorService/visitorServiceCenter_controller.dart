@@ -38,7 +38,8 @@ class VisitorServiceCenterController {
   }
 
   //insert fcm_token
-  Future<void> insertFCMToken() async {
+  Future<bool> insertFCMToken() async {
+    bool status = false;
     try {
 
       //uuid
@@ -59,11 +60,8 @@ class VisitorServiceCenterController {
         device_name = iosInfo.utsname.machine;
       }
 
-      print(device_name);
       //token
       String? fcm_token = await FirebaseMessaging.instance.getToken();
-      print("---------");
-      print(fcm_token);
 
       //roles
       List<dynamic> rolesRaw = await _model.getRoleByUser(username);
@@ -82,15 +80,14 @@ class VisitorServiceCenterController {
         'fcm_token': fcm_token,
         'created_at': datetime_now,
       };
-      print(data);
       await _model.insertFCMToken(data);
-
+      status = true;
     } catch (err, stackTrace) {
       print(err);
-      print(stackTrace);
       userEntity.clearUserPerfer();
       await logError(err.toString(), stackTrace.toString());
     }
+    return status;
   }
 
 }

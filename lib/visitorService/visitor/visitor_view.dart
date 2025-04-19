@@ -749,7 +749,9 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                 },
                               ),
                               Text(
-                                "${_controller.listItem_In.length} : ${_controller.listItem_Out.length}",
+                                _controller.isSwitchImagePicker
+                                ? "${_controller.imageList_In.length} : ${_controller.imageList_Out.length}"
+                                : "${_controller.listItem_In.length} : ${_controller.listItem_Out.length}",
                                 style: TextStyle(
                                     fontSize: _fontSize,
                                     fontWeight: FontWeight.bold,

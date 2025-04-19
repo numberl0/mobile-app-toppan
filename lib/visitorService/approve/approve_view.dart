@@ -418,7 +418,6 @@ class _ApprovePageState extends State<ApprovePage> {
         height: 150,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          color: Colors.white,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.6),
@@ -426,7 +425,7 @@ class _ApprovePageState extends State<ApprovePage> {
               offset: Offset(0, 5),
             ),
             BoxShadow(
-              color: Colors.white,
+              color: borderColor,
               offset: Offset(-5, 0),
             ),
           ],
@@ -487,7 +486,7 @@ class _ApprovePageState extends State<ApprovePage> {
               //   ),
               // ]),
               child: Material(
-                color: borderColor,
+                color: const Color.fromARGB(185, 255, 255, 255),
                 child: InkWell(
                   child: Container(
                     // padding: EdgeInsets.all(30.0),
@@ -505,11 +504,11 @@ class _ApprovePageState extends State<ApprovePage> {
                               padding: EdgeInsets.all(6),
                               decoration: BoxDecoration(
                                   border: Border.all(
-                                      color: Colors.white, width: 3.0),
+                                      color: borderColor, width: 3.0),
                                   shape: BoxShape.circle),
                               child: Icon(
-                                Icons.assignment_outlined,
-                                color: Colors.white,
+                                Icons.feed,
+                                color: borderColor,
                                 size: 55,
                               ),
                             ),
@@ -524,19 +523,24 @@ class _ApprovePageState extends State<ApprovePage> {
                                     'บริษัท : ${entry['company']}',
                                     style: TextStyle(
                                       fontSize: _fontSize + 4,
-                                      color: Colors.white,
+                                      color: Colors.black,
                                       fontWeight: FontWeight.bold,
                                     ),
                                     overflow: TextOverflow.ellipsis,
                                     maxLines: 1,
                                     softWrap: true,
                                   ),
+                                  Divider(
+                                    color: borderColor,
+                                    thickness: 2,
+                                  ),
                                   SizedBox(height: 3),
                                   Text(
                                     'ประเภท ${entry['request_type'][0] + entry['request_type'].substring(1).toLowerCase()}',
                                     style: TextStyle(
                                         fontSize: _fontSize,
-                                        color: Colors.white),
+                                        color: Colors.black,
+                                      fontWeight: FontWeight.bold,),
                                     overflow: TextOverflow.ellipsis,
                                     maxLines: 1,
                                     softWrap: true,
@@ -551,7 +555,8 @@ class _ApprovePageState extends State<ApprovePage> {
                                               'วันที่: ${formattedDate}',
                                               style: TextStyle(
                                                   fontSize: _fontSize,
-                                                  color: Colors.white),
+                                                  color: Colors.black,
+                                      fontWeight: FontWeight.bold,),
                                               overflow: TextOverflow.ellipsis,
                                               maxLines: 1,
                                               softWrap: true,
@@ -561,7 +566,8 @@ class _ApprovePageState extends State<ApprovePage> {
                                               'เวลา: ${timeRanges}',
                                               style: TextStyle(
                                                   fontSize: _fontSize,
-                                                  color: Colors.white),
+                                                  color: Colors.black,
+                                      fontWeight: FontWeight.bold,),
                                               overflow: TextOverflow.ellipsis,
                                               maxLines: 1,
                                               softWrap: true,
@@ -573,7 +579,8 @@ class _ApprovePageState extends State<ApprovePage> {
                                       'วันที่: ${formattedDate}',
                                       style: TextStyle(
                                           fontSize: _fontSize,
-                                          color: Colors.white),
+                                          color: Colors.black,
+                                      fontWeight: FontWeight.bold,),
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: 1,
                                       softWrap: true,
@@ -583,7 +590,8 @@ class _ApprovePageState extends State<ApprovePage> {
                                       'เวลา: ${timeRanges}',
                                       style: TextStyle(
                                           fontSize: _fontSize,
-                                          color: Colors.white),
+                                          color: Colors.black,
+                                      fontWeight: FontWeight.bold,),
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: 1,
                                       softWrap: true,

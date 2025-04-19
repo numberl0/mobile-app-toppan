@@ -28,8 +28,7 @@ class SearchFormController {
     try {
       _loadingDialog.show(context);
 
-      // String formatToDay = DateFormat('yyyy-MM-dd').format(DateTime.now());          // Example: 2025-03-14
-      String formatToDay = '2025-03-14';
+      String formatToDay = DateFormat('yyyy-MM-dd').format(DateTime.now());          // Example: 2025-03-14
       list_Request = await searchModule.getRequestFormByDate(formatToDay);
     } catch (err, stackTrace) {
       _controllerServiceCenter.logError(err.toString(), stackTrace.toString());

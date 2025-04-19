@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:device_preview/device_preview.dart';
@@ -17,9 +18,13 @@ void main() async {
   FirebaseMessage firebaseMessage = FirebaseMessage();
   firebaseMessage.initNotifications();
 
+   await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
+
   runApp(
     DevicePreview(
-      enabled: true,    // <--- Preview UI
+      enabled: false,    // <--- Preview UI
       builder: (context) => MyApp(),
     ),
   );

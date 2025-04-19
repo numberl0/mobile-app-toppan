@@ -559,7 +559,15 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   ).show();
                                 },
                               ),
-                              Text("${_controller.listItem_In.length} : ${_controller.listItem_Out.length}", style: TextStyle(fontSize: _fontSize, fontWeight: FontWeight.bold, color: Colors.orange),),
+                              Text(
+                                _controller.isSwitchImagePicker
+                                ? "${_controller.imageList_In.length} : ${_controller.imageList_Out.length}"
+                                : "${_controller.listItem_In.length} : ${_controller.listItem_Out.length}",
+                                style: TextStyle(
+                                    fontSize: _fontSize,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.orange),
+                              ),
                             ],
                           ),
                           AnimatedCrossFade(
