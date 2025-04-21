@@ -18,7 +18,7 @@ void main() async {
   FirebaseMessage firebaseMessage = FirebaseMessage();
   firebaseMessage.initNotifications();
 
-   await SystemChrome.setPreferredOrientations([
+  await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
 

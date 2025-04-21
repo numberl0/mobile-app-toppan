@@ -2433,22 +2433,22 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
     }
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15), // Rounded corners
-        border: Border.all(color: Colors.grey), // Border color
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.grey),
       ),
       padding: EdgeInsets.symmetric(horizontal: 10),
       child: DropdownButtonFormField<String>(
-        value: _controller.titleNameController.text, // Default value
+        value: _controller.titleNameController.text,
         decoration: InputDecoration(
-          border: InputBorder.none, // Remove default border
+          border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         ),
         icon: Icon(Icons.arrow_drop_down,
-            color: Colors.black), // Custom dropdown icon
+            color: Colors.black),
         style:
-            TextStyle(color: Colors.black, fontSize: _fontSize), // Text style
-        dropdownColor: Colors.white, // Background color for dropdown items
-        borderRadius: BorderRadius.circular(15), // Rounded dropdown items
+            TextStyle(color: Colors.black, fontSize: _fontSize, height: 1.0,),
+        dropdownColor: Colors.white,
+        borderRadius: BorderRadius.circular(15),
         items: titleNameList.map((String item) {
           return DropdownMenuItem<String>(
             value: item,

@@ -10,3 +10,36 @@
 <asynchronous suspension>
 
 -------------------
+[2025-04-19 15:05:25] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedDocument (package:toppan_app/visitorService/approve/approve_model.dart:97)
+<asynchronous suspension>
+#1      ApproveController.approvedDocument (package:toppan_app/visitorService/approve/approve_controller.dart:107)
+<asynchronous suspension>
+#2      _ApprovePageState.popUpShowInformationForm.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:735)
+<asynchronous suspension>
+
+-------------------
+[2025-04-19 09:39:08] 
+[Error] type 'Null' is not a subtype of type 'String' 
+[Stack Trace]
+#0      UserEntity.checkAndClearPrefsOnUpdateApp (package:toppan_app/userEntity.dart:159:7)
+<asynchronous suspension>
+#1      LoginController.isTokenValid (package:toppan_app/login/login_controller.dart:99:7)
+<asynchronous suspension>
+#2      _LoginPageState.loginCheck (package:toppan_app/login/login_view.dart:39:7)
+<asynchronous suspension>
+
+-------------------
+[2025-04-19 16:51:55] 
+[Error] type 'Null' is not a subtype of type 'String' 
+[Stack Trace]
+#0      UserEntity.checkAndClearPrefsOnUpdateApp (package:toppan_app/userEntity.dart:159:7)
+<asynchronous suspension>
+#1      LoginController.isTokenValid (package:toppan_app/login/login_controller.dart:99:7)
+<asynchronous suspension>
+#2      _LoginPageState.loginCheck (package:toppan_app/login/login_view.dart:39:7)
+<asynchronous suspension>
+
+-------------------

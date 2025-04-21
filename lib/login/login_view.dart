@@ -37,7 +37,6 @@ class _LoginPageState extends State<LoginPage> {
   void loginCheck() async {
     try {
       await _controller.isTokenValid(context);
-
     } catch (err, stacktree) {
       print("Error during login check: $err");
       print("Stacktree : $stacktree");

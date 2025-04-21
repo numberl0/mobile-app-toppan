@@ -1,15 +1,26 @@
+import 'dart:io';
+
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 // Like LocalStorage
 class UserEntity {
 
   //Key
+  String app_version = 'app_version';
+
   String username = 'username';
   String token = 'token';
   String roles_visitorService = 'roles_visitorService'; // list<String> = []
 
-
   String device_id = "device_id";
+  String device_name = "device_name";
+  String fcm_token = "fcm_token";
+  String created_token_at = "created_token_at";
 
   //Setter
   Future<void> setUserPerfer(String key, dynamic value) async {
@@ -86,6 +97,64 @@ class UserEntity {
     try {
       final SharedPreferences _prefs = await SharedPreferences.getInstance();
       _prefs.clear();
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  Future<void> generateInfoDeviceToken() async {
+    try{
+      //uuid
+      String devie_id = Uuid().v4();
+
+      // Device Name
+      String device_name = '';
+      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+      if(Platform.isAndroid) {
+        AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+        device_name = androidInfo.name;
+      } else if (Platform.isIOS) {
+        IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+        device_name = iosInfo.utsname.machine;
+      }
+
+      //token
+      String? fcm_token = await FirebaseMessaging.instance.getToken();
+
+      // Created_at
+      String datetime_now =  DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
+
+      setUserPerfer(this.device_id, devie_id);
+      setUserPerfer(this.device_name, device_name);
+      setUserPerfer(this.fcm_token, fcm_token);
+      setUserPerfer(this.created_token_at, datetime_now);
+
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  Future<void> printAllSharedPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs.getKeys();
+
+    print('SharedPreferences contents:');
+    for (String key in keys) {
+      print('$key: ${prefs.get(key)}');
+    }
+  }
+
+  Future<void> checkAndClearPrefsOnUpdateApp() async {
+    try {
+      final PackageInfo info = await PackageInfo.fromPlatform();
+
+      String currentVersion = info.version;
+      String savedVersion = await getUserPerfer(this.app_version);
+
+      if (savedVersion != currentVersion) {
+        clearUserPerfer();
+        setUserPerfer(this.app_version, currentVersion);
+      }
     } catch (err) {
       throw err;
     }

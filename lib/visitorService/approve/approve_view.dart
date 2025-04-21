@@ -140,31 +140,46 @@ class _ApprovePageState extends State<ApprovePage> {
                                     btnOk: ElevatedButton(
                                       onPressed: () async { 
                                         if(_controller.filteredDocument.isNotEmpty) {
-                                          bool status = await _controller.approvedAll();
-                                          if(!status) {
-                                          showTopSnackBar(
-                                              Overlay.of(context),
-                                              CustomSnackBar.error(
-                                                backgroundColor: Colors.red.shade700,
-                                                icon: Icon(Icons.sentiment_very_satisfied,
-                                                color: Colors.red.shade900, size: 120),
-                                                message: 'อนุมัติไม่สำเร็จ',
-                                              ),
-                                            );
-                                        }else{
-                                          setState(() {
-                                            preparePage();
-                                          });
-                                          showTopSnackBar(
-                                            Overlay.of(context),
-                                            CustomSnackBar.success(
-                                              backgroundColor: Colors.green.shade500,
-                                              icon: Icon(Icons.sentiment_very_satisfied, color: Colors.green.shade600, size: 120),
-                                              message: 'อนุมัติเรียบร้อย',
-                                            ),
-                                          );
-                                          Navigator.pop(context);
-                                        }
+                                          bool isAdmin = await _controller.isAdmin();
+                                          if(isAdmin) {
+                                            if(isAdmin) {
+                                            showTopSnackBar(
+                                                Overlay.of(context),
+                                                CustomSnackBar.error(
+                                                  backgroundColor: Colors.red.shade700,
+                                                  icon: Icon(Icons.sentiment_very_satisfied,
+                                                  color: Colors.red.shade900, size: 120),
+                                                  message: 'ผู้ดูแลระบบไม่มีสิทธิ์อนุมัติเอกสาร',
+                                                ),
+                                              );
+                                            }
+                                          }else{
+                                            bool status = await _controller.approvedAll();
+                                            if(!status) {
+                                              showTopSnackBar(
+                                                  Overlay.of(context),
+                                                  CustomSnackBar.error(
+                                                    backgroundColor: Colors.red.shade700,
+                                                    icon: Icon(Icons.sentiment_very_satisfied,
+                                                    color: Colors.red.shade900, size: 120),
+                                                    message: 'อนุมัติไม่สำเร็จ',
+                                                  ),
+                                                );
+                                            }else{
+                                              setState(() {
+                                                preparePage();
+                                              });
+                                              showTopSnackBar(
+                                                Overlay.of(context),
+                                                CustomSnackBar.success(
+                                                  backgroundColor: Colors.green.shade500,
+                                                  icon: Icon(Icons.sentiment_very_satisfied, color: Colors.green.shade600, size: 120),
+                                                  message: 'อนุมัติเรียบร้อย',
+                                                ),
+                                              );
+                                              Navigator.pop(context);
+                                            }
+                                          }
                                         }else{
                                           showTopSnackBar(
                                               Overlay.of(context),
@@ -293,7 +308,7 @@ class _ApprovePageState extends State<ApprovePage> {
           
         ),
 
-        SizedBox(height: 10),
+        SizedBox(height: 20),
 
         //Select Company Search
         TextField(
@@ -318,7 +333,7 @@ class _ApprovePageState extends State<ApprovePage> {
           
         ),
         
-        SizedBox(height: 10),
+        SizedBox(height: 20),
 
         //Select Name Search
         TextField(
@@ -731,32 +746,45 @@ class _ApprovePageState extends State<ApprovePage> {
                           ),
                         ),
                         onPressed: () async {
-                          // Navigate to edit page using GoRouter
-                          bool status = await _controller.approvedDocument(entry);
-                          if(status) {
+                          bool isAdmin = await _controller.isAdmin();
+                          if(isAdmin) {
+                            if(isAdmin) {
                             showTopSnackBar(
-                              Overlay.of(context),
-                              CustomSnackBar.success(
-                                backgroundColor: Colors.green.shade500,
-                                icon: Icon(Icons.sentiment_very_satisfied,
-                                    color: Colors.green.shade600, size: 120),
-                                message: 'อนุมัติเรียบร้อย',
-                              ),
-                            );
-                            setState(() { preparePage(); });
-                            Navigator.of(context).pop();
-                          }else{ 
-                          showTopSnackBar(
                                 Overlay.of(context),
                                 CustomSnackBar.error(
                                   backgroundColor: Colors.red.shade700,
                                   icon: Icon(Icons.sentiment_very_satisfied,
                                   color: Colors.red.shade900, size: 120),
-                                  message: 'อนุมัติไม่สำเร็จ',
+                                  message: 'ผู้ดูแลระบบไม่มีสิทธิ์อนุมัติเอกสาร',
                                 ),
                               );
                             }
-
+                          }else{
+                            bool status = await _controller.approvedDocument(entry);
+                            if(status) {
+                              showTopSnackBar(
+                                Overlay.of(context),
+                                CustomSnackBar.success(
+                                  backgroundColor: Colors.green.shade500,
+                                  icon: Icon(Icons.sentiment_very_satisfied,
+                                      color: Colors.green.shade600, size: 120),
+                                  message: 'อนุมัติเรียบร้อย',
+                                ),
+                              );
+                              setState(() { preparePage(); });
+                              Navigator.of(context).pop();
+                            }else{ 
+                            showTopSnackBar(
+                                  Overlay.of(context),
+                                  CustomSnackBar.error(
+                                    backgroundColor: Colors.red.shade700,
+                                    icon: Icon(Icons.sentiment_very_satisfied,
+                                    color: Colors.red.shade900, size: 120),
+                                    message: 'อนุมัติไม่สำเร็จ',
+                                  ),
+                                );
+                              }
+                          }
                         },
                         child: Text(
                           "อนุมัติ",
@@ -811,7 +839,7 @@ class _ApprovePageState extends State<ApprovePage> {
                         fontSize: _fontSize),
                     SizedBox(height: 25),
                     InfoRow(
-                        label: 'เพื่อ:',
+                        label: 'วัตถุประสงค์:',
                         value: entry['objective'],
                         fontSize: _fontSize),
                     SizedBox(height: 25),

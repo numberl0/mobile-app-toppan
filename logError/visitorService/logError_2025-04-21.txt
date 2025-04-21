@@ -1,0 +1,19 @@
+
+[2025-04-21 10:46:26] 
+[Error] type 'Null' is not a subtype of type 'String' 
+[Stack Trace]
+#0      VisitorFormController.prepareLoadForm (package:toppan_app/visitorService/visitor/visitor_controller.dart:211)
+<asynchronous suspension>
+#1      _VisitorFormPageState.prepareForm (package:toppan_app/visitorService/visitor/visitor_view.dart:62)
+<asynchronous suspension>
+
+-------------------
+[2025-04-21 10:46:46] 
+[Error] type 'Null' is not a subtype of type 'String' 
+[Stack Trace]
+#0      VisitorFormController.prepareLoadForm (package:toppan_app/visitorService/visitor/visitor_controller.dart:211)
+<asynchronous suspension>
+#1      _VisitorFormPageState.prepareForm (package:toppan_app/visitorService/visitor/visitor_view.dart:62)
+<asynchronous suspension>
+
+-------------------

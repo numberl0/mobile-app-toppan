@@ -41,27 +41,14 @@ class VisitorServiceCenterController {
   Future<bool> insertFCMToken() async {
     bool status = false;
     try {
+      // Uuid
+      String device_id = await userEntity.getUserPerfer(userEntity.device_id);
 
-      //uuid
-      String devie_id = Uuid().v4();
-      userEntity.setUserPerfer(userEntity.device_id, devie_id);
+      // Device name
+      String device_name = await userEntity.getUserPerfer(userEntity.device_name);
 
       // Username
       String username = await userEntity.getUserPerfer(userEntity.username);
-
-      // Device Name
-      String device_name = '';
-      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-      if(Platform.isAndroid) {
-        AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-        device_name = androidInfo.name;
-      } else if (Platform.isIOS) {
-        IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
-        device_name = iosInfo.utsname.machine;
-      }
-
-      //token
-      String? fcm_token = await FirebaseMessaging.instance.getToken();
 
       //roles
       List<dynamic> rolesRaw = await _model.getRoleByUser(username);
@@ -69,21 +56,24 @@ class VisitorServiceCenterController {
       await userEntity.setUserPerfer(userEntity.roles_visitorService, roleList);
       String roles = (await userEntity.getUserPerfer(userEntity.roles_visitorService)).join(",");
 
+      // FCM Token
+      String fcm_token = await userEntity.getUserPerfer(userEntity.fcm_token);
+
       // Created_at
-      String datetime_now =  DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
+      String createdAt = await userEntity.getUserPerfer(userEntity.created_token_at);
 
       Map<String, dynamic> data = {
-        'device_id': devie_id,
+        'device_id': device_id,
         'device_name': device_name,
         'username': username,
         'roles': roles,
         'fcm_token': fcm_token,
-        'created_at': datetime_now,
+        'last_active': createdAt,
       };
       await _model.insertFCMToken(data);
+      await insertActvityLog('User ${username} login and insert token FCM');  // add log
       status = true;
     } catch (err, stackTrace) {
-      print(err);
       userEntity.clearUserPerfer();
       await logError(err.toString(), stackTrace.toString());
     }

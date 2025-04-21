@@ -163,7 +163,7 @@ class _SearchPageState extends State<SearchPage> {
           
         ),
 
-        SizedBox(height: 10),
+        SizedBox(height: 20),
 
         //Select Company Search
         TextField(
@@ -188,7 +188,7 @@ class _SearchPageState extends State<SearchPage> {
           
         ),
         
-        SizedBox(height: 10),
+        SizedBox(height: 20),
 
         //Select Name Search
         TextField(
@@ -648,7 +648,7 @@ class _SearchPageState extends State<SearchPage> {
                         fontSize: _fontSize),
                     SizedBox(height: 25),
                     InfoRow(
-                        label: 'เพื่อ:',
+                        label: 'วัตถุประสงค์:',
                         value: entry['objective'],
                         fontSize: _fontSize),
                     SizedBox(height: 25),

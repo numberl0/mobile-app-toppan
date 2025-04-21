@@ -2,6 +2,7 @@ import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:toppan_app/loadingDialog.dart';
 import 'package:toppan_app/userEntity.dart';
 import 'package:toppan_app/visitorService/visitorServiceCenter_controller.dart';
@@ -25,6 +26,10 @@ class LoginController {
     try {
       _loadingDialog.show(context);
 
+      // App version
+      final PackageInfo info = await PackageInfo.fromPlatform();
+      await userEntity.setUserPerfer(userEntity.app_version, info.version);
+
       String username = usernameController.text;
       String password = passwordController.text;
       
@@ -40,9 +45,19 @@ class LoginController {
           await userEntity.setUserPerfer(userEntity.username, username);
           await userEntity.setUserPerfer(userEntity.token, token);
 
-          //VisitorService
-          bool loginSuccess = await visitorService();
-          if(loginSuccess) {
+          //generate token FCM
+          await userEntity.generateInfoDeviceToken();
+
+          // List service
+          List<Future<bool>> service = [
+            _controllerVisistorServiceCenter.insertFCMToken(),
+          ];
+
+          List<bool> results = await Future.wait(service);
+          bool allServiceHaveFCMToken = results.every((r) => r == true);
+
+          // check all service have token FCM
+          if(allServiceHaveFCMToken) {
             GoRouter.of(context).push('/home');
           }
         } else {
@@ -58,23 +73,6 @@ class LoginController {
       _loadingDialog.hide();
     }
   }
-
-
-  //VisitorService
-  Future<bool> visitorService() async {
-    bool status = false;
-    try {
-      String username = await userEntity.getUserPerfer(userEntity.username);
-      await _controllerVisistorServiceCenter.insertActvityLog('User ${username} login.');
-      status = await _controllerVisistorServiceCenter.insertFCMToken();
-    } catch (err, stackTrace) {
-      _controllerVisistorServiceCenter.logError(err.toString(), stackTrace.toString());
-    }
-    return status;
-  }
-
-
-
 
   void _showErrorLoginDialog(BuildContext context, String errMsg) {
     AwesomeDialog(
@@ -98,7 +96,8 @@ class LoginController {
     try{
       _loadingDialog.show(context);
 
-      UserEntity userEntity = UserEntity();
+      await userEntity.checkAndClearPrefsOnUpdateApp();
+
       final token = await userEntity.getUserPerfer(userEntity.token);
       
       if (token != null && !JwtDecoder.isExpired(token)) {

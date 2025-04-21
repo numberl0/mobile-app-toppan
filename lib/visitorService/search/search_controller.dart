@@ -7,6 +7,7 @@ import 'package:toppan_app/visitorService/visitorServiceCenter_controller.dart';
 class SearchFormController {
   SearchModule searchModule = SearchModule();
 
+
   VisitorServiceCenterController _controllerServiceCenter = VisitorServiceCenterController();
 
   // List document
@@ -71,4 +72,6 @@ class SearchFormController {
       _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
     }
   }
+
+
 }

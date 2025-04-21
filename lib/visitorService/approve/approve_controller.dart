@@ -140,4 +140,14 @@ class ApproveController {
     return status;
   }
 
+  Future<bool> isAdmin() async {
+    try {
+      List<String> roles = await userEntity.getUserPerfer(userEntity.roles_visitorService);
+      return roles.contains('Administrator');
+    } catch (err, stackTrace) {
+      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      return false;
+    }
+  }
+
 }
