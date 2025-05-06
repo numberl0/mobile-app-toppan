@@ -10,7 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_signaturepad/signaturepad.dart';
-import 'package:toppan_app/loadingDialog.dart';
+import 'package:toppan_app/loading_dialog.dart';
 import 'package:toppan_app/visitorService/employee/employee_model.dart';
 import 'package:toppan_app/visitorService/visitorServiceCenter_controller.dart';
 import 'package:uuid/uuid.dart';
@@ -33,8 +33,10 @@ class EmployeeController {
   TextEditingController objectiveController = TextEditingController();
 
  // Date and time
-  DateTime? flagDate;
-  TextEditingController dateController = TextEditingController();
+  DateTime? flagDateIn;
+  TextEditingController dateInController = TextEditingController();
+  DateTime? flagDateOut;
+  TextEditingController dateOutController = TextEditingController();
   TimeOfDay? flagTimeIn;
   TextEditingController timeInController = TextEditingController();
   TimeOfDay? flagTimeOut;
@@ -55,6 +57,7 @@ class EmployeeController {
     // 'name':
   ];
   
+  bool outOnly = true;
 
   //Storage In / Out Items by Image
   List<File?> imageList_In = [];
@@ -125,8 +128,7 @@ class EmployeeController {
           "${now.second.toString().padLeft(2, '0')}${(now.millisecondsSinceEpoch % 1000).toString().padLeft(3, '0')}";
 
       // Sequence Number
-      Map<String, dynamic> sequenceData =
-          await employeeModel.getSequeceRunning('EMPLOYEE');
+      Map<String, dynamic> sequenceData = await employeeModel.getSequeceRunning('EMPLOYEE');
       sequenceRunning = sequenceData['sequence'];
       sequenceRunning += 1;
       formatSequenceRunning = sequenceRunning.toString().padLeft(6, '0');
@@ -136,16 +138,16 @@ class EmployeeController {
       this.selectedBuilding = this.buildingList[0]['id'];
 
       // Date
-      flagDate = DateTime.now();
-      dateController.text = DateFormat('yyyy-MM-dd').format(flagDate!);
+      flagDateOut = DateTime.now();
+      dateOutController.text = DateFormat('yyyy-MM-dd').format(flagDateOut!);
+      flagDateIn = flagDateOut;
+      dateInController.text = DateFormat('yyyy-MM-dd').format(flagDateIn!);
 
       // Time
-      flagTimeIn = TimeOfDay.now();
-      String formatTime(TimeOfDay time) {
-        String hour = time.hour.toString().padLeft(2, '0');
-        String minute = time.minute.toString().padLeft(2, '0');
-        return "$hour:$minute";
-      }
+      flagTimeOut = TimeOfDay.now();
+      timeOutController.text = formatTime(flagTimeOut!);
+
+      flagTimeIn = flagTimeOut;
       timeInController.text = formatTime(flagTimeIn!);
 
     } catch (err, stackTrace) {
@@ -154,6 +156,12 @@ class EmployeeController {
       await Future.delayed(Duration(seconds: 1));
       _loadingDialog.hide();
     }
+  }
+
+  String formatTime(TimeOfDay time) {
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    return "$hour:$minute";
   }
 
 
@@ -176,15 +184,18 @@ class EmployeeController {
 
       // Building
       buildingList = await employeeModel.getBuilding();
-      if (data['area'] != null) {
-        this.selectedBuilding = buildingList.firstWhere(
-            (building) => building['building_name'] == data['area'])['id'];
-        if (data['area'] == 'O') {
-          otherBuildingController.text =
-              data['area'] != null ? data['area'] : '';
+      var area = data['area'];
+      var card = data['building_card'];
+      if (area != null) {
+        if (card == 'O') {
+          isExpandedBuilding = true;
+          otherBuildingController.text = area;
+          selectedBuilding = buildingList.firstWhere((b) => b['building_card'] == card)['id'];
+        } else {
+          selectedBuilding = buildingList.firstWhere((b) => b['building_name'] == area)['id'];
         }
       } else {
-        this.selectedBuilding = this.buildingList[0]['id'];
+        selectedBuilding = buildingList[0]['id'];
       }
 
       //Map Data
@@ -192,9 +203,13 @@ class EmployeeController {
           data['vehicle_no'] != null ? data['vehicle_no'] : '';
 
       // Date
-      if (data['date'] != null) {
-        flagDate = DateTime.parse(data['date'].toString()).toLocal();
-        dateController.text = DateFormat('yyyy-MM-dd').format(flagDate!);
+      if (data['date_out'] != null) {
+        flagDateOut = DateTime.parse(data['date_out'].toString()).toLocal();
+        dateOutController.text = DateFormat('yyyy-MM-dd').format(flagDateOut!);
+      }
+      if (data['date_in'] != null) {
+        flagDateIn = DateTime.parse(data['date_in'].toString()).toLocal();
+        dateInController.text = DateFormat('yyyy-MM-dd').format(flagDateIn!);
       }
 
       // Time
@@ -217,6 +232,12 @@ class EmployeeController {
       if (data['time_out'] != null) {
         flagTimeOut = parseTime(data['time_out']);
         timeOutController.text = formatTime24(flagTimeOut);
+      }
+
+      if(flagTimeOut != flagTimeIn) {
+        outOnly = false;
+      }else{
+        outOnly = true;
       }
 
       //Map Data
@@ -312,8 +333,7 @@ class EmployeeController {
 
   Future<String> validateUpload() async {
     final fields = {
-      "กรุณาเลือกวันที่": dateController.text,
-      "กรุณาเพิ่มเวลาเข้า": timeInController.text,
+      "กรุณาเลือกวันที่ออก": dateOutController.text,
       "กรุณาเพิ่มเวลาออก": timeOutController.text,
       "กรุณาระบุวัตถุประสงค์ในการเยี่ยมชม": objectiveController.text,
     };
@@ -327,14 +347,26 @@ class EmployeeController {
       scrollToSection(personSectionKey);
       return 'กรุณาเพิ่มรายชื่อลงในเอกสารอย่างน้อย 1 คน';
     }
-     if (isExpandedBuilding && otherBuildingController.text.isEmpty) {
+    if (isExpandedBuilding && otherBuildingController.text.isEmpty) {
       scrollToSection(buildingSectionKey);
       return 'โปรระบุสถานที่';
+    }
+    if (!outOnly && (timeInController.text.isEmpty || dateInController.text.isEmpty)) {
+      return 'ยังไม่ได้เลือกวันเวลาเข้า';
     }
     return '';
   }
 
-   
+  Future<bool> checkDateOutFrist() async {
+    try {
+      final outDate = DateTime(flagDateOut!.year, flagDateOut!.month, flagDateOut!.day);
+      final inDate = DateTime(flagDateIn!.year, flagDateIn!.month, flagDateIn!.day);
+      return !outDate.isAfter(inDate);
+    } catch (err, stackTrace) {
+      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      return false;
+    }
+  }
 
   Future<void> checkBuildingOther() async {
     Map<String, dynamic> buildingData = buildingList
@@ -482,16 +514,16 @@ class EmployeeController {
       //typForm
       String typeForm = 'EMPLOYEE';
 
-      // Date
-      String formattedDate = DateFormat('yyyy-MM-dd').format(flagDate!);
+      // Date in/out
+      var formattedDateOut = flagDateOut != null? DateFormat('yyyy-MM-dd').format(flagDateOut!) : null;
+      var formattedDateIn = flagDateIn != null? DateFormat('yyyy-MM-dd').format(flagDateIn!) : null;
 
       // Time
       String formatTime(TimeOfDay? time) {
         return '${time?.hour.toString().padLeft(2, '0')}:${time?.minute.toString().padLeft(2, '0')}';
       }
-
-      String formattedTimeIn = formatTime(flagTimeIn);
-      String formattedTimeOut = formatTime(flagTimeOut);
+      var formattedTimeOut = flagTimeOut != null? formatTime(flagTimeOut) : null;
+      var formattedTimeIn = flagTimeIn != null? formatTime(flagTimeIn) : null;
 
       // Building selction
       Map<String, dynamic> buildingData = buildingList
@@ -538,8 +570,9 @@ class EmployeeController {
         'sequence_no': formatSequenceRunning,
         'company': 'Toppan edge (thailand) limited.',
         'vehicle_no': vehicleLicenseController.text,
-        'date': formattedDate,
+        'date_in': formattedDateIn,
         'time_in': formattedTimeIn,
+        'date_out': formattedDateOut,
         'time_out': formattedTimeOut,
         'contact': null,
         'dept': null,

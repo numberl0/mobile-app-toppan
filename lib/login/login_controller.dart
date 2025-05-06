@@ -3,16 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:toppan_app/loadingDialog.dart';
+import 'package:toppan_app/loading_dialog.dart';
 import 'package:toppan_app/userEntity.dart';
-import 'package:toppan_app/visitorService/visitorServiceCenter_controller.dart';
 import 'login_module.dart';
 
 class LoginController {
 
   LoginModule loginModel = LoginModule();
-
-  VisitorServiceCenterController _controllerVisistorServiceCenter = VisitorServiceCenterController();
 
   UserEntity userEntity = UserEntity();
 
@@ -45,21 +42,22 @@ class LoginController {
           await userEntity.setUserPerfer(userEntity.username, username);
           await userEntity.setUserPerfer(userEntity.token, token);
 
-          //generate token FCM
-          await userEntity.generateInfoDeviceToken();
+          // //generate token FCM
+          // await userEntity.generateInfoDeviceToken();
 
-          // List service
-          List<Future<bool>> service = [
-            _controllerVisistorServiceCenter.insertFCMToken(),
-          ];
+          // // List service
+          // List<Future<bool>> service = [
+          //   _controllerVisistorServiceCenter.insertFCMToken(),
+          // ];
 
-          List<bool> results = await Future.wait(service);
-          bool allServiceHaveFCMToken = results.every((r) => r == true);
+          // List<bool> results = await Future.wait(service);
+          // bool allServiceHaveFCMToken = results.every((r) => r == true);
 
-          // check all service have token FCM
-          if(allServiceHaveFCMToken) {
-            GoRouter.of(context).push('/home');
-          }
+          // // check all service have token FCM
+          // if(allServiceHaveFCMToken) {
+          //   GoRouter.of(context).push('/home');
+          // }
+          GoRouter.of(context).push('/home');
         } else {
           _showErrorLoginDialog(context, response['err']);
         }
@@ -67,7 +65,8 @@ class LoginController {
         _showErrorLoginDialog(context, "กรุณากรอก username และ password");
       }
     } catch (err, stackTrace) {
-      _controllerVisistorServiceCenter.logError(err.toString(), stackTrace.toString());
+      print(err);
+      print(stackTrace);
     } finally {
       await Future.delayed(Duration(seconds: 1));
       _loadingDialog.hide();
@@ -95,16 +94,17 @@ class LoginController {
   Future<void> isTokenValid(BuildContext context) async {
     try{
       _loadingDialog.show(context);
-
-      await userEntity.checkAndClearPrefsOnUpdateApp();
-
-      final token = await userEntity.getUserPerfer(userEntity.token);
-      
-      if (token != null && !JwtDecoder.isExpired(token)) {
-        GoRouter.of(context).push('/home');
+      bool emptyKeys = await userEntity.isKeysEmpty();
+      if(!emptyKeys){
+        await userEntity.checkAndClearPrefsByVersion();
+        final token = await userEntity.getUserPerfer(userEntity.token);
+          if (token != null && !JwtDecoder.isExpired(token)) {
+            GoRouter.of(context).push('/home');
+          }
       }
     } catch (err, stackTrace) {
-      _controllerVisistorServiceCenter.logError(err.toString(), stackTrace.toString());
+      print(err);
+      print(stackTrace);
     } finally {
       await Future.delayed(Duration(seconds: 2));
       _loadingDialog.hide();

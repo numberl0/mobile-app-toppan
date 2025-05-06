@@ -16,7 +16,7 @@ import 'package:responsive_framework/responsive_framework.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   FirebaseMessage firebaseMessage = FirebaseMessage();
-  firebaseMessage.initNotifications();
+  await firebaseMessage.initNotifications();
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -24,7 +24,7 @@ void main() async {
 
   runApp(
     DevicePreview(
-      enabled: false,    // <--- Preview UI
+      enabled: true,    // <--- Preview UI
       builder: (context) => MyApp(),
     ),
   );

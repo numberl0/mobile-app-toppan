@@ -13,7 +13,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_switch/flutter_switch.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
-import 'package:toppan_app/clearTemporary.dart';
+import 'package:toppan_app/clear_temporary.dart';
+import 'package:toppan_app/config/api_config.dart';
 
 import 'visitor_controller.dart';
 
@@ -34,26 +35,21 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
   VisitorFormController _controller = VisitorFormController();
   Color? _cancelBtnColor = Colors.red[400];
   Color? _acceptBtnColor = Colors.blue[400];
-  double _fontSize = 16.0;
+  double _fontSize = ApiConfig.fontSize;
 
   @override
   void initState() {
     super.initState();
     prepareForm();
-  }
 
-   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (MediaQuery.of(context).size.width > 799) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final screenWidth = MediaQuery.of(context).size.width;
       setState(() {
-        _fontSize = 24.0;
+        if (screenWidth > 799) {
+          _fontSize += 8.0;
+        }
       });
-    }else{
-      setState(() {
-        _fontSize = 16.0;
-      });
-    }
+    });
   }
 
   void prepareForm() async {
@@ -331,42 +327,23 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                     title: 'บริษัท:',
                     hint: '',
                     controller: _controller.companyController,
+                    maxLength: 255,
                   ),
                   SizedBox(height: 15),
 
-                  Row(
-                    children: [
-                      Expanded(
-                        child: InputField(
-                          title: 'เลขทะเบียนรถ:',
-                          hint: '',
-                          controller: _controller.vehicleLicenseController,
-                        ),
-                      ),
-                      SizedBox(
-                        width: 10,
-                      ),
-                      Expanded(
-                        child: InputField(
-                          title: "วันที่:",
-                          hint: "",
-                          controller: _controller.dateController,
-                          widget: IconButton(
-                            icon: Icon(
-                              Icons.calendar_today_outlined,
-                              color: Colors.grey,
-                            ),
-                            onPressed: () async {
-                              _datePicker(context, _controller.flagDate);
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
+                  FractionallySizedBox(
+                    widthFactor: 0.4, // 40% width
+                    alignment: Alignment.centerLeft,
+                    child: InputField(
+                      title: 'เลขทะเบียนรถ:',
+                      hint: '',
+                      controller: _controller.vehicleLicenseController,
+                      maxLength: 24,
+                    ),
                   ),
-                  SizedBox(height: 15),
 
-                  //Time
+                  SizedBox(height: 15),
+                  //Time In
                   Row(
                     children: [
                       Expanded(
@@ -391,6 +368,29 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                       ),
                       Expanded(
                         child: InputField(
+                          title: "วันที่เข้า:",
+                          hint: "",
+                          controller: _controller.dateInController,
+                          widget: IconButton(
+                            icon: Icon(
+                              Icons.calendar_today_outlined,
+                              color: Colors.grey,
+                            ),
+                            onPressed: () async {
+                              _datePicker(context, _controller.flagDateIn, 'in');
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  SizedBox(height: 15),
+                  //Time Out
+                  Row(
+                    children: [
+                      Expanded(
+                        child: InputField(
                           title: "เวลาออก:",
                           hint: "",
                           controller: _controller.timeOutController,
@@ -406,8 +406,28 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                           ),
                         ),
                       ),
+                      SizedBox(
+                        width: 20,
+                      ),
+                      Expanded(
+                        child: InputField(
+                          title: "วันที่ออก:",
+                          hint: "",
+                          controller: _controller.dateOutController,
+                          widget: IconButton(
+                            icon: Icon(
+                              Icons.calendar_today_outlined,
+                              color: Colors.grey,
+                            ),
+                            onPressed: () async {
+                              _datePicker(context, _controller.flagDateOut, 'out');
+                            },
+                          ),
+                        ),
+                      ),
                     ],
                   ),
+
                   SizedBox(height: 15),
 
                   // Contact
@@ -415,6 +435,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                     title: 'ติดต่อ:',
                     hint: '',
                     controller: _controller.contactController,
+                    maxLength: 255,
                   ),
                   SizedBox(height: 15),
 
@@ -423,6 +444,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                     title: 'แผนก:',
                     hint: '',
                     controller: _controller.departmentController,
+                    maxLength: 255,
                   ),
                   SizedBox(height: 15),
 
@@ -432,6 +454,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                     hint: '',
                     controller: _controller.objectiveController,
                     descriptText: true,
+                    maxLength: 400,
                   ),
                   SizedBox(height: 30),
 
@@ -641,11 +664,11 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                   width: 1.5,
                                   style: BorderStyle.solid,
                                 ),
-                                activeColor: Color.fromARGB(255, 0, 216, 72),
+                                activeColor: Colors.green,
                                 inactiveColor:
                                     Color.fromARGB(255, 255, 255, 255),
-                                activeIcon: Icon(Icons.camera_alt),
-                                inactiveIcon: Icon(Icons.view_list),
+                                activeIcon: Icon(Icons.view_list),
+                                inactiveIcon: Icon(Icons.camera_alt),
                                 onToggle: (val) {
                                   AwesomeDialog(
                                     context: context,
@@ -750,8 +773,8 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                               ),
                               Text(
                                 _controller.isSwitchImagePicker
-                                ? "${_controller.imageList_In.length} : ${_controller.imageList_Out.length}"
-                                : "${_controller.listItem_In.length} : ${_controller.listItem_Out.length}",
+                                    ? "${_controller.imageList_In.length} : ${_controller.imageList_Out.length}"
+                                    : "${_controller.listItem_In.length} : ${_controller.listItem_Out.length}",
                                 style: TextStyle(
                                     fontSize: _fontSize,
                                     fontWeight: FontWeight.bold,
@@ -876,6 +899,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                   controller:
                                       _controller.otherBuildingController,
                                   isRequired: true,
+                                  maxLength: 100,
                                 )
                               : SizedBox.shrink(),
                         ),
@@ -953,7 +977,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                 CustomSnackBar.error(
                                   backgroundColor: Colors.red.shade700,
                                   icon: Icon(Icons.sentiment_very_satisfied,
-                                  color: Colors.red.shade900, size: 120),
+                                      color: Colors.red.shade900, size: 120),
                                   message: valiMessage,
                                 ),
                               );
@@ -965,7 +989,9 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                   Overlay.of(context),
                                   CustomSnackBar.success(
                                     backgroundColor: Colors.green.shade500,
-                                    icon: Icon(Icons.sentiment_very_satisfied, color: Colors.green.shade600, size: 120),
+                                    icon: Icon(Icons.sentiment_very_satisfied,
+                                        color: Colors.green.shade600,
+                                        size: 120),
                                     message: "กรอกเอกสารสำเร็จ",
                                   ),
                                 );
@@ -978,7 +1004,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                   CustomSnackBar.error(
                                     backgroundColor: Colors.red.shade700,
                                     icon: Icon(Icons.sentiment_very_satisfied,
-                                    color: Colors.red.shade900, size: 120),
+                                        color: Colors.red.shade900, size: 120),
                                     message: "Upload Error",
                                   ),
                                 );
@@ -1513,9 +1539,12 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                         showTopSnackBar(
                                           Overlay.of(context),
                                           CustomSnackBar.error(
-                                            backgroundColor: Colors.red.shade700,
-                                            icon: Icon(Icons.sentiment_very_satisfied,
-                                            color: Colors.red.shade900, size: 120),
+                                            backgroundColor:
+                                                Colors.red.shade700,
+                                            icon: Icon(
+                                                Icons.sentiment_very_satisfied,
+                                                color: Colors.red.shade900,
+                                                size: 120),
                                             message:
                                                 "กรุณากรอกข้อมูลให้ครบถ้วน",
                                           ),
@@ -2160,7 +2189,8 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                     CustomSnackBar.error(
                                       backgroundColor: Colors.red.shade700,
                                       icon: Icon(Icons.sentiment_very_satisfied,
-                                      color: Colors.red.shade900, size: 120),
+                                          color: Colors.red.shade900,
+                                          size: 120),
                                       message: "กรุณากรอกข้อมูลให้ครบถ้วน",
                                     ),
                                   );
@@ -2443,10 +2473,12 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         ),
-        icon: Icon(Icons.arrow_drop_down,
-            color: Colors.black),
-        style:
-            TextStyle(color: Colors.black, fontSize: _fontSize, height: 1.0,),
+        icon: Icon(Icons.arrow_drop_down, color: Colors.black),
+        style: TextStyle(
+          color: Colors.black,
+          fontSize: _fontSize,
+          height: 1.0,
+        ),
         dropdownColor: Colors.white,
         borderRadius: BorderRadius.circular(15),
         items: titleNameList.map((String item) {
@@ -2455,7 +2487,6 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
             child: Text(item),
           );
         }).toList(),
-
         onChanged: (String? newValue) {
           setState(() {
             _controller.titleNameController.text = newValue!;
@@ -2466,7 +2497,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
   }
 
   //visitor list generate by widget
-  Widget  personListGenerate() {
+  Widget personListGenerate() {
     return _controller.personList.isNotEmpty
         ? Column(
             children: _controller.personList.map((entry) {
@@ -2687,12 +2718,10 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
             FocusManager.instance.primaryFocus?.unfocus();
           },
           child: MediaQuery(
-            data: MediaQuery.of(context)
-                .copyWith(viewInsets: EdgeInsets.zero),
+            data: MediaQuery.of(context).copyWith(viewInsets: EdgeInsets.zero),
             child: Dialog(
               shape: RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(24),
               ),
               child: Container(
                 constraints: BoxConstraints(
@@ -2708,8 +2737,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                           width: double.infinity,
                           padding: EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color:
-                                Colors.green,
+                            color: Colors.green,
                             borderRadius:
                                 BorderRadius.vertical(top: Radius.circular(24)),
                           ),
@@ -2787,7 +2815,8 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                     CustomSnackBar.error(
                                       backgroundColor: Colors.red.shade700,
                                       icon: Icon(Icons.sentiment_very_satisfied,
-                                      color: Colors.red.shade900, size: 120),
+                                          color: Colors.red.shade900,
+                                          size: 120),
                                       message: 'กรุณากรอกชื่อสิ่งของ',
                                     ),
                                   );
@@ -2840,12 +2869,10 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
             FocusManager.instance.primaryFocus?.unfocus();
           },
           child: MediaQuery(
-            data: MediaQuery.of(context)
-                .copyWith(viewInsets: EdgeInsets.zero),
+            data: MediaQuery.of(context).copyWith(viewInsets: EdgeInsets.zero),
             child: Dialog(
               shape: RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(24),
               ),
               child: Container(
                 constraints: BoxConstraints(
@@ -2940,7 +2967,8 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                     CustomSnackBar.error(
                                       backgroundColor: Colors.red.shade700,
                                       icon: Icon(Icons.sentiment_very_satisfied,
-                                      color: Colors.red.shade900, size: 120),
+                                          color: Colors.red.shade900,
+                                          size: 120),
                                       message: 'กรุณากรอกชื่อสิ่งของ',
                                     ),
                                   );
@@ -2989,7 +3017,8 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
       builder: (BuildContext context, Widget? child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(
-            textScaler: TextScaler.linear(MediaQuery.of(context).size.width > 799? 1.5 : 1.0),
+            textScaler: TextScaler.linear(
+                MediaQuery.of(context).size.width > 799 ? 1.5 : 1.0),
           ),
           child: Theme(
             data: ThemeData.light().copyWith(
@@ -3022,7 +3051,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
   }
 
   //Function Date Picker
-  Future<void> _datePicker(BuildContext context, DateTime? _date) async {
+  Future<void> _datePicker(BuildContext context, DateTime? _date, String type) async {
     DateTime initialDate = DateTime.now();
     DateTime? _pickerDate = await showDatePicker(
         context: context,
@@ -3032,7 +3061,8 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
         builder: (BuildContext context, Widget? child) {
           return MediaQuery(
             data: MediaQuery.of(context).copyWith(
-              textScaler: TextScaler.linear(MediaQuery.of(context).size.width > 799? 1.5 : 1.0),
+              textScaler: TextScaler.linear(
+                  MediaQuery.of(context).size.width > 799 ? 1.5 : 1.0),
             ),
             child: Theme(
               data: ThemeData.light().copyWith(
@@ -3051,12 +3081,39 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
 
     if (_pickerDate != null) {
       initialDate = _pickerDate;
+      initialDate = _pickerDate;
       setState(() {
-        _controller.flagDate = initialDate;
-        _controller.dateController.text =
-            DateFormat('yyyy-MM-dd').format(initialDate);
+        if(type == 'out'){
+          _controller.flagDateOut = initialDate;
+          _controller.dateOutController.text = DateFormat('yyyy-MM-dd').format(initialDate);
+        }else if (type == 'in') {
+          _controller.flagDateIn = initialDate;
+          _controller.dateInController.text = DateFormat('yyyy-MM-dd').format(initialDate);
+        }
       });
-    } else {}
+      
+      if(_controller.flagDateOut != null && _controller.flagDateIn != null) {
+        bool checkInFrist = await _controller.checkDateInFrist();
+        if (!checkInFrist) {
+          showTopSnackBar(
+            Overlay.of(context),
+            CustomSnackBar.error(
+              backgroundColor: Colors.red.shade700,
+              icon: Icon(Icons.sentiment_very_satisfied,
+                  color: Colors.red.shade900, size: 120),
+              message: "วันที่ออกต้องมากกว่าวันที่เข้าเสมอ",
+            ),
+          );
+          if(type == 'out'){
+            _controller.flagDateOut = null;
+            _controller.dateOutController.text = '';
+          }else if (type == 'in') {
+            _controller.flagDateIn = null;
+            _controller.dateInController.text = '';
+          }
+        }
+      }
+    }
   }
 
   //Image Function
@@ -3200,6 +3257,7 @@ class InputField extends StatefulWidget {
   final Widget? widget;
   final bool? descriptText;
   final bool isRequired;
+  final int? maxLength;
 
   const InputField({
     Key? key,
@@ -3209,6 +3267,7 @@ class InputField extends StatefulWidget {
     this.widget,
     this.descriptText,
     this.isRequired = false,
+    this.maxLength,
   }) : super(key: key);
 
   @override
@@ -3217,27 +3276,23 @@ class InputField extends StatefulWidget {
 
 class _InputFieldState extends State<InputField> {
   bool _isError = false;
-  double _fontSize = 16.0;
+  double _fontSize = ApiConfig.fontSize;
 
   @override
   void initState() {
     super.initState();
     _validateInput();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final screenWidth = MediaQuery.of(context).size.width;
+      setState(() {
+        if (screenWidth > 799) {
+          _fontSize += 8.0;
+        }
+      });
+    });
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (MediaQuery.of(context).size.width > 799) {
-      setState(() {
-        _fontSize = 20.0;
-      });
-    }else{
-      setState(() {
-        _fontSize = 16.0;
-      });
-    }
-  }
 
   void _validateInput() {
     if (widget.isRequired) {
@@ -3278,17 +3333,18 @@ class _InputFieldState extends State<InputField> {
               children: [
                 Expanded(
                   child: TextFormField(
+                    inputFormatters: widget.maxLength != null
+                    ? [LengthLimitingTextInputFormatter(widget.maxLength)]
+                    : [LengthLimitingTextInputFormatter(100)],
                     onChanged: (value) => _validateInput(),
-                    onEditingComplete: () {
-                      FocusScope.of(context)
-                          .unfocus(); // Also remove focus on enter
-                    },
+                    onEditingComplete: () => FocusScope.of(context).unfocus(),
                     cursorColor: Colors.green.shade600,
                     readOnly: widget.widget != null,
                     autofocus: false,
                     controller: widget.controller,
                     maxLines: null,
-                    minLines: 1,
+                    minLines: widget.descriptText == true ? null : 1,
+                    expands: widget.descriptText == true,
                     decoration: InputDecoration(
                       hintText: widget.hint,
                       border: InputBorder.none,

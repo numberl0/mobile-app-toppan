@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
+import 'package:toppan_app/config/api_config.dart';
 import 'package:toppan_app/visitorService/approve/approve_controller.dart';
 
 class ApproveView {
@@ -23,7 +24,7 @@ class _ApprovePageState extends State<ApprovePage> {
 
   ApproveController _controller = ApproveController();
 
-  double _fontSize = 16.0;
+  double _fontSize = ApiConfig.fontSize;
 
   @override
   void initState() {
@@ -34,20 +35,14 @@ class _ApprovePageState extends State<ApprovePage> {
         _controller.startAnimation = true;
       });
     });
-  }
-
-   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (MediaQuery.of(context).size.width > 799) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final screenWidth = MediaQuery.of(context).size.width;
       setState(() {
-        _fontSize = 20.0;
+        if (screenWidth > 799) {
+          _fontSize += 8.0;
+        }
       });
-    }else{
-      setState(() {
-        _fontSize = 16.0;
-      });
-    }
+    });
   }
 
   void preparePage() async {
@@ -408,16 +403,19 @@ class _ApprovePageState extends State<ApprovePage> {
   Widget itemForm(int index, Map<String, dynamic> entry) {
     // Color
     Color borderColor = Colors.black;
-    if (entry['request_type'] == 'VISITOR' ) {
-      borderColor = Colors.green; // Green for visitors
-    } else if (entry['request_type'] == 'EMPLOYEE') {
-      borderColor = Colors.orange; // Orange for employees
-    }
-    // Time ranges
-    String timeRanges = entry['time_in'].substring(0, 5) + ' ถึง ' + entry['time_out'].substring(0, 5);
+    String timeRanges = '';
     // DateTime
     initializeDateThaiFormatting();
-    String formattedDate = DateFormat("d MMMM yyyy", "th_TH").format(DateTime.parse(entry['date']).toLocal());
+    String formattedDateIn = '';
+    if (entry['request_type'] == 'VISITOR' ) {
+      borderColor = Colors.green; // Green for visitors
+      timeRanges = entry['time_in'].substring(0, 5) + ' ถึง ' + entry['time_out'].substring(0, 5);
+      formattedDateIn = DateFormat("d MMMM yyyy", "th_TH").format(DateTime.parse(entry['date_in']).toLocal());
+    } else if (entry['request_type'] == 'EMPLOYEE') {
+      borderColor = Colors.orange; // Orange for employees
+      timeRanges = entry['time_out'].substring(0, 5) + ' ถึง ' + entry['time_in'].substring(0, 5);
+      formattedDateIn = DateFormat("d MMMM yyyy", "th_TH").format(DateTime.parse(entry['date_out']).toLocal());
+    }
 
     double screenWidth = MediaQuery.of(context).size.width;
     return AnimatedContainer(
@@ -567,7 +565,7 @@ class _ApprovePageState extends State<ApprovePage> {
                                         crossAxisAlignment: CrossAxisAlignment.center,
                                         children: [
                                             Text(
-                                              'วันที่: ${formattedDate}',
+                                              'วันที่: ${formattedDateIn}',
                                               style: TextStyle(
                                                   fontSize: _fontSize,
                                                   color: Colors.black,
@@ -591,7 +589,7 @@ class _ApprovePageState extends State<ApprovePage> {
                                       )
                                   ]else ...[
                                     Text(
-                                      'วันที่: ${formattedDate}',
+                                      'วันที่: ${formattedDateIn}',
                                       style: TextStyle(
                                           fontSize: _fontSize,
                                           color: Colors.black,
@@ -832,10 +830,16 @@ class _ApprovePageState extends State<ApprovePage> {
                         value: objectiveType,
                         fontSize: _fontSize),
                     SizedBox(height: 25),
-                    InfoRow(
-                        label: 'วันที่:',
+                     InfoRow(
+                        label: 'วันเวลาที่ออก:',
                         value: DateFormat("d MMMM yyyy", "th_TH")
-                            .format(DateTime.parse(entry['date']).toLocal()),
+                            .format(DateTime.parse(entry['date_out']).toLocal()) + '     ' + entry['time_out'].substring(0, 5) + ' น.',
+                        fontSize: _fontSize),
+                    SizedBox(height: 25),
+                    InfoRow(
+                        label: 'วันเวลาที่กลับ:',
+                        value: DateFormat("d MMMM yyyy", "th_TH")
+                            .format(DateTime.parse(entry['date_in']).toLocal()) + '     ' + entry['time_in'].substring(0, 5) + ' น.',
                         fontSize: _fontSize),
                     SizedBox(height: 25),
                     InfoRow(
@@ -856,19 +860,15 @@ class _ApprovePageState extends State<ApprovePage> {
                         fontSize: _fontSize),
                     SizedBox(height: 25),
                     InfoRow(
-                        label: 'วันที่:',
+                        label: 'วันเวลาที่เข้า:',
                         value: DateFormat("d MMMM yyyy", "th_TH")
-                            .format(DateTime.parse(entry['date']).toLocal()),
+                            .format(DateTime.parse(entry['date_in']).toLocal()) + '     ' + entry['time_in'].substring(0, 5) + ' น.',
                         fontSize: _fontSize),
                     SizedBox(height: 25),
                     InfoRow(
-                        label: 'เวลาเข้า:',
-                        value: entry['time_in'].substring(0, 5) + ' น.',
-                        fontSize: _fontSize),
-                    SizedBox(height: 25),
-                    InfoRow(
-                        label: 'เวลาออก:',
-                        value: entry['time_out'].substring(0, 5) + ' น.',
+                        label: 'วันเวลาที่ออก:',
+                        value: DateFormat("d MMMM yyyy", "th_TH")
+                            .format(DateTime.parse(entry['date_out']).toLocal()) + '     ' + entry['time_out'].substring(0, 5) + ' น.',
                         fontSize: _fontSize),
                     SizedBox(height: 25),
                     InfoRow(

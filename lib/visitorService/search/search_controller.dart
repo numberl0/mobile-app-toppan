@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:toppan_app/loadingDialog.dart';
+import 'package:toppan_app/loading_dialog.dart';
 import 'package:toppan_app/visitorService/search/search_model.dart';
 import 'package:toppan_app/visitorService/visitorServiceCenter_controller.dart';
 

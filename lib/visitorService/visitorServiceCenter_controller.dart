@@ -23,6 +23,7 @@ class VisitorServiceCenterController {
       Map<String, dynamic> data = {
           "log_date": formattedDate,
           "action": action,
+          "device_id": await userEntity.getUserPerfer(userEntity.device_id),
           "username": await userEntity.getUserPerfer(userEntity.username),
       };
       await _model.insertActivityLog(data);
@@ -75,6 +76,28 @@ class VisitorServiceCenterController {
       status = true;
     } catch (err, stackTrace) {
       userEntity.clearUserPerfer();
+      await logError(err.toString(), stackTrace.toString());
+    }
+    return status;
+  }
+
+  Future<void> updateActiveFCM() async {
+    try {
+      String deviceId = await userEntity.getUserPerfer(userEntity.device_id);
+      String formatDateTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
+      await userEntity.setUserPerfer(userEntity.created_token_at, formatDateTime);
+      _model.activeFCM_TOKEN(deviceId, formatDateTime);
+    } catch (err, stackTrace) {
+      await logError(err.toString(), stackTrace.toString());
+    }
+  }
+
+  Future<bool> checkFCMToken() async {
+    bool status = false;
+    try{
+      String deviceId = await userEntity.getUserPerfer(userEntity.device_id);
+      status = await _model.checkRecordFCM(deviceId);
+    } catch (err, stackTrace) {
       await logError(err.toString(), stackTrace.toString());
     }
     return status;

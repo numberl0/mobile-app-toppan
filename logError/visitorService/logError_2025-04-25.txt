@@ -1,0 +1,12 @@
+
+[2025-04-25 15:14:56] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"FCM Token not found."} 
+[Stack Trace]
+#0      VisitorServiceCenterModel.deleteFCMToken (package:toppan_app/visitorService/visitorServiceCenter_model.dart:178:7)
+<asynchronous suspension>
+#1      HomeController.logout (package:toppan_app/home/home_controller.dart:90:7)
+<asynchronous suspension>
+#2      _HomePageState.build.<anonymous closure>.<anonymous closure> (package:toppan_app/home/home_view.dart:180:37)
+<asynchronous suspension>
+
+-------------------

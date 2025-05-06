@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
-import 'package:toppan_app/clearTemporary.dart';
+import 'package:toppan_app/clear_temporary.dart';
+import 'package:toppan_app/config/api_config.dart';
 
 import 'search_controller.dart';
 
@@ -22,7 +23,7 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
 
   Cleartemporary cleartemporary = Cleartemporary();
-  double _fontSize = 16.0;
+  double _fontSize = ApiConfig.fontSize;
 
   SearchFormController _controller = SearchFormController();
 
@@ -35,20 +36,14 @@ class _SearchPageState extends State<SearchPage> {
         _controller.startAnimation = true;
       });
     });
-  }
-
-   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (MediaQuery.of(context).size.width > 799) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final screenWidth = MediaQuery.of(context).size.width;
       setState(() {
-        _fontSize = 20.0;
+        if (screenWidth > 799) {
+          _fontSize += 8.0;
+        }
       });
-    }else{
-      setState(() {
-        _fontSize = 16.0;
-      });
-    }
+    });
   }
 
   void preparePage() async {
@@ -221,7 +216,19 @@ class _SearchPageState extends State<SearchPage> {
   Widget listForm() {
     final ScrollController controller = ScrollController();
     return Expanded(
-      child: ScrollConfiguration(
+      child:  _controller.filteredDocument.isEmpty
+        ? SingleChildScrollView(
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.4, // Adjust height dynamically
+              child: Center(
+                child: Text(
+                  '-------- ยังไม่มีรายการในตอนนี้ --------',
+                  style: TextStyle(fontSize: 18, color: Colors.grey.shade300),
+                ),
+              ),
+            ),
+          )
+      : ScrollConfiguration(
         behavior: ScrollConfiguration.of(context).copyWith(
           dragDevices: {
             PointerDeviceKind.touch,
@@ -250,16 +257,20 @@ class _SearchPageState extends State<SearchPage> {
   Widget itemForm(int index, Map<String, dynamic> entry) {
     // Color
     Color borderColor = Colors.black;
-    if (entry['request_type'] == 'VISITOR' ) {
-      borderColor = Colors.green; // Green for visitors
-    } else if (entry['request_type'] == 'EMPLOYEE') {
-      borderColor = Colors.orange; // Orange for employees
-    }
-    // Time ranges
-    String timeRanges = entry['time_in'].substring(0, 5) + ' ถึง ' + entry['time_out'].substring(0, 5);
+    String timeRanges = '';
+    String formattedDateIn = '';
     // DateTime
     initializeDateThaiFormatting();
-    String formattedDate = DateFormat("d MMMM yyyy", "th_TH").format(DateTime.parse(entry['date']).toLocal());
+    if (entry['request_type'] == 'VISITOR' ) {
+      borderColor = Colors.green; // Green for visitors
+      timeRanges = entry['time_in'].substring(0, 5) + ' ถึง ' + entry['time_out'].substring(0, 5);
+      formattedDateIn = DateFormat("d MMMM yyyy", "th_TH").format(DateTime.parse(entry['date_in']).toLocal());
+    } else if (entry['request_type'] == 'EMPLOYEE') {
+      borderColor = Colors.orange; // Orange for employees
+      timeRanges = entry['time_out'].substring(0, 5) + ' ถึง ' + entry['time_in'].substring(0, 5);
+      formattedDateIn = DateFormat("d MMMM yyyy", "th_TH").format(DateTime.parse(entry['date_out']).toLocal());
+    }
+    
 
     double screenWidth = MediaQuery.of(context).size.width;
     return AnimatedContainer(
@@ -413,7 +424,7 @@ class _SearchPageState extends State<SearchPage> {
                                         crossAxisAlignment: CrossAxisAlignment.center,
                                         children: [
                                             Text(
-                                              'วันที่: ${formattedDate}',
+                                              'วันที่: ${formattedDateIn}',
                                               style: TextStyle(
                                                   fontSize: _fontSize,
                                                   color: Colors.black,
@@ -439,7 +450,7 @@ class _SearchPageState extends State<SearchPage> {
                                       )
                                   ]else ...[
                                     Text(
-                                      'วันที่: ${formattedDate}',
+                                      'วันที่: ${formattedDateIn}',
                                       style: TextStyle(
                                           fontSize: _fontSize,
                                           color: Colors.black,
@@ -642,9 +653,15 @@ class _SearchPageState extends State<SearchPage> {
                         fontSize: _fontSize),
                     SizedBox(height: 25),
                     InfoRow(
-                        label: 'วันที่:',
+                        label: 'วันเวลาที่ออก:',
                         value: DateFormat("d MMMM yyyy", "th_TH")
-                            .format(DateTime.parse(entry['date']).toLocal()),
+                            .format(DateTime.parse(entry['date_out']).toLocal()) + '     ' + entry['time_out'].substring(0, 5) + ' น.',
+                        fontSize: _fontSize),
+                    SizedBox(height: 25),
+                    InfoRow(
+                        label: 'วันเวลาที่กลับ:',
+                        value: DateFormat("d MMMM yyyy", "th_TH")
+                            .format(DateTime.parse(entry['date_in']).toLocal()) + '     ' + entry['time_in'].substring(0, 5) + ' น.',
                         fontSize: _fontSize),
                     SizedBox(height: 25),
                     InfoRow(
@@ -665,19 +682,15 @@ class _SearchPageState extends State<SearchPage> {
                         fontSize: _fontSize),
                     SizedBox(height: 25),
                     InfoRow(
-                        label: 'วันที่:',
+                        label: 'วันเวลาที่เข้า:',
                         value: DateFormat("d MMMM yyyy", "th_TH")
-                            .format(DateTime.parse(entry['date']).toLocal()),
+                            .format(DateTime.parse(entry['date_in']).toLocal()) + '     ' + entry['time_in'].substring(0, 5) + ' น.',
                         fontSize: _fontSize),
                     SizedBox(height: 25),
                     InfoRow(
-                        label: 'เวลาเข้า:',
-                        value: entry['time_in'].substring(0, 5) + ' น.',
-                        fontSize: _fontSize),
-                    SizedBox(height: 25),
-                    InfoRow(
-                        label: 'เวลาออก:',
-                        value: entry['time_out'].substring(0, 5) + ' น.',
+                        label: 'วันเวลาที่ออก:',
+                        value: DateFormat("d MMMM yyyy", "th_TH")
+                            .format(DateTime.parse(entry['date_out']).toLocal()) + '     ' + entry['time_out'].substring(0, 5) + ' น.',
                         fontSize: _fontSize),
                     SizedBox(height: 25),
                     InfoRow(

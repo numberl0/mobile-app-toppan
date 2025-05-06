@@ -11,4 +11,6 @@ class ApiConfig {
 
   static const String authPipe  = 'auth';
   static const String visitorPipe = 'visitor';
+
+  static const double fontSize = 16.0;
 }

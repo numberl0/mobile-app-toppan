@@ -77,31 +77,4 @@ class HomeModel {
     return data;
   }
 
-  Future<void> deleteFCMToken(String device_id) async {
-    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/deleteFCMToken');
-    String token = await userEntity.getUserPerfer(userEntity.token);
-    try{
-      final response = await http.delete(
-        url,
-        headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${token}',
-        },
-         body: jsonEncode({ 
-        "device_id": device_id,
-      }),
-      ).timeout(
-        Duration(seconds: 10),
-        onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
-      );
-      if(response.statusCode >= 200 && response.statusCode <= 299) {
-        print("[SUCCESS] FCM Token deleted successfully");
-      }else{
-        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
-      }
-    } catch (err) {
-      throw err;
-    }
-  }
-
 }

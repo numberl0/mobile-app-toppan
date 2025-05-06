@@ -121,4 +121,88 @@ class VisitorServiceCenterModel {
       throw err;
     }
    }
+
+   Future<void> activeFCM_TOKEN(String deviceId, String dateTimeNow) async {
+    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/updateLastActiveFCMToken');
+    String token = await userEntity.getUserPerfer(userEntity.token);
+    try {
+      final response = await http.post(
+        url,
+        headers: 
+        {
+          'Authorization': 'Bearer ${token}',
+          'Content-Type': 'application/json'
+        },
+        body: jsonEncode({
+          'device_id': deviceId,
+          'last_active': dateTimeNow
+        }),
+      ).timeout(
+        Duration(seconds: 10),
+        onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
+      );
+      if (response.statusCode >= 200 && response.statusCode <= 299) {
+        print("[SUCCESS] Update Active FCM Token Successfully");
+      } else {
+        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
+      }
+    } catch (err) {
+      print("[ERROR] Failed to Update Active FCM Token: $err");
+      throw err;
+    }
+   }
+
+   Future<void> deleteFCMToken(String device_id) async {
+    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/deleteFCMToken');
+    String token = await userEntity.getUserPerfer(userEntity.token);
+    try{
+      final response = await http.delete(
+        url,
+        headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${token}',
+        },
+         body: jsonEncode({ 
+        "device_id": device_id,
+      }),
+      ).timeout(
+        Duration(seconds: 10),
+        onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
+      );
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
+        print("[SUCCESS] FCM Token deleted successfully");
+      }else{
+        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
+      }
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  Future<bool> checkRecordFCM(String device_id) async {
+    bool status = false;
+    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/checkRecordFCM' + '?device_id=${Uri.encodeComponent(device_id)}');
+    String token = await userEntity.getUserPerfer(userEntity.token);
+    try{
+      final response = await http.get(
+        url,
+        headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${token}',
+        },
+      ).timeout(
+        Duration(seconds: 10),
+        onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
+      );
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
+        final data = jsonDecode(response.body);
+        status = data['data'];
+      }else{
+        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
+      }
+    } catch (err) {
+      throw err;
+    }
+    return status;
+  }
 }

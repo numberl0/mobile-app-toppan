@@ -8,8 +8,8 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_signaturepad/signaturepad.dart';
-import 'package:toppan_app/clearTemporary.dart';
-import 'package:toppan_app/loadingDialog.dart';
+import 'package:toppan_app/clear_temporary.dart';
+import 'package:toppan_app/loading_dialog.dart';
 import 'package:toppan_app/userEntity.dart';
 import 'package:toppan_app/visitorService/visitor/visitor_model.dart';
 import 'package:toppan_app/visitorService/visitorServiceCenter_controller.dart';
@@ -37,8 +37,10 @@ class VisitorFormController {
   TextEditingController vehicleLicenseController = TextEditingController();
 
   // Date and time
-  DateTime? flagDate;
-  TextEditingController dateController = TextEditingController();
+  DateTime? flagDateIn;
+  TextEditingController dateInController = TextEditingController();
+  DateTime? flagDateOut;
+  TextEditingController dateOutController = TextEditingController();
   TimeOfDay? flagTimeIn;
   TextEditingController timeInController = TextEditingController();
   TimeOfDay? flagTimeOut;
@@ -116,7 +118,8 @@ class VisitorFormController {
   Future<String> validateUpload() async {
     final fields = {
       "กรุณาใส่ชื่อบริษัท": companyController.text,
-      "กรุณาเลือกวันที่": dateController.text,
+      "กรุณาเลือกวันที่เข้า": dateInController.text,
+      "กรุณาเลือกวันที่ออก": dateOutController.text,
       "กรุณาเพิ่มเวลาเข้า": timeInController.text,
       "กรุณาเพิ่มเวลาออก": timeOutController.text,
       "กรุณาใส่ข้อมูลผู้ติดต่อ": contactController.text,
@@ -171,9 +174,9 @@ class VisitorFormController {
       buildingList = await visitorformModule.getBuilding();
       this.selectedBuilding = this.buildingList[0]['id'];
 
-      // Date
-      flagDate = DateTime.now();
-      dateController.text = DateFormat('yyyy-MM-dd').format(flagDate!);
+      // Date In
+      flagDateIn = DateTime.now();    //new form set only date_in
+      dateInController.text = DateFormat('yyyy-MM-dd').format(flagDateIn!);
 
       // Time
       flagTimeIn = TimeOfDay.now();
@@ -217,15 +220,18 @@ class VisitorFormController {
 
       // Building
       buildingList = await visitorformModule.getBuilding();
-      if (data['area'] != null) {
-        this.selectedBuilding = buildingList.firstWhere(
-            (building) => building['building_name'] == data['area'])['id'];
-        if (data['area'] == 'O') {
-          otherBuildingController.text =
-              data['area'] != null ? data['area'] : '';
+      var area = data['area'];
+      var card = data['building_card'];
+      if (area != null) {
+        if (card == 'O') {
+          isExpandedBuilding = true;
+          otherBuildingController.text = area;
+          selectedBuilding = buildingList.firstWhere((b) => b['building_card'] == card)['id'];
+        } else {
+          selectedBuilding = buildingList.firstWhere((b) => b['building_name'] == area)['id'];
         }
       } else {
-        this.selectedBuilding = this.buildingList[0]['id'];
+        selectedBuilding = buildingList[0]['id'];
       }
 
       //Map Data
@@ -234,9 +240,13 @@ class VisitorFormController {
           data['vehicle_no'] != null ? data['vehicle_no'] : '';
 
       // Date
-      if (data['date'] != null) {
-        flagDate = DateTime.parse(data['date'].toString()).toLocal();
-        dateController.text = DateFormat('yyyy-MM-dd').format(flagDate!);
+      if (data['date_in'] != null) {
+        flagDateIn = DateTime.parse(data['date_in'].toString()).toLocal();
+        dateInController.text = DateFormat('yyyy-MM-dd').format(flagDateIn!);
+      }
+      if (data['date_out'] != null) {
+        flagDateOut = DateTime.parse(data['date_out'].toString()).toLocal();
+        dateOutController.text = DateFormat('yyyy-MM-dd').format(flagDateOut!);
       }
 
       // Time
@@ -445,6 +455,17 @@ class VisitorFormController {
     }
   }
 
+  Future<bool> checkDateInFrist() async {
+    try {
+      final outDate = DateTime(flagDateOut!.year, flagDateOut!.month, flagDateOut!.day);
+      final inDate = DateTime(flagDateIn!.year, flagDateIn!.month, flagDateIn!.day);
+      return !inDate.isAfter(outDate);
+    } catch (err, stackTrace) {
+      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      return false;
+    }
+  }
+
   //------------------------------ Upload Form --------------------------------------------//
 
   Future<bool> uploadVisitorForm() async {
@@ -556,7 +577,8 @@ class VisitorFormController {
       String typeForm = 'VISITOR';
 
       // Date
-      String formattedDate = DateFormat('yyyy-MM-dd').format(flagDate!);
+      String formattedDateIn = DateFormat('yyyy-MM-dd').format(flagDateIn!);
+      String formattedDateOut = DateFormat('yyyy-MM-dd').format(flagDateOut!);
 
       // Time
       String formatTime(TimeOfDay? time) {
@@ -598,8 +620,9 @@ class VisitorFormController {
         'sequence_no': formatSequenceRunning,
         'company': companyController.text,
         'vehicle_no': vehicleLicenseController.text,
-        'date': formattedDate,
+        'date_in': formattedDateIn,
         'time_in': formattedTimeIn,
+        'date_out': formattedDateOut,
         'time_out': formattedTimeOut,
         'contact': contactController.text,
         'dept': departmentController.text,
@@ -613,8 +636,7 @@ class VisitorFormController {
         'empSign_by': null,
         'approved_status': apprSign[0],
         'approved_sign': apprSign[1],
-        'approved_datetime':
-            apprSign[2] != null ? apprSign[2].toString() : null,
+        'approved_datetime': apprSign[2] != null ? apprSign[2].toString() : null,
         'approved_by': apprSign[3],
         'media_status': mediaSign[0],
         'media_sign': mediaSign[1],

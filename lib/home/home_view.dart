@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
-import 'package:toppan_app/clearTemporary.dart';
+import 'package:toppan_app/clear_temporary.dart';
+import 'package:toppan_app/config/api_config.dart';
 import 'package:toppan_app/home/home_controller.dart';
 import 'package:toppan_app/service_manager.dart';
 
@@ -22,30 +23,22 @@ class _HomePageState extends State<HomePage> {
 
   Cleartemporary cleartemporary = Cleartemporary();
 
-  double _fontSize = 16.0;
-  
+  double _fontSize = ApiConfig.fontSize; 
 
   @override
   void initState() {
     super.initState();
-    checkConnection();
+    preparePage();
     clearTemp();
-  }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (MediaQuery.of(context).size.width > 799) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final screenWidth = MediaQuery.of(context).size.width;
       setState(() {
-        _controller.screenWidth = MediaQuery.of(context).size.width;
-        _fontSize = 24.0;
+        if (screenWidth > 799) {
+          _fontSize += 8.0;
+        }
       });
-    }else{
-      setState(() {
-        _controller.screenWidth = MediaQuery.of(context).size.width;
-        _fontSize = 16.0;
-      });
-    }
+    });
   }
 
   void clearTemp() async {
@@ -56,10 +49,11 @@ class _HomePageState extends State<HomePage> {
     await cleartemporary.listCacheFiles();
   }
 
-  void checkConnection() async {
-    await _controller.checkConnectionAllService(context);
+  void preparePage() async {
+    await _controller.preparePage(context);
     setState(() {});
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -227,7 +221,8 @@ class _HomePageState extends State<HomePage> {
 
   Widget page(BuildContext context) {
     final ScrollController scrollController = ScrollController();
-
+    double screenWidth = MediaQuery.of(context).size.width;
+    double paddingHorizontal = screenWidth * 0.07;
     return Center(
     child: LayoutBuilder(
       builder: (context, constraints) {
@@ -245,22 +240,25 @@ class _HomePageState extends State<HomePage> {
                   ),
                   child: SingleChildScrollView(
                     controller: scrollController,
-                    child: Center( // Ensures GridView is centered
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.95),
-                        child: GridView.builder(
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: constraints.maxWidth > 799 ? 3 : 2,
-                            childAspectRatio: 0.9,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(paddingHorizontal, 16, paddingHorizontal, 16),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.95),
+                          child: GridView.builder(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: constraints.maxWidth > 799 ? 2 : 2,
+                              childAspectRatio: 0.9,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                            ),
+                            itemCount: _controller.serviceList.length,
+                            itemBuilder: (context, index) {
+                              return buildService(context, _controller.serviceList[index]);
+                            },
                           ),
-                          itemCount: _controller.serviceList.length,
-                          itemBuilder: (context, index) {
-                            return buildService(context, _controller.serviceList[index]);
-                          },
                         ),
                       ),
                     ),
@@ -274,7 +272,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget buildService(BuildContext context, ServiceEntity data) {
     int imageLengthControl = 2;
-    if(MediaQuery.of(context).size.width > 799 || _controller.servicesStatus.length <= 2) {
+    if(MediaQuery.of(context).size.width > 799 && _controller.servicesStatus.length <= 2) {
         imageLengthControl = 1;
     }
     return Stack(

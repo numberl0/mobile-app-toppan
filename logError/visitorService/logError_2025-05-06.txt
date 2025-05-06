@@ -1,0 +1,14 @@
+
+[2025-05-06 09:14:54] 
+[Error] type 'Null' is not a subtype of type 'String' 
+[Stack Trace]
+#0      VisitorServiceCenterController.updateActiveFCM (package:toppan_app/visitorService/visitorServiceCenter_controller.dart:86:14)
+<asynchronous suspension>
+#1      HomeController.checkConnectionService (package:toppan_app/home/home_controller.dart:68:7)
+<asynchronous suspension>
+#2      HomeController.preparePage (package:toppan_app/home/home_controller.dart:28:7)
+<asynchronous suspension>
+#3      _HomePageState.preparePage (package:toppan_app/home/home_view.dart:53:5)
+<asynchronous suspension>
+
+-------------------

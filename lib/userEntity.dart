@@ -85,7 +85,7 @@ class UserEntity {
   Future<void> removeUserPerfer(String key) async {
     try {
       final SharedPreferences _prefs = await SharedPreferences.getInstance();
-      _prefs.remove(key);
+      await _prefs.remove(key);
       print('Remove UserEntity : $key');
     } catch (err) {
       print('Error retrieving preference for key $key: $err');
@@ -96,7 +96,7 @@ class UserEntity {
   Future<void> clearUserPerfer() async {
     try {
       final SharedPreferences _prefs = await SharedPreferences.getInstance();
-      _prefs.clear();
+      await _prefs.clear();
     } catch (err) {
       throw err;
     }
@@ -124,10 +124,10 @@ class UserEntity {
       // Created_at
       String datetime_now =  DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
 
-      setUserPerfer(this.device_id, devie_id);
-      setUserPerfer(this.device_name, device_name);
-      setUserPerfer(this.fcm_token, fcm_token);
-      setUserPerfer(this.created_token_at, datetime_now);
+      await setUserPerfer(this.device_id, devie_id);
+      await setUserPerfer(this.device_name, device_name);
+      await setUserPerfer(this.fcm_token, fcm_token);
+      await setUserPerfer(this.created_token_at, datetime_now);
 
     } catch (err) {
       throw err;
@@ -136,7 +136,7 @@ class UserEntity {
 
   Future<void> printAllSharedPreferences() async {
     final prefs = await SharedPreferences.getInstance();
-    final keys = prefs.getKeys();
+    final keys = await prefs.getKeys();
 
     print('SharedPreferences contents:');
     for (String key in keys) {
@@ -144,7 +144,7 @@ class UserEntity {
     }
   }
 
-  Future<void> checkAndClearPrefsOnUpdateApp() async {
+  Future<void> checkAndClearPrefsByVersion() async {
     try {
       final PackageInfo info = await PackageInfo.fromPlatform();
 
@@ -153,11 +153,34 @@ class UserEntity {
 
       if (savedVersion != currentVersion) {
         clearUserPerfer();
-        setUserPerfer(this.app_version, currentVersion);
+        await setUserPerfer(this.app_version, currentVersion);
       }
     } catch (err) {
       throw err;
     }
+  }
+
+  Future<bool> isKeysEmpty() async {
+    bool status = false;
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      Set<String> keys = prefs.getKeys();
+
+      // Exclude keys related to Device Preview settings
+      Set<String> excludedKeys = {'device_preview.settings'};
+
+      // Filter out the device_preview related keys
+      keys.removeWhere((key) => excludedKeys.contains(key));
+      printAllSharedPreferences();
+      if (keys.isEmpty) {
+        status = true;
+      } else {
+        status = false;
+      }
+    } catch (err) {
+      throw err;
+    }
+    return status;
   }
 
 }
