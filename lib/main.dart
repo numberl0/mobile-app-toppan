@@ -24,7 +24,7 @@ void main() async {
 
   runApp(
     DevicePreview(
-      enabled: true,    // <--- Preview UI
+      enabled: false,    // <--- Preview UI
       builder: (context) => MyApp(),
     ),
   );
