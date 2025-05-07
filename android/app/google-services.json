@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:44522108351:android:ec38c0b268b2bff6265d0a",
+        "mobilesdk_app_id": "1:44522108351:android:0be2d03a259f4d66265d0a",
         "android_client_info": {
-          "package_name": "com.example.toppan_app"
+          "package_name": "com.toppan.mobile"
         }
       },
       "oauth_client": [],

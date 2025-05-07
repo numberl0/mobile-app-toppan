@@ -123,7 +123,7 @@ class VisitorServiceCenterModel {
    }
 
    Future<void> activeFCM_TOKEN(String deviceId, String dateTimeNow) async {
-    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/updateLastActiveFCMToken');
+    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/updateActiveFCMToken');
     String token = await userEntity.getUserPerfer(userEntity.token);
     try {
       final response = await http.post(

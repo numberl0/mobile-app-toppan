@@ -42,21 +42,6 @@ class LoginController {
           await userEntity.setUserPerfer(userEntity.username, username);
           await userEntity.setUserPerfer(userEntity.token, token);
 
-          // //generate token FCM
-          // await userEntity.generateInfoDeviceToken();
-
-          // // List service
-          // List<Future<bool>> service = [
-          //   _controllerVisistorServiceCenter.insertFCMToken(),
-          // ];
-
-          // List<bool> results = await Future.wait(service);
-          // bool allServiceHaveFCMToken = results.every((r) => r == true);
-
-          // // check all service have token FCM
-          // if(allServiceHaveFCMToken) {
-          //   GoRouter.of(context).push('/home');
-          // }
           GoRouter.of(context).push('/home');
         } else {
           _showErrorLoginDialog(context, response['err']);

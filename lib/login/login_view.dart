@@ -19,21 +19,6 @@ class _LoginPageState extends State<LoginPage> {
     loginCheck();
   }
 
-
-  //  @override
-  // void didChangeDependencies() {
-  //   super.didChangeDependencies();
-  //   if (MediaQuery.of(context).size.width > 799) {
-  //     setState(() {
-  //       _fontSize = 24.0;
-  //     });
-  //   }else{
-  //     setState(() {
-  //       _fontSize = 16.0;
-  //     });
-  //   }
-  // }
-
   void loginCheck() async {
     try {
       await _controller.isTokenValid(context);
