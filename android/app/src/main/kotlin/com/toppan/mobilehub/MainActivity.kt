@@ -1,4 +1,4 @@
-package com.toppan.mobile
+package com.toppan.mobilehub
 
 import io.flutter.embedding.android.FlutterActivity
 

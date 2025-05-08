@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyCfCPeVF8amAGuHIJ_OU4k16nGfUancens',
-    appId: '1:44522108351:android:ec38c0b268b2bff6265d0a',
+    appId: '1:44522108351:android:d095f44d521232ef265d0a',
     messagingSenderId: '44522108351',
     projectId: 'toppanapplication',
     storageBucket: 'toppanapplication.firebasestorage.app',
@@ -59,20 +59,20 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCVabfEiERCayTvEoKpGWLCrRdwKF5BXB4',
-    appId: '1:44522108351:ios:fe5b98f206a345f2265d0a',
+    appId: '1:44522108351:ios:3c86ad44ff369756265d0a',
     messagingSenderId: '44522108351',
     projectId: 'toppanapplication',
     storageBucket: 'toppanapplication.firebasestorage.app',
-    iosBundleId: 'com.example.toppanApp',
+    iosBundleId: 'com.toppan.mobilehub',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyCVabfEiERCayTvEoKpGWLCrRdwKF5BXB4',
-    appId: '1:44522108351:ios:fe5b98f206a345f2265d0a',
+    appId: '1:44522108351:ios:3c86ad44ff369756265d0a',
     messagingSenderId: '44522108351',
     projectId: 'toppanapplication',
     storageBucket: 'toppanapplication.firebasestorage.app',
-    iosBundleId: 'com.example.toppanApp',
+    iosBundleId: 'com.toppan.mobilehub',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(

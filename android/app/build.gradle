@@ -12,7 +12,7 @@ def keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 } else {
-    throw new GradleException("key.properties file not found!")
+    throw new Exception("key.properties file not found!")
 }
 
 dependencies {
@@ -26,7 +26,7 @@ dependencies {
 }
 
 android {
-    namespace = "com.toppan.mobile"
+    namespace = "com.toppan.mobilehub"
     // compileSdk = flutter.compileSdkVersion
     // ndkVersion = flutter.ndkVersion
     compileSdk = 35
@@ -44,7 +44,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "com.toppan.mobile"
+        applicationId "com.toppan.mobilehub"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

@@ -7,7 +7,7 @@ class ApiConfig {
       return 'https://visitor.toppan-edge.co.th';
     } else {
       // Test environment URL (Local or Staging URL)
-      return 'http://192.168.31.193:5000';
+      return 'http://192.168.31.228:5000';
     }
   }
 
