@@ -83,10 +83,12 @@ class VisitorServiceCenterController {
 
   Future<void> updateActiveFCM() async {
     try {
-      String deviceId = await userEntity.getUserPerfer(userEntity.device_id);
-      String formatDateTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
-      await userEntity.setUserPerfer(userEntity.created_token_at, formatDateTime);
-      _model.activeFCM_TOKEN(deviceId, formatDateTime);
+      String? deviceId = await userEntity.getUserPerfer(userEntity.device_id);
+      if(deviceId != null) {
+        String formatDateTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
+        await userEntity.setUserPerfer(userEntity.created_token_at, formatDateTime);
+        _model.activeFCM_TOKEN(deviceId, formatDateTime);
+      }
     } catch (err, stackTrace) {
       await logError(err.toString(), stackTrace.toString());
     }

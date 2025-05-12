@@ -7,7 +7,6 @@
     <uses-feature android:name="android.hardware.camera" android:required="true"/>
 
     <application
-        android:debuggable="false"
         android:usesCleartextTraffic="true"
         android:label="ToppanApp"
         android:name="${applicationName}"
