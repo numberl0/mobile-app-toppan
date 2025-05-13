@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:toppan_app/service_manager.dart';
 import 'package:toppan_app/userEntity.dart';
 import 'package:toppan_app/visitorService/visitorServiceCenter_controller.dart';
-import 'package:toppan_app/visitorService/visitorServiceCenter_model.dart';
 
 
 import 'home_model.dart';
@@ -14,9 +13,6 @@ class HomeController {
   UserEntity userEntity = UserEntity();
 
   VisitorServiceCenterController _controllerVisistorServiceCenter = VisitorServiceCenterController();
-
-  VisitorServiceCenterModel _visiorModel = VisitorServiceCenterModel();
-
 
   List<ServiceEntity> serviceList = [];
   Map<String, bool> servicesStatus = {};
@@ -56,7 +52,7 @@ class HomeController {
         GoRouter.of(context).push('/login');
         return;
       }
-    } catch (err, stackTrace) {
+    } catch (err) {
       // _controllerVisistorServiceCenter.logError(err.toString(), stackTrace.toString());
     }
   }
