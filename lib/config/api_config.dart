@@ -3,11 +3,9 @@ import 'package:flutter/foundation.dart';
 class ApiConfig {
   static String get apiBaseUrl {
     if (kReleaseMode) {
-      // Production environment URL
-      return 'https://visitor.toppan-edge.co.th';
+      return 'https://visitor.toppan-edge.co.th';   // Production environment URL
     } else {
-      // Test environment URL (Local or Staging URL)
-      return 'http://192.168.31.193:5000';
+      return 'http://192.168.31.193:5000';    // Test environment URL (Local or Staging URL) 
     }
   }
 

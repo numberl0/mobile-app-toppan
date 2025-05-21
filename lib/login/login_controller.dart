@@ -42,6 +42,7 @@ class LoginController {
           await userEntity.setUserPerfer(userEntity.username, username);
           await userEntity.setUserPerfer(userEntity.token, token);
 
+          clearLoginInput();
           GoRouter.of(context).push('/home');
         } else {
           _showErrorLoginDialog(context, response['err']);
@@ -49,9 +50,7 @@ class LoginController {
       } else {
         _showErrorLoginDialog(context, "กรุณากรอก username และ password");
       }
-    } catch (err, stackTrace) {
-      print(err);
-      print(stackTrace);
+    } catch (err) {
     } finally {
       await Future.delayed(Duration(seconds: 1));
       _loadingDialog.hide();
@@ -94,6 +93,11 @@ class LoginController {
       await Future.delayed(Duration(seconds: 2));
       _loadingDialog.hide();
     }
+  }
+
+  void clearLoginInput(){
+    usernameController.clear();
+    passwordController.clear();
   }
 
 }

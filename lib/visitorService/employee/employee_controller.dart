@@ -15,6 +15,8 @@ import 'package:toppan_app/visitorService/employee/employee_model.dart';
 import 'package:toppan_app/visitorService/visitorServiceCenter_controller.dart';
 import 'package:uuid/uuid.dart';
 
+import 'package:image/image.dart' as img;
+
 class EmployeeController {
 
   EmployeeModel employeeModel = EmployeeModel();
@@ -474,7 +476,7 @@ class EmployeeController {
     bool status = false;
     try {
       // Upload image client(mobile) to server
-      Map<String, dynamic>? filenamesData = await uploadImageToServer(tno_pass,'EMPLOYEE'); //1st
+      Map<String, dynamic>? filenamesData = await uploadImageToServer(tno_pass,'EMPLOYEE', dateOutController.text); //1st
 
       // Upload to PASS_REQUEST table
       bool uploadRequest =
@@ -712,7 +714,7 @@ class EmployeeController {
 
   // Upload Image to Server
   Future<Map<String, dynamic>?> uploadImageToServer(
-      String tno_pass, String folderName) async {
+      String tno_pass, String folderName, String date) async {
     Map<String, dynamic> data = {};
     try {
       List<File?> visitorSignatureFiles = [];
@@ -722,7 +724,7 @@ class EmployeeController {
           List<String> partsId = person['ID'].split('-');
           String lastPart = partsId.last;
           final directory = await getTemporaryDirectory();
-          String fileName = 'signature_employee_${lastPart}.png';
+          String fileName = 'E_${lastPart}.png';
           final filePath = join(directory.path, fileName);
           final file = File(filePath);
           await file.writeAsBytes(signatureData);
@@ -735,32 +737,66 @@ class EmployeeController {
       //item
       List<File> item_in = [];
       List<File> item_out = [];
+      Future<File> processImage(File imageFile, String newFileName) async {
+        final bytes = await imageFile.readAsBytes();
+        final decodedImage = img.decodeImage(bytes);
+        if (decodedImage == null) throw Exception('Failed to decode image');
+
+        final directory = await getTemporaryDirectory();
+        final newPath = join(directory.path, '$newFileName.jpg'); // Force .jpg to avoid weird formats
+
+        final encodedImage = img.encodeJpg(decodedImage, quality: 90);
+        final newFile = File(newPath);
+        await newFile.writeAsBytes(encodedImage);
+        return newFile;
+      }
+
       if (isSwitchImagePicker) {
-        //item in
+        // item_in
         for (int index = 0; index < imageList_In.length; index++) {
-          var item = imageList_In[index];
+          final item = imageList_In[index];
           if (item != null) {
-            final directory = await getTemporaryDirectory();
-            final fileExtension = extension(item.path);
-            String newFileName = 'item_In_$index$fileExtension';
-            final newFilePath = join(directory.path, newFileName);
-            final renamedFile = await item.copy(newFilePath);
-            item_in.add(renamedFile);
+            final processed = await processImage(item, 'in_$index');
+            item_in.add(processed);
           }
         }
-        // item out
+
+        // item_out
         for (int index = 0; index < imageList_Out.length; index++) {
-          var item = imageList_Out[index];
+          final item = imageList_Out[index];
           if (item != null) {
-            final directory = await getTemporaryDirectory();
-            final fileExtension = extension(item.path);
-            String newFileName = 'item_Out_$index$fileExtension';
-            final newFilePath = join(directory.path, newFileName);
-            final renamedFile = await item.copy(newFilePath);
-            item_out.add(renamedFile);
+            final processed = await processImage(item, 'out_$index');
+            item_out.add(processed);
           }
         }
       }
+
+      // if (isSwitchImagePicker) {
+      //   //item in
+      //   for (int index = 0; index < imageList_In.length; index++) {
+      //     var item = imageList_In[index];
+      //     if (item != null) {
+      //       final directory = await getTemporaryDirectory();
+      //       final fileExtension = extension(item.path);
+      //       String newFileName = 'item_In_$index$fileExtension';
+      //       final newFilePath = join(directory.path, newFileName);
+      //       final renamedFile = await item.copy(newFilePath);
+      //       item_in.add(renamedFile);
+      //     }
+      //   }
+      //   // item out
+      //   for (int index = 0; index < imageList_Out.length; index++) {
+      //     var item = imageList_Out[index];
+      //     if (item != null) {
+      //       final directory = await getTemporaryDirectory();
+      //       final fileExtension = extension(item.path);
+      //       String newFileName = 'item_Out_$index$fileExtension';
+      //       final newFilePath = join(directory.path, newFileName);
+      //       final renamedFile = await item.copy(newFilePath);
+      //       item_out.add(renamedFile);
+      //     }
+      //   }
+      // }
 
       //Approver
       List<File?> signatureApprover = [];
@@ -768,7 +804,7 @@ class EmployeeController {
         Uint8List? signatureData = signatureSectionMap[section]?[0];
         if (signatureData != null) {
           final directory = await getTemporaryDirectory();
-          String fileName = '${section.toLowerCase()}_Signature.png';
+          String fileName = '${section.toLowerCase()}.png';
           final filePath = join(directory.path, fileName);
           final file = File(filePath);
           await file.writeAsBytes(signatureData);
@@ -791,7 +827,7 @@ class EmployeeController {
 
       // Upload image to server
       await employeeModel.uploadImageFiles(tno_pass, folderName,
-          dataFileImage); //<---------------------------- upload image to server
+          dataFileImage, date); //<---------------------------- upload image to server
 
       // Prepare only filename
       List<String?> visitorFilenames = visitorSignatureFiles

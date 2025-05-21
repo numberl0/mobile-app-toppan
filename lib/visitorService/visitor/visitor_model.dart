@@ -313,7 +313,7 @@ class VisitorformModule {
   }
 
   // Upload Image Pass Request
-  Future<bool> uploadImageFiles(String tno, String folderNameForm, Map<String, dynamic> data) async {
+  Future<bool> uploadImageFiles(String tno, String folderNameForm, Map<String, dynamic> data, String date) async {
     bool status = false;
     final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/uploadImageFiles');
     String token = await userEntity.getUserPerfer(userEntity.token);
@@ -322,6 +322,7 @@ class VisitorformModule {
 
       // Add other data fields if necessary (e.g., tno, type)
       request.fields['tno'] = tno;
+      request.fields['date'] = date;
       request.fields['typeForm'] = folderNameForm;
 
       // Handle people signatures
