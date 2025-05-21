@@ -1,0 +1,226 @@
+
+[2025-05-20 11:53:04] 
+[Error] Exception: [ERROR] PathNotFoundException: Cannot open file, path = '/data/user/0/com.toppan.mobilehub/cache/V_d767b674c60e.png' (OS Error: No such file or directory, errno = 2)
+ At line #0      _checkForErrorResponse (dart:io/common.dart:55:9) 
+[Stack Trace]
+#0      VisitorformModule.uploadImageFiles (package:toppan_app/visitorService/visitor/visitor_model.dart:381:7)
+<asynchronous suspension>
+#1      VisitorFormController.uploadImageToServer (package:toppan_app/visitorService/visitor/visitor_controller.dart:774:7)
+<asynchronous suspension>
+#2      VisitorFormController.uploadVisitorForm (package:toppan_app/visitorService/visitor/visitor_controller.dart:475:45)
+<asynchronous suspension>
+#3      _VisitorFormPageState._getPageContent.<anonymous closure> (package:toppan_app/visitorService/visitor/visitor_view.dart:986:35)
+<asynchronous suspension>
+
+-------------------
+[2025-05-20 11:53:04] 
+[Error] NoSuchMethodError: The method '[]' was called on null.
+Receiver: null
+Tried calling: [](0) 
+[Stack Trace]
+#0      Object.noSuchMethod (dart:core-patch/object_patch.dart:38:5)
+#1      VisitorFormController.uploadToPassRequest (package:toppan_app/visitorService/visitor/visitor_controller.dart:604:69)
+#2      VisitorFormController.uploadVisitorForm (package:toppan_app/visitorService/visitor/visitor_controller.dart:479:17)
+<asynchronous suspension>
+#3      _VisitorFormPageState._getPageContent.<anonymous closure> (package:toppan_app/visitorService/visitor/visitor_view.dart:986:35)
+<asynchronous suspension>
+
+-------------------
+[2025-05-20 11:53:04] 
+[Error] Exception: Error uploading to PASS_REQUEST 
+[Stack Trace]
+#0      VisitorFormController.uploadVisitorForm (package:toppan_app/visitorService/visitor/visitor_controller.dart:481:9)
+<asynchronous suspension>
+#1      _VisitorFormPageState._getPageContent.<anonymous closure> (package:toppan_app/visitorService/visitor/visitor_view.dart:986:35)
+<asynchronous suspension>
+
+-------------------
+[2025-05-20 11:55:31] 
+[Error] HttpException: Request failed with status: 404, Body: <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>Cannot GET /loadImages/VISITOR/2025/05/20250520112119194/item_in/0.jpg</pre>
+</body>
+</html>
+ 
+[Stack Trace]
+#0      VisitorformModule.loadImageToFile (package:toppan_app/visitorService/visitor/visitor_model.dart:421:5)
+<asynchronous suspension>
+#1      VisitorFormController.prepareLoadForm (package:toppan_app/visitorService/visitor/visitor_controller.dart:302:28)
+<asynchronous suspension>
+#2      _VisitorFormPageState.prepareForm (package:toppan_app/visitorService/visitor/visitor_view.dart:58:7)
+<asynchronous suspension>
+
+-------------------
+[2025-05-20 13:22:38] 
+[Error] HttpException: Request failed with status: 404, Body: <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>Cannot GET /loadImages/VISITOR/2025/05/20250520112119194/item_in/0.jpg</pre>
+</body>
+</html>
+ 
+[Stack Trace]
+#0      VisitorformModule.loadImageToFile (package:toppan_app/visitorService/visitor/visitor_model.dart:421:5)
+<asynchronous suspension>
+#1      VisitorFormController.prepareLoadForm (package:toppan_app/visitorService/visitor/visitor_controller.dart:304:28)
+<asynchronous suspension>
+#2      _VisitorFormPageState.prepareForm (package:toppan_app/visitorService/visitor/visitor_view.dart:58:7)
+<asynchronous suspension>
+
+-------------------
+[2025-05-20 14:56:18] 
+[Error] HttpException: Request failed with status: 404, Body: <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>Cannot GET /loadImages/EMPLOYEE/2025/05/20250520134421700/people/E_acddb6464581.png</pre>
+</body>
+</html>
+ 
+[Stack Trace]
+#0      EmployeeModel.loadImageAsBytes (package:toppan_app/visitorService/employee/employee_model.dart:307:7)
+<asynchronous suspension>
+#1      EmployeeController.prepareLoadForm (package:toppan_app/visitorService/employee/employee_controller.dart:253:15)
+<asynchronous suspension>
+#2      _EmployeeFormPageState.prepareForm (package:toppan_app/visitorService/employee/employee_view.dart:62:7)
+<asynchronous suspension>
+
+-------------------
+[2025-05-20 14:59:31] 
+[Error] HttpException: Request failed with status: 404, Body: <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>Cannot GET /loadImages/EMPLOYEE/2025/05/20250520134421700/people/E_06c6ce510fda.png</pre>
+</body>
+</html>
+ 
+[Stack Trace]
+#0      EmployeeModel.loadImageAsBytes (package:toppan_app/visitorService/employee/employee_model.dart:307:7)
+<asynchronous suspension>
+#1      EmployeeController.prepareLoadForm (package:toppan_app/visitorService/employee/employee_controller.dart:253:15)
+<asynchronous suspension>
+#2      _EmployeeFormPageState.prepareForm (package:toppan_app/visitorService/employee/employee_view.dart:62:7)
+<asynchronous suspension>
+
+-------------------
+[2025-05-20 15:03:12] 
+[Error] HttpException: Request failed with status: 404, Body: <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>Cannot GET /loadImages/EMPLOYEE/2025/05/20250520134421700/people/E_47c2cceddb25.png</pre>
+</body>
+</html>
+ 
+[Stack Trace]
+#0      EmployeeModel.loadImageAsBytes (package:toppan_app/visitorService/employee/employee_model.dart:307:7)
+<asynchronous suspension>
+#1      EmployeeController.prepareLoadForm (package:toppan_app/visitorService/employee/employee_controller.dart:253:15)
+<asynchronous suspension>
+#2      _EmployeeFormPageState.prepareForm (package:toppan_app/visitorService/employee/employee_view.dart:62:7)
+<asynchronous suspension>
+
+-------------------
+[2025-05-20 15:05:56] 
+[Error] HttpException: Request failed with status: 404, Body: <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>Cannot GET /loadImages/EMPLOYEE/2025/05/20250520134421700/people/E_c02ec693bbf6.png</pre>
+</body>
+</html>
+ 
+[Stack Trace]
+#0      EmployeeModel.loadImageAsBytes (package:toppan_app/visitorService/employee/employee_model.dart:307:7)
+<asynchronous suspension>
+#1      EmployeeController.prepareLoadForm (package:toppan_app/visitorService/employee/employee_controller.dart:253:15)
+<asynchronous suspension>
+#2      _EmployeeFormPageState.prepareForm (package:toppan_app/visitorService/employee/employee_view.dart:62:7)
+<asynchronous suspension>
+
+-------------------
+[2025-05-20 15:09:23] 
+[Error] HttpException: Request failed with status: 404, Body: <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>Cannot GET /loadImages/EMPLOYEE/2025/05/20250520134421700/people/E_85b5614b1bd2.png</pre>
+</body>
+</html>
+ 
+[Stack Trace]
+#0      EmployeeModel.loadImageAsBytes (package:toppan_app/visitorService/employee/employee_model.dart:307:7)
+<asynchronous suspension>
+#1      EmployeeController.prepareLoadForm (package:toppan_app/visitorService/employee/employee_controller.dart:253:15)
+<asynchronous suspension>
+#2      _EmployeeFormPageState.prepareForm (package:toppan_app/visitorService/employee/employee_view.dart:62:7)
+<asynchronous suspension>
+
+-------------------
+[2025-05-20 15:13:36] 
+[Error] HttpException: Request failed with status: 404, Body: <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>Cannot GET /loadImages/EMPLOYEE/2025/05/20250520134421700/people/E_95663e046977.png</pre>
+</body>
+</html>
+ 
+[Stack Trace]
+#0      EmployeeModel.loadImageAsBytes (package:toppan_app/visitorService/employee/employee_model.dart:307:7)
+<asynchronous suspension>
+#1      EmployeeController.prepareLoadForm (package:toppan_app/visitorService/employee/employee_controller.dart:253:15)
+<asynchronous suspension>
+#2      _EmployeeFormPageState.prepareForm (package:toppan_app/visitorService/employee/employee_view.dart:62:7)
+<asynchronous suspension>
+
+-------------------
+[2025-05-20 15:15:13] 
+[Error] HttpException: Request failed with status: 404, Body: <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>Cannot GET /loadImages/EMPLOYEE/2025/05/20250520134421700/people/E_e2686207a4a1.png</pre>
+</body>
+</html>
+ 
+[Stack Trace]
+#0      EmployeeModel.loadImageAsBytes (package:toppan_app/visitorService/employee/employee_model.dart:307:7)
+<asynchronous suspension>
+#1      EmployeeController.prepareLoadForm (package:toppan_app/visitorService/employee/employee_controller.dart:253:15)
+<asynchronous suspension>
+#2      _EmployeeFormPageState.prepareForm (package:toppan_app/visitorService/employee/employee_view.dart:62:7)
+<asynchronous suspension>
+
+-------------------
