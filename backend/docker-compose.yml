@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+
+  gateway:
+    build:
+      context: .
+      dockerfile: service/gateway/Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - /app/shared/node_modules
+      - ./shared:/app/shared
+      
+      - /app/service/gateway/node_modules
+      - ./service/gateway:/app/service/gateway 
+
+  auth:
+    build:
+      context: .
+      dockerfile: service/auth/Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - /app/shared/node_modules
+      - ./shared:/app/shared
+      
+      - /app/service/auth/node_modules
+      - ./service/auth:/app/service/auth  
+
+  visitor:
+    build:
+      context: .
+      dockerfile: service/visitor/Dockerfile
+    ports:
+      - "3306:3306"
+    volumes:
+      - /app/shared/node_modules
+      - ./shared:/app/shared
+
+      - /app/service/visitor/node_modules
+      - ./service/visitor:/app/service/visitor  

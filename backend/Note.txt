@@ -1,0 +1,18 @@
+----------------------	Command for running backend  ----------------------
+docker compose build			-		For build image
+	
+docker compose up -d			-		For start all service
+
+docker compose stop <service_name>	-		For stop service with service_name
+
+docker compose down			-		For stop and remove containers
+
+docker compose stop			-		For stop and keep containers
+
+docker compose down			-		For stop and remove containers
+
+
+----------------------	When edit backend  ----------------------
+Use this command for build and start againt
+docker compose build
+docker compose up -d
