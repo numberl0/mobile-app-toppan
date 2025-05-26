@@ -1,3 +1,4 @@
+const os = require('os');
 const path = require('path');
 const { execSync } = require('child_process');
 
@@ -18,6 +19,19 @@ function getHostIP() {
     return '127.0.0.1';
   }
 }
+
+// // Auto-detect Host IP For Use PM2
+// function getHostIP() {
+//     const interfaces = os.networkInterfaces();
+//     for (const name of Object.keys(interfaces)) {
+//         for (const iface of interfaces[name]) {
+//             if (iface.family === 'IPv4' && !iface.internal) {
+//                 return iface.address;
+//             }
+//         }
+//     }
+//     return '127.0.0.1'; // fallback
+// }
 
 const environment = 'test'; // test, production
 const localIP = getHostIP();
