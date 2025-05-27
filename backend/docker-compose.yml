@@ -20,7 +20,7 @@ services:
       context: .
       dockerfile: service/auth/Dockerfile
     ports:
-      - "3000:3000"
+      - "20505:20505"
     volumes:
       - /app/shared/node_modules
       - ./shared:/app/shared
@@ -33,7 +33,7 @@ services:
       context: .
       dockerfile: service/visitor/Dockerfile
     ports:
-      - "3306:3306"
+      - "20506:20506"
     volumes:
       - /app/shared/node_modules
       - ./shared:/app/shared

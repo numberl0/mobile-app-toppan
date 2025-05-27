@@ -11,6 +11,6 @@ RUN npm install
 WORKDIR /app/service/auth
 RUN npm install
 
-EXPOSE 3000
+EXPOSE 20505
 
 CMD ["node", "server.js"]

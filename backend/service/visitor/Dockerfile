@@ -11,6 +11,6 @@ RUN npm install
 WORKDIR /app/service/visitor
 RUN npm install
 
-EXPOSE 3306
+EXPOSE 20506
 
 CMD ["node", "server.js"]

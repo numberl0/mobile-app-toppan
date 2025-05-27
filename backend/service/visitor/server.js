@@ -1000,15 +1000,10 @@ cron.schedule(visitorConfig.notifyTime, async () => {
     const queryDoc = `SELECT tno_pass, building_card FROM PASS_REQUEST WHERE date_in = ? AND approved_status = 0`;;
     const resultDoc = await dbQuery(queryDoc, [today]);
 
-    if (resultDoc.length === 0) {
-      console.log("No pending pass requests today.");
-      return;
-    }
-
     const buildingCardConditions = {
-      Y: "CardManager",
-      N: "Manager",
-      O: "Manager,CardManager",
+      Y: "Administrator,CardManager",
+      N: "Administrator,Manager",
+      O: "Administrator,Manager,CardManager",
     };
 
     const roleConditions = new Set();

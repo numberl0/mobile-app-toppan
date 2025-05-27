@@ -16,7 +16,7 @@ const config = {
             enable: true,
         },
         ldapConfig: {
-            port: 3000,
+            port: 20505,
             pipe: 'auth',
             domain: 'dptf.com',
             server: '192.168.200.1',
@@ -28,7 +28,7 @@ const config = {
             database: 'TEST_VISITOR_APP',
         },
         visitorConfig: {
-            port: 3306,
+            port: 20506,
             pipe: 'visitor',
             pathImageSignatureUser: 'http://192.168.200.170:81/static/uploads',
             pathImageDocuments: path.join(__dirname, '..', 'service', 'visitor', 'docImage'),
