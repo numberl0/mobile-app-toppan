@@ -771,33 +771,6 @@ class EmployeeController {
         }
       }
 
-      // if (isSwitchImagePicker) {
-      //   //item in
-      //   for (int index = 0; index < imageList_In.length; index++) {
-      //     var item = imageList_In[index];
-      //     if (item != null) {
-      //       final directory = await getTemporaryDirectory();
-      //       final fileExtension = extension(item.path);
-      //       String newFileName = 'item_In_$index$fileExtension';
-      //       final newFilePath = join(directory.path, newFileName);
-      //       final renamedFile = await item.copy(newFilePath);
-      //       item_in.add(renamedFile);
-      //     }
-      //   }
-      //   // item out
-      //   for (int index = 0; index < imageList_Out.length; index++) {
-      //     var item = imageList_Out[index];
-      //     if (item != null) {
-      //       final directory = await getTemporaryDirectory();
-      //       final fileExtension = extension(item.path);
-      //       String newFileName = 'item_Out_$index$fileExtension';
-      //       final newFilePath = join(directory.path, newFileName);
-      //       final renamedFile = await item.copy(newFilePath);
-      //       item_out.add(renamedFile);
-      //     }
-      //   }
-      // }
-
       //Approver
       List<File?> signatureApprover = [];
       for (var section in signatureSectionMap.keys) {

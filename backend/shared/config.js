@@ -1,40 +1,7 @@
-const os = require('os');
 const path = require('path');
-const { execSync } = require('child_process');
-
-// Auto-detect host IP depending on platform (Linux or Windows/Mac Docker)
-function getHostIP() {
-  if (process.platform === 'darwin' || process.platform === 'win32') {
-    // Docker Desktop on Mac/Windows provides this special DNS name
-    return 'host.docker.internal';
-  } else {
-    // On Linux, get default gateway IP inside container (usually host IP)
-    try {
-      const route = execSync('ip route').toString();
-      const match = route.match(/default via ([0-9.]+)/);
-      if (match && match[1]) return match[1];
-    } catch (e) {
-      // Ignore errors and fallback
-    }
-    return '127.0.0.1';
-  }
-}
-
-// // Auto-detect Host IP For Use PM2
-// function getHostIP() {
-//     const interfaces = os.networkInterfaces();
-//     for (const name of Object.keys(interfaces)) {
-//         for (const iface of interfaces[name]) {
-//             if (iface.family === 'IPv4' && !iface.internal) {
-//                 return iface.address;
-//             }
-//         }
-//     }
-//     return '127.0.0.1'; // fallback
-// }
 
 const environment = 'test'; // test, production
-const localIP = getHostIP();
+const localIP = '192.168.31.193';
 const config = {
 
     // ------------------------------------------------- Test ---------------------------------------------------------- //
@@ -109,6 +76,6 @@ const config = {
 };
 
 console.log(`Loaded config for: ${environment.toUpperCase()}`);
-console.log('Using pathImageDocuments:', config[environment].visitorConfig.pathImageDocuments);
 console.log('Using localIP:', localIP);
+console.log('Using pathImageDocuments Visitor:', config[environment].visitorConfig.pathImageDocuments);
 module.exports = config[environment];

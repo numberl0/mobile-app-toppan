@@ -387,6 +387,7 @@ class VisitorformModule {
   // Function Load image by url return Uint8List
   Future<Uint8List?> loadImageAsBytes(String imageUrl) async {
     try {
+      print(imageUrl);
       final response = await http.get(Uri.parse(imageUrl));
       if (response.statusCode >= 200 && response.statusCode <= 299) {
         return response.bodyBytes;

@@ -2232,9 +2232,9 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
   }
 
   void popUpEditPerson(Map<String, dynamic> entry) {
-    _controller.titleNameController.text = entry['TitleName']!;
-    _controller.fullNameController.text = entry['FullName']!;
-    _controller.cardIdController.text = entry['Card_Id']!;
+    _controller.titleNameController.text = entry['TitleName'] ?? '';
+    _controller.fullNameController.text = entry['FullName'] ?? '';
+    _controller.cardIdController.text = entry['Card_Id'] ?? '';
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -2384,7 +2384,6 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                       ),
                     ),
 
-                    // Full-Width "เพิ่ม" Button
                     // Full-Width "เพิ่ม" Button
                     Padding(
                       padding: EdgeInsets.all(16),
@@ -2553,7 +2552,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                           ),
                                           SizedBox(height: 8),
                                           Text(
-                                            'Card : ${entry['Card_Id']}',
+                                            'Card : ${entry['Card_Id'] ?? ''}',
                                             style: TextStyle(
                                               fontSize: _fontSize - 2,
                                               fontWeight: FontWeight.bold,
@@ -2589,10 +2588,15 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                     height: 5,
                                   ),
                                   Center(
-                                    child: Image.memory(
-                                      entry['Signature'],
-                                      fit: BoxFit.contain,
-                                    ),
+                                    child: entry['Signature'] != null
+                                        ? Image.memory(
+                                            entry['Signature'],
+                                            fit: BoxFit.contain,
+                                          )
+                                        : Text(
+                                            'No Signature Available',
+                                            style: TextStyle(color: Colors.grey),
+                                          ),
                                   ),
                                 ],
                               ),

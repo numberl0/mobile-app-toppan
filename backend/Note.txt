@@ -1,4 +1,4 @@
-----------------------	Command for running backend  ----------------------
+---------------------- Simple command for control backend docker  ----------------------
 docker compose build			-		For build image
 	
 docker compose up -d			-		For build container and start service (all)
@@ -12,5 +12,22 @@ docker compose restart <service_name>	-		For restart and keep containers (by nam
 docker compose stop <service_name>	-		For stop and keep containers (by name)
 
 
-----------------------	When edit backend  ----------------------
-* In case edit build image and start again
+----------------------	How to run backend  ----------------------
+-- PRODUCTION --
+1. Edit environment for production 
+2. cd to file docker-compose stay
+3. docker compose build
+4. docker compose up -d
+*We do not run or build the gateway in production environments because it is not utilized there.
+
+-- TEST --
+1. Edit environment for test 
+2. Edit Local IP for your Local IP
+3. cd to file docker-compose stay
+4. docker compose build
+5. docker compose up -d
+
+--------------------- Case issue ----------------------
+1. When you start multiple services simultaneously, and some fail to launch for an unknown reason, you should restart those specific services.
+
+2. If you modify the backend code, you'll need to rebuild the image and then restart the service for your changes to take effect

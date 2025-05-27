@@ -16,6 +16,7 @@ import 'package:toppan_app/visitorService/visitorServiceCenter_controller.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:image/image.dart' as img;
+import 'package:uuid/v4.dart';
 
 class VisitorFormController {
   VisitorformModule visitorformModule = VisitorformModule();
@@ -205,19 +206,32 @@ class VisitorFormController {
       Map<String, dynamic> data = loadData!;
 
       // For update recode
-      flagUpdateForm = true;
+      flagUpdateForm = data['tno_pass'] != null? true : false; //case pull in visitor normal
 
       // Agreement Warning
       Map<String, dynamic> aggrementText = await visitorformModule.getAgreementText();
       agreementEng = aggrementText['content_eng'] != null? aggrementText['content_eng'] : '';
       agreementThai = aggrementText['content_thai'] != null? aggrementText['content_thai'] : '';
 
+      String generateTnoPass() {
+        DateTime now = DateTime.now();
+        return "${now.year}"
+              "${now.month.toString().padLeft(2, '0')}"
+              "${now.day.toString().padLeft(2, '0')}"
+              "${now.hour.toString().padLeft(2, '0')}"
+              "${now.minute.toString().padLeft(2, '0')}"
+              "${now.second.toString().padLeft(2, '0')}"
+              "${(now.millisecond).toString().padLeft(3, '0')}";
+      }
+
+      tno_pass = data['tno_pass'] ?? generateTnoPass();
+
       //tno
-      tno_pass = data['tno_pass'];
-      tno_ref = data['tno_ref'] != null ? data['area'] : null;
+      // tno_pass = data['tno_pass'];
+      tno_ref = data['tno_ref'] ?? null;
 
       // Sequence Running Number
-      formatSequenceRunning = data['sequence_no'];
+      formatSequenceRunning = data['sequence_no'] ?? '';
       sequenceRunning = int.tryParse(formatSequenceRunning) ?? 0;
 
       // Building
@@ -279,12 +293,20 @@ class VisitorFormController {
       objectiveController.text =
           data['objective'] != null ? data['objective'] : '';
 
+
       // personList
+      var uuid = Uuid();
       for (var person in data['people']) {
+        person.putIfAbsent('ID', () =>  uuid.v4() );
+        person.putIfAbsent('Card_Id', () => null);
+        person.putIfAbsent('DateTime', () => DateTime.now().toString());
+
+        // Signature
         if (person['Signature'] != null && person['Signature'] is String) {
-          Uint8List? signatureBytes =
-              await visitorformModule.loadImageAsBytes(person['Signature']);
+          Uint8List? signatureBytes = await visitorformModule.loadImageAsBytes(person['Signature']);
           person['Signature'] = signatureBytes;
+        }else{
+          person['Signature'] = null;
         }
       }
       personList = (data['people'] as List<dynamic>)
@@ -292,42 +314,44 @@ class VisitorFormController {
           .toList();
 
       //item_in / item_out
-      if (data['item_in']['type'] == data['item_out']['type']) {
-        if (data['item_in']['type'] == 'image' &&
-            data['item_out']['type'] == 'image') {
-          //in case image
-          isSwitchImagePicker = true;
-          if (data['item_in']['item'] != null &&
-              data['item_in']['item'] is List) {
-            for (String imageUrl
-                in List<String>.from(data['item_in']['item'])) {
-              File? file = await visitorformModule.loadImageToFile(imageUrl);
-              if (file != null) {
-                imageList_In.add(file);
+      if(data['item_in'] != null && data['item_out'] != null){      // in case pull in visitor normal
+        if (data['item_in']['type'] == data['item_out']['type']) {
+          if (data['item_in']['type'] == 'image' &&
+              data['item_out']['type'] == 'image') {
+            //in case image
+            isSwitchImagePicker = true;
+            if (data['item_in']['item'] != null &&
+                data['item_in']['item'] is List) {
+              for (String imageUrl
+                  in List<String>.from(data['item_in']['item'])) {
+                File? file = await visitorformModule.loadImageToFile(imageUrl);
+                if (file != null) {
+                  imageList_In.add(file);
+                }
               }
             }
-          }
-          if (data['item_out']['item'] != null &&
-              data['item_out']['item'] is List) {
-            for (String imageUrl
-                in List<String>.from(data['item_out']['item'])) {
-              File? file = await visitorformModule.loadImageToFile(imageUrl);
-              if (file != null) {
-                imageList_Out.add(file);
+            if (data['item_out']['item'] != null &&
+                data['item_out']['item'] is List) {
+              for (String imageUrl
+                  in List<String>.from(data['item_out']['item'])) {
+                File? file = await visitorformModule.loadImageToFile(imageUrl);
+                if (file != null) {
+                  imageList_Out.add(file);
+                }
               }
             }
-          }
-        } else {
-          // in case list
-          if (data['item_in']['item'] != null) {
-            listItem_In = List<Map<String, String>>.from(
-                (data['item_in']['item'] as List)
-                    .map((e) => {"name": e.toString()}));
-          }
-          if (data['item_out']['item'] != null) {
-            listItem_Out = List<Map<String, String>>.from(
-                (data['item_out']['item'] as List)
-                    .map((e) => {"name": e.toString()}));
+          } else {
+            // in case list
+            if (data['item_in']['item'] != null) {
+              listItem_In = List<Map<String, String>>.from(
+                  (data['item_in']['item'] as List)
+                      .map((e) => {"name": e.toString()}));
+            }
+            if (data['item_out']['item'] != null) {
+              listItem_Out = List<Map<String, String>>.from(
+                  (data['item_out']['item'] as List)
+                      .map((e) => {"name": e.toString()}));
+            }
           }
         }
       }
@@ -572,7 +596,7 @@ class VisitorFormController {
 
   // Upload to PASS_REQUEST table
   Future<bool> uploadToPassRequest(
-      String tno_pass, Map<String, dynamic>? filenamesData) async {
+    String tno_pass, Map<String, dynamic>? filenamesData) async {
     bool uploadStatus = false;
     try {
       //typForm
@@ -593,7 +617,7 @@ class VisitorFormController {
       // Building selction
       Map<String, dynamic> buildingData = buildingList
           .firstWhere((building) => building['id'] == this.selectedBuilding);
-          
+
       // Area
       String area;
       if (isExpandedBuilding) {
@@ -652,7 +676,7 @@ class VisitorFormController {
         'proArea_sign': prodSign[1],
         'proArea_datetime': prodSign[2] != null ? prodSign[2].toString() : null,
         'proArea_by': prodSign[3],
-        'tno_ref': null,
+        'tno_ref': tno_ref,
       };
 
       if (!flagUpdateForm || (await visitorformModule.passRequestDoesNotExist(tno_pass))!) {
@@ -718,33 +742,6 @@ class VisitorFormController {
       //item
       List<File> item_in = [];
       List<File> item_out = [];
-      // if (isSwitchImagePicker) {
-      //   //item in
-      //   for (int index = 0; index < imageList_In.length; index++) {
-      //     var item = imageList_In[index];
-      //     if (item != null) {
-      //       final directory = await getTemporaryDirectory();
-      //       final fileExtension = extension(item.path);
-      //       String newFileName = 'in_$index$fileExtension';
-      //       final newFilePath = join(directory.path, newFileName);
-      //       final renamedFile = await item.copy(newFilePath);
-      //       item_in.add(renamedFile);
-      //     }
-      //   }
-      //   // item out
-      //   for (int index = 0; index < imageList_Out.length; index++) {
-      //     var item = imageList_Out[index];
-      //     if (item != null) {
-      //       final directory = await getTemporaryDirectory();
-      //       final fileExtension = extension(item.path);
-      //       String newFileName = 'out_$index$fileExtension';
-      //       final newFilePath = join(directory.path, newFileName);
-      //       final renamedFile = await item.copy(newFilePath);
-      //       item_out.add(renamedFile);
-      //     }
-      //   }
-      // }
-
       Future<File> processImage(File imageFile, String newFileName) async {
         final bytes = await imageFile.readAsBytes();
         final decodedImage = img.decodeImage(bytes);

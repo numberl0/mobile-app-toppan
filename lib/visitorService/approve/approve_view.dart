@@ -831,13 +831,13 @@ class _ApprovePageState extends State<ApprovePage> {
                         fontSize: _fontSize),
                     SizedBox(height: 25),
                      InfoRow(
-                        label: 'วันเวลาที่ออก:',
+                        label: 'เวลาออก:',
                         value: DateFormat("d MMMM yyyy", "th_TH")
                             .format(DateTime.parse(entry['date_out']).toLocal()) + '     ' + entry['time_out'].substring(0, 5) + ' น.',
                         fontSize: _fontSize),
                     SizedBox(height: 25),
                     InfoRow(
-                        label: 'วันเวลาที่กลับ:',
+                        label: 'เวลากลับ:',
                         value: DateFormat("d MMMM yyyy", "th_TH")
                             .format(DateTime.parse(entry['date_in']).toLocal()) + '     ' + entry['time_in'].substring(0, 5) + ' น.',
                         fontSize: _fontSize),
@@ -860,13 +860,13 @@ class _ApprovePageState extends State<ApprovePage> {
                         fontSize: _fontSize),
                     SizedBox(height: 25),
                     InfoRow(
-                        label: 'วันเวลาที่เข้า:',
+                        label: 'เวลาเข้า:',
                         value: DateFormat("d MMMM yyyy", "th_TH")
                             .format(DateTime.parse(entry['date_in']).toLocal()) + '     ' + entry['time_in'].substring(0, 5) + ' น.',
                         fontSize: _fontSize),
                     SizedBox(height: 25),
                     InfoRow(
-                        label: 'วันเวลาที่ออก:',
+                        label: 'เวลาออก:',
                         value: DateFormat("d MMMM yyyy", "th_TH")
                             .format(DateTime.parse(entry['date_out']).toLocal()) + '     ' + entry['time_out'].substring(0, 5) + ' น.',
                         fontSize: _fontSize),
@@ -1253,7 +1253,7 @@ class InfoRow extends StatelessWidget {
     required this.label,
     required this.value,
     required this.fontSize,
-    this.labelWidth = 125.0,
+    this.labelWidth = 130.0,
   }) : super(key: key);
 
   @override
