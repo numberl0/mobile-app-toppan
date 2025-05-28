@@ -9,7 +9,7 @@ module.exports = {
         script: 'service/gateway/server.js',
         instances: 1,
         exec_mode: 'fork',
-        watch: true,
+        watch: false,
         env: {
           PORT: gateWayConfig.port, // API Gateway port
         },
@@ -23,7 +23,7 @@ module.exports = {
         script: 'service/auth/server.js',
         instances: 1,
         exec_mode: 'fork',
-        watch: true,
+        watch: false,
         env: {
           PORT: ldapConfig.port,  // API LDAP port
         },
@@ -37,7 +37,7 @@ module.exports = {
         script: 'service/visitor/server.js',
         instances: 1,
         exec_mode: 'fork',
-        watch: true,
+        watch: false,
         env: {
           PORT: visitorConfig.port, // API VisitorApp port
         },
