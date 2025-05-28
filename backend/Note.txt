@@ -1,33 +1,26 @@
----------------------- Simple command for control backend docker  ----------------------
-docker compose build			-		For build image
-	
-docker compose up -d			-		For build container and start service (all)
+--------------------- install ---------------------
+1. Navigate to the directory where package.json file is located.
+2. npm install firebase-admin jsonwebtoken body-parser cors dayjs express http multer mysql2 node-cron http-proxy ldapjs
+*And npm install -g pm2 for runservice
 
-docker compose down			-		For stop and remove containers (all)
+--------------------- How to run ---------------------
+1. In config.js, set the environment to your desired value (e.g., test or production)
+2. "In ecosystem.config.js, comment out the gateway configuration for production deployments, but ensure it remains active (uncommented) for test environments.
+3. Navigate to the directory where your ecosystem.config.js file is located.
+4. Run the command: pm2 start ecosystem.config.js
 
-docker compose start <service_name>	-		For start and keep containers (by name)
+--------------------- Basic command PM2 ---------------------
+---- Start & Manage Apps ----
+pm2 start <config_pm2_file_name> 	-	Start apps defined in a config file
+pm2 stop all				-	Stop all running apps
+pm2 restart all				-	Restart all apps
+pm2 delete all				- 	Stop and delete all apps
+*Can work as separate services (Example : pm2 stop <service_name> )
 
-docker compose restart <service_name>	-		For restart and keep containers (by name)
+---- Monitor & Logs ----
+pm2 list			-	Show all managed apps
+pm2 status			-	Alias for pm2 list
+pm2 logs			-	Show logs for all apps
+pm2 logs <service_name>		-	Show logs for a specific app
+pm2 monit			-	Real-time CPU, memory, and process monitoring
 
-docker compose stop <service_name>	-		For stop and keep containers (by name)
-
-
-----------------------	How to run backend  ----------------------
--- PRODUCTION --
-1. Edit environment for production 
-2. cd to file docker-compose stay
-3. docker compose build
-4. docker compose up -d
-*We do not run or build the gateway in production environments because it is not utilized there.
-
--- TEST --
-1. Edit environment for test 
-2. Edit Local IP for your Local IP
-3. cd to file docker-compose stay
-4. docker compose build
-5. docker compose up -d
-
---------------------- Case issue ----------------------
-1. When you start multiple services simultaneously, and some fail to launch for an unknown reason, you should restart those specific services.
-
-2. If you modify the backend code, you'll need to rebuild the image and then restart the service for your changes to take effect

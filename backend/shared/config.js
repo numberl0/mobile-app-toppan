@@ -1,7 +1,22 @@
 const path = require('path');
+const os = require('os');
+
+// use for test only
+function getLocalIP() {
+  const interfaces = os.networkInterfaces();
+
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return '127.0.0.1'; // fallback
+}
 
 const environment = 'test'; // test, production
-const localIP = '192.168.31.193';
+const localIP = getLocalIP();
 const config = {
 
     // ------------------------------------------------- Test ---------------------------------------------------------- //
@@ -76,6 +91,6 @@ const config = {
 };
 
 console.log(`Loaded config for: ${environment.toUpperCase()}`);
-console.log('Using localIP:', localIP);
-console.log('Using pathImageDocuments Visitor:', config[environment].visitorConfig.pathImageDocuments);
+console.log('Using Domain:', config[environment].gateWayConfig.domain)
+console.log('Using pathImageDocuments in Visitor:', config[environment].visitorConfig.pathImageDocuments);
 module.exports = config[environment];
