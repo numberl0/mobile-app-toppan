@@ -231,8 +231,14 @@ class VisitorFormController {
       tno_ref = data['tno_ref'] ?? null;
 
       // Sequence Running Number
-      formatSequenceRunning = data['sequence_no'] ?? '';
-      sequenceRunning = int.tryParse(formatSequenceRunning) ?? 0;
+      if (data['sequence_no'] != null && data['sequence_no'].toString().isNotEmpty) {
+        formatSequenceRunning = data['sequence_no'];
+        sequenceRunning = int.tryParse(formatSequenceRunning) ?? 0;
+      } else {
+        Map<String, dynamic> sequenceData = await visitorformModule.getSequeceRunning('VISITOR');
+        sequenceRunning = (sequenceData['sequence'] ?? 0) + 1;
+        formatSequenceRunning = sequenceRunning.toString().padLeft(6, '0');
+      }
 
       // Building
       buildingList = await visitorformModule.getBuilding();
