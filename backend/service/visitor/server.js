@@ -984,12 +984,21 @@ const sendNotification = async (fcm_tokens) => {
     },
     tokens: fcm_tokens,
   };
-
   try {
     const response = await admin.messaging().sendEachForMulticast(message);
     console.log("Notification sent to:", response);
+
+    console.log(`Success: ${response.successCount}, Failure: ${response.failureCount}`);
+
+    response.responses.forEach((resp, index) => {
+      if (!resp.success) {
+        console.error(`- Error for token [${fcm_tokens[index]}]:`);
+        console.error(`- Code: ${resp.error.code}`);
+        console.error(`- Message: ${resp.error.message}`);
+      }
+    });
   } catch (error) {
-    console.error("Error sending notification:", error);
+    console.error("Fatal error sending notification:", error);
   }
 };
 

@@ -84,7 +84,7 @@ const config = {
             pathImageDocuments: path.join(__dirname, '..', 'service', 'visitor', 'docImage'),
             max_logError: 10,
             path_logError: path.join(__dirname, '..', 'service', 'visitor', 'logError'),
-            notifyTime: "*/30 * * * *", // 30 minute
+            notifyTime: "0 * * * *", // 1 hour
             clearFCMToken: '0 2 * * *', // 2 A.M.
         },
     },
