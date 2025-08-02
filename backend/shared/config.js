@@ -36,6 +36,16 @@ const config = {
             domain: 'dptf.com',
             server: '192.168.200.1',
         },
+        hrisDB: {
+            server: '192.168.200.10',
+            user: 'view_user1',
+            password: 'er*W!y2eHp9$',
+            database: 'dptf_prd_0705',
+            options: {
+                encrypt: false,
+                trustServerCertificate: true
+            },
+        },
         visitorDB: {
             host: '192.168.200.170',
             user: 'root',
@@ -51,6 +61,7 @@ const config = {
             path_logError: path.join(__dirname, '..', 'service', 'visitor', 'logError'),
             notifyTime: "*/30 * * * *", // 30 minute
             clearFCMToken: '0 2 * * *', // 2 A.M.
+            manualFilename: 'visitor_mobile_manual_'
         },
     },
 
@@ -71,6 +82,16 @@ const config = {
             domain: 'dptf.com',
             server: '192.168.200.1',
         },
+        hrisDB: {
+            server: '192.168.200.10',
+            user: 'view_user1',
+            password: 'er*W!y2eHp9$',
+            database: 'dptf_prd_0705',
+            options: {
+                encrypt: false,
+                trustServerCertificate: true
+            },
+        },
         visitorDB: {
             host: '192.168.200.170',
             user: 'root',
@@ -86,6 +107,7 @@ const config = {
             path_logError: path.join(__dirname, '..', 'service', 'visitor', 'logError'),
             notifyTime: "0 * * * *", // 1 hour
             clearFCMToken: '0 2 * * *', // 2 A.M.
+            manualFilename: 'visitor_mobile_manual_'
         },
     },
 };

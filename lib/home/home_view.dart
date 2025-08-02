@@ -1,3 +1,4 @@
+import 'package:toppan_app/main.dart';
 import 'dart:ui';
 
 import 'package:awesome_dialog/awesome_dialog.dart';
@@ -18,7 +19,7 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with RouteAware {
   static HomeController _controller = HomeController();
 
   Cleartemporary cleartemporary = Cleartemporary();
@@ -41,12 +42,30 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPush() {
+    clearTemp();
+  }
+
+  @override
+  void didPopNext() {
+    clearTemp(); // called when coming back from another page
+  }
+
   void clearTemp() async {
-    await cleartemporary.listCacheFiles();
-    print('-----------------');
     await cleartemporary.clearCache();
-    print('-----------------');
-    await cleartemporary.listCacheFiles();
   }
 
   void preparePage() async {
@@ -101,16 +120,35 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          // actions: [
-          //   IconButton(
-          //     icon: Icon(
-          //       Icons.notifications,
-          //       color: Colors.white,
-          //       size: 28,
-          //     ),
-          //     onPressed: () {},
-          //   ),
-          // ],
+          actions: [
+            Container(
+                margin: EdgeInsets.only(right: 12),
+                child: Chip(
+                  avatar: CircleAvatar(
+                    radius: 12,
+                    backgroundColor: Colors.white,
+                    child: Center(
+                      child: Text(
+                        _controller.displayName.isNotEmpty
+                        ? _controller.displayName.substring(0, 1).toUpperCase()
+                        : '?',
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  label: Text(
+                    _controller.displayName,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  backgroundColor: Colors.blueGrey,
+                )),
+          ],
+
           leading: IconButton(
             icon: Icon(
               size: 40,
@@ -323,7 +361,19 @@ class _HomePageState extends State<HomePage> {
                   ).show();
                 }
               : () {
-                  data.onTap!(context);
+                  if(data.userIn) {
+                    data.onTap!(context);
+                  }else{
+                    showTopSnackBar(
+                      Overlay.of(context),
+                      CustomSnackBar.error(
+                        backgroundColor: Colors.red.shade700,
+                        icon: Icon(Icons.sentiment_very_satisfied,
+                            color: Colors.red.shade900, size: 120),
+                        message: "ไม่สามารถเข้าใช้งานระบบ ${data.title} ได้เนื่องจากไม่มีข้อมูลผู้ใช้ในระบบ",
+                      ),
+                    );
+                  }
                 },
           borderRadius: BorderRadius.circular(20),
           child: Container(

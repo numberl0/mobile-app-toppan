@@ -387,7 +387,6 @@ class VisitorformModule {
   // Function Load image by url return Uint8List
   Future<Uint8List?> loadImageAsBytes(String imageUrl) async {
     try {
-      print(imageUrl);
       final response = await http.get(Uri.parse(imageUrl));
       if (response.statusCode >= 200 && response.statusCode <= 299) {
         return response.bodyBytes;
@@ -423,4 +422,62 @@ class VisitorformModule {
   }
 }
 
+  Future<List<String>> getDepartments() async {
+    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/getDepartments');
+    String token = await userEntity.getUserPerfer(userEntity.token);
+    List<String> data = [];
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${token}',
+        },
+      ).timeout(
+        Duration(seconds: 10),
+        onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
+      );
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
+        var responseDecode = jsonDecode(response.body);
+        if(responseDecode['data'] != null && responseDecode['data'].isNotEmpty){
+          data = List<String>.from(responseDecode['data'].map((e) => e.toString()));
+        }
+      }else{
+        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
+      }
+    } catch (err) {
+      throw (err);
+    }
+    return data;
+  }
+
+
+  Future<List<String>> getContactByDept(String dept) async {
+    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/getEmployeeNameByDept' + '?dept=${Uri.encodeComponent(dept)}');
+    String token = await userEntity.getUserPerfer(userEntity.token);
+    List<String> data = [];
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${token}'
+        },
+      ).timeout(
+        Duration(seconds: 10),
+        onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
+      );
+      if(response.statusCode >= 200 && response.statusCode <= 299) {
+        var responseDecode = jsonDecode(response.body);
+        if(responseDecode['data'] != null && responseDecode['data'].isNotEmpty){;
+          data = List<String>.from(responseDecode['data'].map((e) => e.toString()));
+        }
+      }else{
+        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
+      }
+    } catch (err) {
+      throw err;
+    }
+    return data;
+  }
 }

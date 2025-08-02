@@ -1,0 +1,6 @@
+{
+    "sonarlint.connectedMode.project": {
+        "connectionId": "http-192-168-31-193-9000-",
+        "projectKey": "visitor-mobile"
+    }
+}

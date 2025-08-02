@@ -24,6 +24,7 @@ class EmployeeController {
   VisitorServiceCenterController _controllerServiceCenter = VisitorServiceCenterController();
 
   bool flagUpdateForm = false;
+  bool logBook = false;
   String tno_pass = '';
 
   int sequenceRunning = 0;
@@ -53,10 +54,10 @@ class EmployeeController {
     // 'DateTime' :
   ];
   List<Map<String, String>> listItem_In = [
-    // 'name':
+    // 'item':
   ];
   List<Map<String, String>> listItem_Out = [
-    // 'name':
+    // 'item':
   ];
   
   bool outOnly = true;
@@ -76,7 +77,7 @@ class EmployeeController {
     'Employee': [null, null, 'พนักงาน', null],
     'Approved': [null, null, 'ผู้อนุมัติ', null],
     'Media': [null, null, 'ผู้ตรวจสอบสื่อ', null],
-    'Security': [null, null, 'รปภ. หน้าโรงงาน', null],
+    'Security': [null, null, 'รปภ.', null],
   };
 
   // Controllers Employee's Information
@@ -136,7 +137,12 @@ class EmployeeController {
       formatSequenceRunning = sequenceRunning.toString().padLeft(6, '0');
 
       // Building
-      buildingList = await employeeModel.getBuilding();
+      List<dynamic> rawListBuilding = await employeeModel.getBuilding();
+      buildingList = rawListBuilding
+        .map((item) => Map<String, dynamic>.from(item))
+        .where((building) {
+          return building['building_name'] == 'อาคาร B' || building['building_name'] == 'อาคาร C';
+        }).toList();
       this.selectedBuilding = this.buildingList[0]['id'];
 
       // Date
@@ -153,7 +159,7 @@ class EmployeeController {
       timeInController.text = formatTime(flagTimeIn!);
 
     } catch (err, stackTrace) {
-      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
     } finally {
       await Future.delayed(Duration(seconds: 1));
       _loadingDialog.hide();
@@ -177,6 +183,9 @@ class EmployeeController {
       // For update recode
       flagUpdateForm = true;
 
+      // logBook
+      logBook = data['logBook'] == true;
+
       //tno
       tno_pass = data['tno_pass'];
 
@@ -185,7 +194,12 @@ class EmployeeController {
       sequenceRunning = int.tryParse(formatSequenceRunning) ?? 0;
 
       // Building
-      buildingList = await employeeModel.getBuilding();
+      List<dynamic> rawListBuilding = await employeeModel.getBuilding();
+      buildingList = rawListBuilding
+        .map((item) => Map<String, dynamic>.from(item))
+        .where((building) {
+          return building['building_name'] == 'อาคาร B' || building['building_name'] == 'อาคาร C';
+        }).toList();
       var area = data['area'];
       var card = data['building_card'];
       if (area != null) {
@@ -247,56 +261,58 @@ class EmployeeController {
           data['objective'] != null ? data['objective'] : '';
 
       // personList
-      for (var person in data['people']) {
+      List<Map<String, dynamic>> copiedPeople = (data['people'] as List<dynamic>)
+      .map((e) => Map<String, dynamic>.from(e as Map))
+      .toList();
+      
+      var uuid = Uuid();
+      for (var person in copiedPeople) {
+        person.putIfAbsent('ID', () =>  uuid.v4() );
+        person.putIfAbsent('Card_Id', () => null);
+        person.putIfAbsent('DateTime', () => DateTime.now().toString());
+
+        // Signature
         if (person['Signature'] != null && person['Signature'] is String) {
-          Uint8List? signatureBytes =
-              await employeeModel.loadImageAsBytes(person['Signature']);
+          Uint8List? signatureBytes = await employeeModel.loadImageAsBytes(person['Signature']);
           person['Signature'] = signatureBytes;
+        }else{
+          person['Signature'] = null;
         }
       }
-      personList = (data['people'] as List<dynamic>)
-          .map((e) => e as Map<String, dynamic>)
-          .toList();
+      personList = copiedPeople;
 
-      //item_in / item_out
-      if (data['item_in']['type'] == data['item_out']['type']) {
-        if (data['item_in']['type'] == 'image' &&
-            data['item_out']['type'] == 'image') {
-          //in case image
-          isSwitchImagePicker = true;
-          if (data['item_in']['item'] != null &&
-              data['item_in']['item'] is List) {
-            for (String imageUrl
-                in List<String>.from(data['item_in']['item'])) {
-              File? file = await employeeModel.loadImageToFile(imageUrl);
-              if (file != null) {
-                imageList_In.add(file);
-              }
+      //item_in
+      if(data['item_in'] != null) {
+        if (data['item_in']['images'] != null && data['item_in']['images'] is List) {
+          for (String imageUrl in List<String>.from(data['item_in']['images'])) {
+            File? file = await employeeModel.loadImageToFile(imageUrl);
+            if (file != null) {
+              imageList_In.add(file);
             }
-          }
-          if (data['item_out']['item'] != null &&
-              data['item_out']['item'] is List) {
-            for (String imageUrl
-                in List<String>.from(data['item_out']['item'])) {
-              File? file = await employeeModel.loadImageToFile(imageUrl);
-              if (file != null) {
-                imageList_Out.add(file);
-              }
-            }
-          }
-        } else {
-          // in case list
-          if (data['item_in']['item'] != null) {
-            listItem_In = List<Map<String, String>>.from(
-                (data['item_in']['item'] as List)
-                    .map((e) => {"name": e.toString()}));
-          }
-          if (data['item_out']['item'] != null) {
-            listItem_Out = List<Map<String, String>>.from(
-                (data['item_out']['item'] as List)
-                    .map((e) => {"name": e.toString()}));
           }
         }
+        // in case list
+        if (data['item_in']['items'] != null) {
+          listItem_In = List<Map<String, String>>.from(
+              (data['item_in']['items'] as List)
+                  .map((e) => {"item": e.toString()}));
+        }
+      }
+      // item_out
+      if(data['item_out'] != null) {
+        if (data['item_out']['images'] != null && data['item_out']['images'] is List) {
+          for (String imageUrl in List<String>.from(data['item_out']['images'])) {
+            File? file = await employeeModel.loadImageToFile(imageUrl);
+            if (file != null) {
+              imageList_Out.add(file);
+            }
+          }
+        }
+        if (data['item_out']['items'] != null) {
+        listItem_Out = List<Map<String, String>>.from(
+            (data['item_out']['items'] as List)
+                .map((e) => {"item": e.toString()}));
+       }
       }
 
 
@@ -359,13 +375,58 @@ class EmployeeController {
     return '';
   }
 
-  Future<bool> checkDateOutFrist() async {
+  // Future<bool> checkDateOutFrist() async {
+  //   try {
+  //     final outDate = DateTime(flagDateOut!.year, flagDateOut!.month, flagDateOut!.day);
+  //     final inDate = DateTime(flagDateIn!.year, flagDateIn!.month, flagDateIn!.day);
+  //     return !outDate.isAfter(inDate);
+  //   } catch (err, stackTrace) {
+  //     await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+  //     return false;
+  //   }
+  // }
+
+   Future<bool> checkDateOutFrist() async {
     try {
       final outDate = DateTime(flagDateOut!.year, flagDateOut!.month, flagDateOut!.day);
       final inDate = DateTime(flagDateIn!.year, flagDateIn!.month, flagDateIn!.day);
-      return !outDate.isAfter(inDate);
+      return outDate.isBefore(inDate);
     } catch (err, stackTrace) {
-      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      return false;
+    }
+  }
+
+    Future<bool> checkTimeOutNotPastInSameDay() async {
+      try {
+        final sameDate = flagDateIn!.year == flagDateOut!.year &&
+                     flagDateIn!.month == flagDateOut!.month &&
+                     flagDateIn!.day == flagDateOut!.day;
+        if (sameDate) {
+          final date = DateTime(flagDateIn!.year, flagDateIn!.month, flagDateIn!.day);
+          final dateTimeIn = DateTime(date.year, date.month, date.day, flagTimeIn!.hour, flagTimeIn!.minute);
+          final dateTimeOut = DateTime(date.year, date.month, date.day, flagTimeOut!.hour, flagTimeOut!.minute);
+          return !dateTimeIn.isBefore(dateTimeOut);
+        }
+    return false;
+    } catch (err, stackTrace) {
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      return false;
+    }
+  }
+
+  Future<bool> checkDateTimeError() async {
+    try {
+      if(flagDateIn != null && flagDateOut != null && flagTimeIn != null && flagTimeOut != null){
+        bool isDateValid = await checkDateOutFrist();
+        bool isTimeValid = await checkTimeOutNotPastInSameDay();
+        if (!isDateValid && !isTimeValid) {
+          return false;
+        }
+      }
+      return true;
+    } catch (err, stackTrace) {
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
       return false;
     }
   }
@@ -399,7 +460,7 @@ class EmployeeController {
       expandedPerson();
       await clearPersonController();
     } catch (err, stackTrace) {
-      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
     }
   }
 
@@ -421,7 +482,7 @@ class EmployeeController {
         entry['Signature'] = signatureData;
       }
     } catch (err, stackTrace) {
-      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
     }
   }
 
@@ -443,7 +504,7 @@ class EmployeeController {
   Future<void> addItemTypeList(String type) async {
     if (itemNameController.text.isNotEmpty) {
       Map<String, String> item = {
-        'name': itemNameController.text,
+        'item': itemNameController.text,
       };
       if (type == 'in') {
         listItem_In.add(item); //add item in
@@ -456,7 +517,7 @@ class EmployeeController {
   }
 
   void editItemTypeList(Map<String, String> entry) {
-    entry['name'] = itemNameController.text;
+    entry['item'] = itemNameController.text;
   }
 
   void itemListClear() {
@@ -479,17 +540,16 @@ class EmployeeController {
       Map<String, dynamic>? filenamesData = await uploadImageToServer(tno_pass,'EMPLOYEE', dateOutController.text); //1st
 
       // Upload to PASS_REQUEST table
-      bool uploadRequest =
-          await uploadToPassRequest(tno_pass, filenamesData); //2nd
-      if (!uploadRequest) {
-        throw Exception('Error uploading to PASS_REQUEST');
-      }
+      bool uploadRequest = await uploadToPassRequest(tno_pass, filenamesData); //2nd
+      // if (!uploadRequest) {
+      //   throw Exception('Error uploading to PASS_REQUEST');
+      // }
 
       // Upload in PASS_Form table
       bool uploadForm = await uploadToPassForm(tno_pass, filenamesData); //3rd
-      if (!uploadForm) {
-        throw Exception('Error uploading to PASS_FORM');
-      }
+      // if (!uploadForm) {
+      //   throw Exception('Error uploading to PASS_FORM');
+      // }
 
       
       if(uploadForm && uploadRequest && !flagUpdateForm) {
@@ -502,7 +562,7 @@ class EmployeeController {
 
       }
     } catch (err, stackTrace) {
-      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
     }
     return status;
   }
@@ -544,13 +604,12 @@ class EmployeeController {
 
       //Signature
       //[0]=status, [1]=signature filenames, [2]=date, [3]=signatures_by
-      List<dynamic> empSign =
-          getDataSignatureMapping(signatureSectionMap, 'Employee', approverFilenames_Signature);
-      List<dynamic> apprSign = getDataSignatureMapping(
+      List<dynamic> empSign = await getDataSignatureMapping(signatureSectionMap, 'Employee', approverFilenames_Signature);
+      List<dynamic> apprSign = await getDataSignatureMapping(
           signatureSectionMap, 'Approved', approverFilenames_Signature);
-      List<dynamic> mediaSign = getDataSignatureMapping(
+      List<dynamic> mediaSign = await getDataSignatureMapping(
           signatureSectionMap, 'Media', approverFilenames_Signature);
-      List<dynamic> mainSign = getDataSignatureMapping(
+      List<dynamic> mainSign = await getDataSignatureMapping(
           signatureSectionMap, 'Security', approverFilenames_Signature);
 
       int objTypeInt = 1;
@@ -570,7 +629,7 @@ class EmployeeController {
         'tno_pass': tno_pass,
         'request_type': typeForm,
         'sequence_no': formatSequenceRunning,
-        'company': 'Toppan edge (thailand) limited.',
+        'company': 'TOPPAN EDGE (THAILAND) LIMITED.',
         'vehicle_no': vehicleLicenseController.text,
         'date_in': formattedDateIn,
         'time_in': formattedTimeIn,
@@ -615,7 +674,7 @@ class EmployeeController {
       }
 
     } catch (err, stackTrace) {
-      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
     }
     return uploadStatus;
   }
@@ -645,31 +704,13 @@ class EmployeeController {
         });
       });
 
-      //Item In/Out
-      //Check item is image
-      String typeItem = '';
-      if (isSwitchImagePicker) {
-        typeItem = 'image';
-      } else {
-        typeItem = 'list';
-      }
-      // Prepare item data
-      Map<String, dynamic> itemIn_Json = {
-        "type": typeItem,
-        'item': itemInFilenames
-      };
-      Map<String, dynamic> itemOut_Json = {
-        "type": typeItem,
-        'item': itemOutFilenames
-      };
-
       // Prepare all data
       Map<String, dynamic> data = {
         'tno_pass': tno_pass,
-        'visitorType': 0,
+        'visitorType': 1,
         'people': peopleList,
-        'item_in': itemIn_Json,
-        'item_out': itemOut_Json,
+        'item_in': itemInFilenames,
+        'item_out': itemOutFilenames,
       };
       // call api
       if(!flagUpdateForm) {
@@ -679,13 +720,13 @@ class EmployeeController {
       }
 
     } catch (err, stackTrace) {
-      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
     }
     return uploadStatus;
   }
 
 
-  List<dynamic> getDataSignatureMapping(Map<String, List<dynamic>> signatureMap,String sectionKey, Map<String, dynamic> approverFilenames_Signature) {
+  Future<List> getDataSignatureMapping(Map<String, List<dynamic>> signatureMap,String sectionKey, Map<String, dynamic> approverFilenames_Signature) async {
     List<dynamic> data = [];
     try {
       var signatureMapping = signatureSectionMap[sectionKey];
@@ -706,7 +747,7 @@ class EmployeeController {
         ];
       }
     } catch (err, stackTrace) {
-      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
     }
     return data;
   }
@@ -735,8 +776,8 @@ class EmployeeController {
       }
 
       //item
-      List<File> item_in = [];
-      List<File> item_out = [];
+      List<File> image_list_in = [];
+      List<File> image_list_out = [];
       Future<File> processImage(File imageFile, String newFileName) async {
         final bytes = await imageFile.readAsBytes();
         final decodedImage = img.decodeImage(bytes);
@@ -745,29 +786,26 @@ class EmployeeController {
         final directory = await getTemporaryDirectory();
         final newPath = join(directory.path, '$newFileName.jpg'); // Force .jpg to avoid weird formats
 
-        final encodedImage = img.encodeJpg(decodedImage, quality: 90);
+        final encodedImage = img.encodeJpg(decodedImage, quality: 70);
         final newFile = File(newPath);
         await newFile.writeAsBytes(encodedImage);
         return newFile;
       }
 
-      if (isSwitchImagePicker) {
-        // item_in
-        for (int index = 0; index < imageList_In.length; index++) {
-          final item = imageList_In[index];
-          if (item != null) {
-            final processed = await processImage(item, 'in_$index');
-            item_in.add(processed);
-          }
+      // item_in (image)
+      for (int index = 0; index < imageList_In.length; index++) {
+        final item = imageList_In[index];
+        if (item != null) {
+          final processed = await processImage(item, 'in_$index');
+          image_list_in.add(processed);
         }
-
-        // item_out
-        for (int index = 0; index < imageList_Out.length; index++) {
-          final item = imageList_Out[index];
-          if (item != null) {
-            final processed = await processImage(item, 'out_$index');
-            item_out.add(processed);
-          }
+      }
+      // item_out (image)
+      for (int index = 0; index < imageList_Out.length; index++) {
+        final item = imageList_Out[index];
+        if (item != null) {
+          final processed = await processImage(item, 'out_$index');
+          image_list_out.add(processed);
         }
       }
 
@@ -791,8 +829,8 @@ class EmployeeController {
         'people': visitorSignatureFiles.isEmpty
             ? null
             : visitorSignatureFiles, //visitor signature
-        'item_in': item_in.isEmpty ? null : item_in, //item in image
-        'item_out': item_out.isEmpty ? null : item_out, //item out image
+        'item_in': image_list_in.isEmpty ? null : image_list_in, //item in image
+        'item_out': image_list_out.isEmpty ? null : image_list_out, //item out image
         'approver': signatureApprover.isEmpty
             ? null
             : signatureApprover, //approver signature
@@ -806,20 +844,23 @@ class EmployeeController {
       List<String?> visitorFilenames = visitorSignatureFiles
           .map((file) => file != null ? basename(file.path) : null)
           .toList();
+
       //prepare item filename
-      var item_In_Filenames;
-      var item_Out_Filenames;
-      if (isSwitchImagePicker) {
-        item_In_Filenames = item_in.map((file) => basename(file.path)).toList();
-        item_Out_Filenames =
-            item_out.map((file) => basename(file.path)).toList();
-      } else {
-        //user name is not image
-        item_In_Filenames =
-            listItem_In.map((item) => item['name'] as String).toList();
-        item_Out_Filenames =
-            listItem_Out.map((item) => item['name'] as String).toList();
-      }
+      //item in
+      final itemsIN = listItem_In.map((e) => e['item'] as String?).where((item) => item != null && item.trim().isNotEmpty).cast<String>().toList();
+      final imagesIN = image_list_in.where((file) => file != null && file.path != null).map((file) => basename(file.path)).toList();
+      final Map<String, List<String>> item_In_Filenames = {
+        "items": itemsIN,
+        "images": imagesIN,
+      };
+      //item out
+      final itemsOUT = listItem_Out.map((e) => e['item'] as String?).where((item) => item != null && item.trim().isNotEmpty).cast<String>().toList();
+      final imagesOUT = image_list_out.where((file) => file != null && file.path != null).map((file) => basename(file.path)).toList();
+      final Map<String, List<String>> item_Out_Filenames = {
+        "items": itemsOUT,
+        "images": imagesOUT,
+      };
+
       //prepare approver filename
       List<String?> approverFilenames = signatureApprover
           .map((file) => file != null ? basename(file.path) : null)
@@ -842,7 +883,7 @@ class EmployeeController {
         'approver[]': [approverMap],
       };
     } catch (err, stackTrace) {
-      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
     }
     return data;
   }

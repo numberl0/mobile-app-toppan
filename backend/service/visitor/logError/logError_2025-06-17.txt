@@ -1,0 +1,511 @@
+
+[2025-06-17 11:38:31] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"User Not Found With This username"} 
+[Stack Trace]
+#0      HomeModel.getRoleByUser (package:toppan_app/home/home_model.dart:75:7)
+<asynchronous suspension>
+#1      HomeController.prepareUserVisitor (package:toppan_app/home/home_controller.dart:86:29)
+<asynchronous suspension>
+#2      HomeController.checkConnectionService (package:toppan_app/home/home_controller.dart:70:7)
+<asynchronous suspension>
+#3      HomeController.preparePage (package:toppan_app/home/home_controller.dart:30:7)
+<asynchronous suspension>
+#4      _HomePageState.preparePage (package:toppan_app/home/home_view.dart:72:5)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 11:42:04] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedDocument (package:toppan_app/visitorService/approve/approve_model.dart:97:7)
+<asynchronous suspension>
+#1      ApproveController.approvedDocument (package:toppan_app/visitorService/approve/approve_controller.dart:108:16)
+<asynchronous suspension>
+#2      _ApprovePageState.popUpShowInformationForm.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:888:35)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 11:42:09] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedDocument (package:toppan_app/visitorService/approve/approve_model.dart:97:7)
+<asynchronous suspension>
+#1      ApproveController.approvedDocument (package:toppan_app/visitorService/approve/approve_controller.dart:108:16)
+<asynchronous suspension>
+#2      _ApprovePageState.popUpShowInformationForm.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:888:35)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 11:42:34] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedDocument (package:toppan_app/visitorService/approve/approve_model.dart:97:7)
+<asynchronous suspension>
+#1      ApproveController.approvedDocument (package:toppan_app/visitorService/approve/approve_controller.dart:108:16)
+<asynchronous suspension>
+#2      _ApprovePageState.popUpShowInformationForm.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:888:35)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 11:42:42] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedDocument (package:toppan_app/visitorService/approve/approve_model.dart:97:7)
+<asynchronous suspension>
+#1      ApproveController.approvedDocument (package:toppan_app/visitorService/approve/approve_controller.dart:108:16)
+<asynchronous suspension>
+#2      _ApprovePageState.popUpShowInformationForm.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:888:35)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 11:42:46] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedDocument (package:toppan_app/visitorService/approve/approve_model.dart:97:7)
+<asynchronous suspension>
+#1      ApproveController.approvedDocument (package:toppan_app/visitorService/approve/approve_controller.dart:108:16)
+<asynchronous suspension>
+#2      _ApprovePageState.popUpShowInformationForm.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:888:35)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 11:42:47] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedDocument (package:toppan_app/visitorService/approve/approve_model.dart:97:7)
+<asynchronous suspension>
+#1      ApproveController.approvedDocument (package:toppan_app/visitorService/approve/approve_controller.dart:108:16)
+<asynchronous suspension>
+#2      _ApprovePageState.popUpShowInformationForm.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:888:35)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 11:42:49] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedDocument (package:toppan_app/visitorService/approve/approve_model.dart:97:7)
+<asynchronous suspension>
+#1      ApproveController.approvedDocument (package:toppan_app/visitorService/approve/approve_controller.dart:108:16)
+<asynchronous suspension>
+#2      _ApprovePageState.popUpShowInformationForm.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:888:35)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 11:42:51] 
+[Error] HttpException: Request failed with status: 500, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedAll (package:toppan_app/visitorService/approve/approve_model.dart:128:7)
+<asynchronous suspension>
+#1      ApproveController.approvedAll (package:toppan_app/visitorService/approve/approve_controller.dart:134:16)
+<asynchronous suspension>
+#2      _ApprovePageState.SearchInputBar.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:361:61)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 11:42:55] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedDocument (package:toppan_app/visitorService/approve/approve_model.dart:97:7)
+<asynchronous suspension>
+#1      ApproveController.approvedDocument (package:toppan_app/visitorService/approve/approve_controller.dart:108:16)
+<asynchronous suspension>
+#2      _ApprovePageState.popUpShowInformationForm.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:888:35)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 11:44:34] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedDocument (package:toppan_app/visitorService/approve/approve_model.dart:97:7)
+<asynchronous suspension>
+#1      ApproveController.approvedDocument (package:toppan_app/visitorService/approve/approve_controller.dart:108:16)
+<asynchronous suspension>
+#2      _ApprovePageState.popUpShowInformationForm.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:888:35)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 11:47:59] 
+[Error] HttpException: Request failed with status: 500, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedAll (package:toppan_app/visitorService/approve/approve_model.dart:128:7)
+<asynchronous suspension>
+#1      ApproveController.approvedAll (package:toppan_app/visitorService/approve/approve_controller.dart:134:16)
+<asynchronous suspension>
+#2      _ApprovePageState.SearchInputBar.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:361:61)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 11:48:00] 
+[Error] HttpException: Request failed with status: 500, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedAll (package:toppan_app/visitorService/approve/approve_model.dart:128:7)
+<asynchronous suspension>
+#1      ApproveController.approvedAll (package:toppan_app/visitorService/approve/approve_controller.dart:134:16)
+<asynchronous suspension>
+#2      _ApprovePageState.SearchInputBar.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:361:61)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 11:48:54] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedDocument (package:toppan_app/visitorService/approve/approve_model.dart:97:7)
+<asynchronous suspension>
+#1      ApproveController.approvedDocument (package:toppan_app/visitorService/approve/approve_controller.dart:108:16)
+<asynchronous suspension>
+#2      _ApprovePageState.popUpShowInformationForm.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:888:35)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 11:48:54] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedDocument (package:toppan_app/visitorService/approve/approve_model.dart:97:7)
+<asynchronous suspension>
+#1      ApproveController.approvedDocument (package:toppan_app/visitorService/approve/approve_controller.dart:108:16)
+<asynchronous suspension>
+#2      _ApprovePageState.popUpShowInformationForm.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:888:35)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 11:49:45] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedDocument (package:toppan_app/visitorService/approve/approve_model.dart:97:7)
+<asynchronous suspension>
+#1      ApproveController.approvedDocument (package:toppan_app/visitorService/approve/approve_controller.dart:108:16)
+<asynchronous suspension>
+#2      _ApprovePageState.popUpShowInformationForm.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:888:35)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 11:51:04] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedDocument (package:toppan_app/visitorService/approve/approve_model.dart:97:7)
+<asynchronous suspension>
+#1      ApproveController.approvedDocument (package:toppan_app/visitorService/approve/approve_controller.dart:108:16)
+<asynchronous suspension>
+#2      _ApprovePageState.popUpShowInformationForm.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:888:35)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 11:58:31] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedDocument (package:toppan_app/visitorService/approve/approve_model.dart:97:7)
+<asynchronous suspension>
+#1      ApproveController.approvedDocument (package:toppan_app/visitorService/approve/approve_controller.dart:108:16)
+<asynchronous suspension>
+#2      _ApprovePageState.popUpShowInformationForm.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:888:35)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 12:35:05] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedDocument (package:toppan_app/visitorService/approve/approve_model.dart:97:7)
+<asynchronous suspension>
+#1      ApproveController.approvedDocument (package:toppan_app/visitorService/approve/approve_controller.dart:118:16)
+<asynchronous suspension>
+#2      _ApprovePageState.popUpShowInformationForm.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:888:35)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 12:39:10] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedDocument (package:toppan_app/visitorService/approve/approve_model.dart:97:7)
+<asynchronous suspension>
+#1      ApproveController.approvedDocument (package:toppan_app/visitorService/approve/approve_controller.dart:121:16)
+<asynchronous suspension>
+#2      _ApprovePageState.popUpShowInformationForm.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:888:35)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 12:54:26] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedDocument (package:toppan_app/visitorService/approve/approve_model.dart:97:7)
+<asynchronous suspension>
+#1      ApproveController.approvedDocument (package:toppan_app/visitorService/approve/approve_controller.dart:121:16)
+<asynchronous suspension>
+#2      _ApprovePageState.popUpShowInformationForm.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:888:35)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 12:56:23] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedDocument (package:toppan_app/visitorService/approve/approve_model.dart:99:7)
+<asynchronous suspension>
+#1      ApproveController.approvedDocument (package:toppan_app/visitorService/approve/approve_controller.dart:118:16)
+<asynchronous suspension>
+#2      _ApprovePageState.popUpShowInformationForm.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:888:35)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 12:57:47] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedDocument (package:toppan_app/visitorService/approve/approve_model.dart:99:7)
+<asynchronous suspension>
+#1      ApproveController.approvedDocument (package:toppan_app/visitorService/approve/approve_controller.dart:118:16)
+<asynchronous suspension>
+#2      _ApprovePageState.popUpShowInformationForm.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:888:35)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 12:58:19] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"Failed to move signature file."} 
+[Stack Trace]
+#0      ApproveModel.approvedDocument (package:toppan_app/visitorService/approve/approve_model.dart:99:7)
+<asynchronous suspension>
+#1      ApproveController.approvedDocument (package:toppan_app/visitorService/approve/approve_controller.dart:118:16)
+<asynchronous suspension>
+#2      _ApprovePageState.popUpShowInformationForm.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:toppan_app/visitorService/approve/approve_view.dart:888:35)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 14:31:03] 
+[Error] Null check operator used on a null value 
+[Stack Trace]
+#0      VisitorFormController.checkDateInFrist (package:toppan_app/visitorService/visitor/visitor_controller.dart:507:43)
+#1      VisitorFormController.checkDateTimeError (package:toppan_app/visitorService/visitor/visitor_controller.dart:538:32)
+#2      _VisitorFormPageState._timePicker (package:toppan_app/visitorService/visitor/visitor_view.dart:3076:49)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 14:31:03] 
+[Error] Null check operator used on a null value 
+[Stack Trace]
+#0      VisitorFormController.checkTimeNotPastInSameDay (package:toppan_app/visitorService/visitor/visitor_controller.dart:518:57)
+#1      VisitorFormController.checkDateTimeError (package:toppan_app/visitorService/visitor/visitor_controller.dart:539:32)
+<asynchronous suspension>
+#2      _VisitorFormPageState._timePicker (package:toppan_app/visitorService/visitor/visitor_view.dart:3076:31)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 14:43:04] 
+[Error] Null check operator used on a null value 
+[Stack Trace]
+#0      VisitorFormController.checkDateInFrist (package:toppan_app/visitorService/visitor/visitor_controller.dart:507:43)
+#1      VisitorFormController.checkDateTimeError (package:toppan_app/visitorService/visitor/visitor_controller.dart:536:32)
+#2      _VisitorFormPageState._timePicker (package:toppan_app/visitorService/visitor/visitor_view.dart:3076:44)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 14:43:04] 
+[Error] Null check operator used on a null value 
+[Stack Trace]
+#0      VisitorFormController.checkTimeNotPastInSameDay (package:toppan_app/visitorService/visitor/visitor_controller.dart:518:57)
+#1      VisitorFormController.checkDateTimeError (package:toppan_app/visitorService/visitor/visitor_controller.dart:537:32)
+<asynchronous suspension>
+#2      _VisitorFormPageState._timePicker (package:toppan_app/visitorService/visitor/visitor_view.dart:3076:26)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 14:46:45] 
+[Error] Null check operator used on a null value 
+[Stack Trace]
+#0      VisitorFormController.checkDateInFrist (package:toppan_app/visitorService/visitor/visitor_controller.dart:507:43)
+#1      VisitorFormController.checkDateTimeError (package:toppan_app/visitorService/visitor/visitor_controller.dart:536:32)
+#2      _VisitorFormPageState._timePicker (package:toppan_app/visitorService/visitor/visitor_view.dart:3076:44)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 14:46:45] 
+[Error] Null check operator used on a null value 
+[Stack Trace]
+#0      VisitorFormController.checkTimeNotPastInSameDay (package:toppan_app/visitorService/visitor/visitor_controller.dart:518:57)
+#1      VisitorFormController.checkDateTimeError (package:toppan_app/visitorService/visitor/visitor_controller.dart:539:30)
+<asynchronous suspension>
+#2      _VisitorFormPageState._timePicker (package:toppan_app/visitorService/visitor/visitor_view.dart:3076:26)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 14:46:49] 
+[Error] Null check operator used on a null value 
+[Stack Trace]
+#0      VisitorFormController.checkDateInFrist (package:toppan_app/visitorService/visitor/visitor_controller.dart:507:43)
+#1      VisitorFormController.checkDateTimeError (package:toppan_app/visitorService/visitor/visitor_controller.dart:536:32)
+#2      _VisitorFormPageState._timePicker (package:toppan_app/visitorService/visitor/visitor_view.dart:3076:44)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 14:46:49] 
+[Error] Null check operator used on a null value 
+[Stack Trace]
+#0      VisitorFormController.checkTimeNotPastInSameDay (package:toppan_app/visitorService/visitor/visitor_controller.dart:518:57)
+#1      VisitorFormController.checkDateTimeError (package:toppan_app/visitorService/visitor/visitor_controller.dart:539:30)
+<asynchronous suspension>
+#2      _VisitorFormPageState._timePicker (package:toppan_app/visitorService/visitor/visitor_view.dart:3076:26)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 14:47:36] 
+[Error] Null check operator used on a null value 
+[Stack Trace]
+#0      VisitorFormController.checkDateInFrist (package:toppan_app/visitorService/visitor/visitor_controller.dart:507:43)
+#1      VisitorFormController.checkDateTimeError (package:toppan_app/visitorService/visitor/visitor_controller.dart:536:32)
+#2      _VisitorFormPageState._timePicker (package:toppan_app/visitorService/visitor/visitor_view.dart:3076:44)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 14:47:36] 
+[Error] Null check operator used on a null value 
+[Stack Trace]
+#0      VisitorFormController.checkTimeNotPastInSameDay (package:toppan_app/visitorService/visitor/visitor_controller.dart:518:57)
+#1      VisitorFormController.checkDateTimeError (package:toppan_app/visitorService/visitor/visitor_controller.dart:540:30)
+<asynchronous suspension>
+#2      _VisitorFormPageState._timePicker (package:toppan_app/visitorService/visitor/visitor_view.dart:3076:26)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 14:47:55] 
+[Error] Null check operator used on a null value 
+[Stack Trace]
+#0      VisitorFormController.checkDateInFrist (package:toppan_app/visitorService/visitor/visitor_controller.dart:507:43)
+#1      VisitorFormController.checkDateTimeError (package:toppan_app/visitorService/visitor/visitor_controller.dart:536:32)
+#2      _VisitorFormPageState._timePicker (package:toppan_app/visitorService/visitor/visitor_view.dart:3076:44)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 14:48:03] 
+[Error] Null check operator used on a null value 
+[Stack Trace]
+#0      VisitorFormController.checkDateInFrist (package:toppan_app/visitorService/visitor/visitor_controller.dart:507:43)
+#1      VisitorFormController.checkDateTimeError (package:toppan_app/visitorService/visitor/visitor_controller.dart:536:32)
+#2      _VisitorFormPageState._timePicker (package:toppan_app/visitorService/visitor/visitor_view.dart:3076:44)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 14:48:05] 
+[Error] Null check operator used on a null value 
+[Stack Trace]
+#0      VisitorFormController.checkDateInFrist (package:toppan_app/visitorService/visitor/visitor_controller.dart:507:43)
+#1      VisitorFormController.checkDateTimeError (package:toppan_app/visitorService/visitor/visitor_controller.dart:536:32)
+#2      _VisitorFormPageState._timePicker (package:toppan_app/visitorService/visitor/visitor_view.dart:3076:44)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 15:41:21] 
+[Error] Null check operator used on a null value 
+[Stack Trace]
+#0      EmployeeController.checkTimeOutNotPastInSameDay (package:toppan_app/visitorService/employee/employee_controller.dart:398:82)
+#1      EmployeeController.checkDateTimeError (package:toppan_app/visitorService/employee/employee_controller.dart:413:34)
+<asynchronous suspension>
+#2      _EmployeeFormPageState._datePicker (package:toppan_app/visitorService/employee/employee_view.dart:3256:30)
+<asynchronous suspension>
+#3      _EmployeeFormPageState._getPageContent.<anonymous closure> (package:toppan_app/visitorService/employee/employee_view.dart:343:43)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 15:42:40] 
+[Error] Null check operator used on a null value 
+[Stack Trace]
+#0      EmployeeController.checkTimeOutNotPastInSameDay (package:toppan_app/visitorService/employee/employee_controller.dart:398:82)
+#1      EmployeeController.checkDateTimeError (package:toppan_app/visitorService/employee/employee_controller.dart:413:34)
+<asynchronous suspension>
+#2      _EmployeeFormPageState._datePicker (package:toppan_app/visitorService/employee/employee_view.dart:3256:30)
+<asynchronous suspension>
+#3      _EmployeeFormPageState._getPageContent.<anonymous closure> (package:toppan_app/visitorService/employee/employee_view.dart:343:43)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 15:43:14] 
+[Error] Null check operator used on a null value 
+[Stack Trace]
+#0      EmployeeController.checkTimeOutNotPastInSameDay (package:toppan_app/visitorService/employee/employee_controller.dart:398:82)
+#1      EmployeeController.checkDateTimeError (package:toppan_app/visitorService/employee/employee_controller.dart:413:34)
+<asynchronous suspension>
+#2      _EmployeeFormPageState._datePicker (package:toppan_app/visitorService/employee/employee_view.dart:3256:30)
+<asynchronous suspension>
+#3      _EmployeeFormPageState._getPageContent.<anonymous closure> (package:toppan_app/visitorService/employee/employee_view.dart:343:43)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 15:43:22] 
+[Error] Null check operator used on a null value 
+[Stack Trace]
+#0      EmployeeController.checkTimeOutNotPastInSameDay (package:toppan_app/visitorService/employee/employee_controller.dart:398:82)
+#1      EmployeeController.checkDateTimeError (package:toppan_app/visitorService/employee/employee_controller.dart:413:34)
+<asynchronous suspension>
+#2      _EmployeeFormPageState._datePicker (package:toppan_app/visitorService/employee/employee_view.dart:3256:30)
+<asynchronous suspension>
+#3      _EmployeeFormPageState._getPageContent.<anonymous closure> (package:toppan_app/visitorService/employee/employee_view.dart:343:43)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 15:43:29] 
+[Error] Null check operator used on a null value 
+[Stack Trace]
+#0      EmployeeController.checkTimeOutNotPastInSameDay (package:toppan_app/visitorService/employee/employee_controller.dart:398:82)
+#1      EmployeeController.checkDateTimeError (package:toppan_app/visitorService/employee/employee_controller.dart:413:34)
+<asynchronous suspension>
+#2      _EmployeeFormPageState._datePicker (package:toppan_app/visitorService/employee/employee_view.dart:3256:30)
+<asynchronous suspension>
+#3      _EmployeeFormPageState._getPageContent.<anonymous closure> (package:toppan_app/visitorService/employee/employee_view.dart:343:43)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 15:46:03] 
+[Error] Null check operator used on a null value 
+[Stack Trace]
+#0      EmployeeController.checkTimeOutNotPastInSameDay (package:toppan_app/visitorService/employee/employee_controller.dart:398:82)
+#1      EmployeeController.checkDateTimeError (package:toppan_app/visitorService/employee/employee_controller.dart:413:34)
+<asynchronous suspension>
+#2      _EmployeeFormPageState._datePicker (package:toppan_app/visitorService/employee/employee_view.dart:3256:30)
+<asynchronous suspension>
+#3      _EmployeeFormPageState._getPageContent.<anonymous closure> (package:toppan_app/visitorService/employee/employee_view.dart:343:43)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 15:46:42] 
+[Error] Null check operator used on a null value 
+[Stack Trace]
+#0      EmployeeController.checkTimeOutNotPastInSameDay (package:toppan_app/visitorService/employee/employee_controller.dart:398:82)
+#1      EmployeeController.checkDateTimeError (package:toppan_app/visitorService/employee/employee_controller.dart:413:34)
+<asynchronous suspension>
+#2      _EmployeeFormPageState._datePicker (package:toppan_app/visitorService/employee/employee_view.dart:3256:30)
+<asynchronous suspension>
+#3      _EmployeeFormPageState._getPageContent.<anonymous closure> (package:toppan_app/visitorService/employee/employee_view.dart:343:43)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 16:11:14] 
+[Error] Null check operator used on a null value 
+[Stack Trace]
+#0      VisitorFormController.checkTimeOutNotPastInSameDay (package:toppan_app/visitorService/visitor/visitor_controller.dart:524:84)
+#1      VisitorFormController.checkDateTimeError (package:toppan_app/visitorService/visitor/visitor_controller.dart:538:34)
+<asynchronous suspension>
+#2      _VisitorFormPageState._datePicker (package:toppan_app/visitorService/visitor/visitor_view.dart:3144:29)
+<asynchronous suspension>
+#3      _VisitorFormPageState._getPageContent.<anonymous closure> (package:toppan_app/visitorService/visitor/visitor_view.dart:440:37)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 16:11:16] 
+[Error] Null check operator used on a null value 
+[Stack Trace]
+#0      VisitorFormController.checkTimeOutNotPastInSameDay (package:toppan_app/visitorService/visitor/visitor_controller.dart:524:84)
+#1      VisitorFormController.checkDateTimeError (package:toppan_app/visitorService/visitor/visitor_controller.dart:538:34)
+<asynchronous suspension>
+#2      _VisitorFormPageState._datePicker (package:toppan_app/visitorService/visitor/visitor_view.dart:3144:29)
+<asynchronous suspension>
+#3      _VisitorFormPageState._getPageContent.<anonymous closure> (package:toppan_app/visitorService/visitor/visitor_view.dart:440:37)
+<asynchronous suspension>
+
+-------------------
+[2025-06-17 16:11:31] 
+[Error] Null check operator used on a null value 
+[Stack Trace]
+#0      VisitorFormController.checkTimeOutNotPastInSameDay (package:toppan_app/visitorService/visitor/visitor_controller.dart:524:84)
+#1      VisitorFormController.checkDateTimeError (package:toppan_app/visitorService/visitor/visitor_controller.dart:538:34)
+<asynchronous suspension>
+#2      _VisitorFormPageState._datePicker (package:toppan_app/visitorService/visitor/visitor_view.dart:3144:29)
+<asynchronous suspension>
+#3      _VisitorFormPageState._getPageContent.<anonymous closure> (package:toppan_app/visitorService/visitor/visitor_view.dart:440:37)
+<asynchronous suspension>
+
+-------------------

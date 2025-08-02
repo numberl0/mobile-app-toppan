@@ -31,8 +31,9 @@ class SearchFormController {
 
       String formatToDay = DateFormat('yyyy-MM-dd').format(DateTime.now());          // Example: 2025-03-14
       list_Request = await searchModule.getRequestFormByDate(formatToDay);
+
     } catch (err, stackTrace) {
-      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
     } finally {
       await Future.delayed(Duration(seconds: 1));
       _loadingDialog.hide();
@@ -69,7 +70,7 @@ class SearchFormController {
         return matchesType && matchesCompany && matchesPerson;
       }).toList();
     } catch (err, stackTrace) {
-      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
     }
   }
 

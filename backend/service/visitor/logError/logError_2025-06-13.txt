@@ -1,0 +1,61 @@
+
+[2025-06-13 04:34:27] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"User Not Found With This username"} 
+[Stack Trace]
+#0      HomeModel.getRoleByUser (package:toppan_app/home/home_model.dart:75:7)
+<asynchronous suspension>
+#1      HomeController.prepareUserVisitor (package:toppan_app/home/home_controller.dart:87:29)
+<asynchronous suspension>
+#2      HomeController.checkConnectionService (package:toppan_app/home/home_controller.dart:71:7)
+<asynchronous suspension>
+#3      HomeController.preparePage (package:toppan_app/home/home_controller.dart:30:7)
+<asynchronous suspension>
+#4      _HomePageState.preparePage (package:toppan_app/home/home_view.dart:72:5)
+<asynchronous suspension>
+
+-------------------
+[2025-06-13 04:38:52] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"User Not Found With This username"} 
+[Stack Trace]
+#0      HomeModel.getRoleByUser (package:toppan_app/home/home_model.dart:75:7)
+<asynchronous suspension>
+#1      HomeController.prepareUserVisitor (package:toppan_app/home/home_controller.dart:87:29)
+<asynchronous suspension>
+#2      HomeController.checkConnectionService (package:toppan_app/home/home_controller.dart:71:7)
+<asynchronous suspension>
+#3      HomeController.preparePage (package:toppan_app/home/home_controller.dart:30:7)
+<asynchronous suspension>
+#4      _HomePageState.preparePage (package:toppan_app/home/home_view.dart:72:5)
+<asynchronous suspension>
+
+-------------------
+[2025-06-13 04:48:04] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"User Not Found With This username"} 
+[Stack Trace]
+#0      HomeModel.getRoleByUser (package:toppan_app/home/home_model.dart:75:7)
+<asynchronous suspension>
+#1      HomeController.prepareUserVisitor (package:toppan_app/home/home_controller.dart:87:29)
+<asynchronous suspension>
+#2      HomeController.checkConnectionService (package:toppan_app/home/home_controller.dart:71:7)
+<asynchronous suspension>
+#3      HomeController.preparePage (package:toppan_app/home/home_controller.dart:30:7)
+<asynchronous suspension>
+#4      _HomePageState.preparePage (package:toppan_app/home/home_view.dart:72:5)
+<asynchronous suspension>
+
+-------------------
+[2025-06-13 06:08:16] 
+[Error] HttpException: Request failed with status: 404, Body: {"error":"User Not Found With This username"} 
+[Stack Trace]
+#0      HomeModel.getRoleByUser (package:toppan_app/home/home_model.dart:75:7)
+<asynchronous suspension>
+#1      HomeController.prepareUserVisitor (package:toppan_app/home/home_controller.dart:87:29)
+<asynchronous suspension>
+#2      HomeController.checkConnectionService (package:toppan_app/home/home_controller.dart:71:7)
+<asynchronous suspension>
+#3      HomeController.preparePage (package:toppan_app/home/home_controller.dart:30:7)
+<asynchronous suspension>
+#4      _HomePageState.preparePage (package:toppan_app/home/home_view.dart:72:5)
+<asynchronous suspension>
+
+-------------------

@@ -38,8 +38,10 @@ class LoginController {
         Map<String,dynamic> response = await loginModel.validateLogin(data_Req);
         if(response['canLogin']){
           final username = response['username'];
+          final displayName = response['displayName'];
           final token = response['token'];
           await userEntity.setUserPerfer(userEntity.username, username);
+          await userEntity.setUserPerfer(userEntity.displayName, displayName);
           await userEntity.setUserPerfer(userEntity.token, token);
 
           clearLoginInput();

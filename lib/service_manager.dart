@@ -5,13 +5,14 @@ import 'package:toppan_app/visitorService/visitorServiceCenter_controller.dart';
 import 'userEntity.dart';
 
 class ServiceEntity {
-  final String title;
-  final bool enable;
-  final String iconPath;
-  final double iconWidth;
-  final double iconHeight;
-  final List<Color> backGroundColor;
-  final Function(BuildContext)? onTap;
+  String title;
+  bool enable;
+  String iconPath;
+  double iconWidth;
+  double iconHeight;
+  List<Color> backGroundColor;
+  Function(BuildContext)? onTap;
+  bool userIn;
 
   ServiceEntity({
     required this.title,
@@ -21,6 +22,7 @@ class ServiceEntity {
     required this.iconHeight, 
     required this.backGroundColor,
     required this.onTap,
+    required this.userIn
   });
 }
 
@@ -37,7 +39,7 @@ class ServiceManager {
     return serviceList;
   }
 
-  void preparePermissionsServices(Map<String, bool> servicesStatus) async {
+  void preparePermissionsServices(Map<String, bool> servicesStatus) {
     // --------------------------- Task Service --------------------------- //
     taskServices = {
       'visitorService': 
@@ -46,6 +48,7 @@ class ServiceManager {
         {'key': 'employee', 'label': 'พนักงาน', 'icon': Icons.cases_rounded, 'enable': true},
         {'key': 'search', 'label': 'ค้นหา', 'icon': Icons.content_paste_search, 'enable': true},
         {'key': 'approve', 'label': 'อนุมัติ', 'icon': Icons.fact_check_outlined, 'enable': true},
+        {'key': 'logBook', 'label': 'ล็อกบุ๊ค', 'icon': Icons.menu_book_rounded, 'enable': true},
       ],
       // other service task
     };
@@ -53,7 +56,8 @@ class ServiceManager {
     // --------------------------- Permission Task Service --------------------------- //
     taskPermissions = {
       'visitorService': [
-        {'key': 'approve', 'canOpen': ['Manager', 'CardManager', 'Administrator']},
+        {'key': 'approve', 'canOpen': ['Manager', 'CardManager', 'Administrator', 'SecurityManager']},
+        {'key': 'logBook', 'canOpen': ['Manager', 'CardManager', 'Administrator', 'SecurityManager']},
       ],
       //other service task permission
     };
@@ -79,17 +83,29 @@ class ServiceManager {
         onTap: (context) {
           dialogServiceTask(context, taskServices['visitorService']);
         },
+        userIn: false,
       ),
       // add other service
     ];
+
+    filterServiceByRoles();
     
+  }
+
+  // check user don't have roles in service can't use service
+  void filterServiceByRoles() async {
+    for (final service in serviceList) {
+      final serviceKey = service.title.toLowerCase() + 'Service';
+      List<String> userRoles = (await userEntity.getUserPerfer('roles_' + serviceKey)) ?? [];
+      service.userIn = userRoles.isNotEmpty;
+    }
   }
 
   void filterTaskByPermissions() {
     taskServices.forEach((serviceKey, taskList) async {
       if (taskPermissions.containsKey(serviceKey)) {
         List<Map<String, dynamic>> permissionList = List<Map<String, dynamic>>.from(taskPermissions[serviceKey]);
-        List<String> userRoles = await userEntity.getUserPerfer('roles_'+serviceKey);
+        List<String> userRoles =(await userEntity.getUserPerfer('roles_' + serviceKey)) ?? [];
         for (var task in taskList) {
           String taskKey = task['key'];
 
@@ -128,6 +144,9 @@ class ServiceManager {
             break;
           case 'approve':
             route = '/visitor?option=approve'; 
+            break;
+          case 'logBook':
+            route = '/visitor?option=logBook'; 
             break;
           default:
             return;

@@ -25,6 +25,7 @@ class LoginModule {
         responseMapping = {
             'canLogin': true,
             'username': dataRes['username'],
+            'displayName': dataRes['displayName'],
             'token': dataRes['token'],
         };
       }else{

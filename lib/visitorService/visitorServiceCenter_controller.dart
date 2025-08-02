@@ -1,12 +1,6 @@
-
-
-import 'dart:io';
-import 'package:device_info_plus/device_info_plus.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:intl/intl.dart';
 import 'package:toppan_app/userEntity.dart';
 import 'package:toppan_app/visitorService/visitorServiceCenter_model.dart';
-import 'package:uuid/uuid.dart';
 
 class VisitorServiceCenterController {
 
@@ -71,10 +65,9 @@ class VisitorServiceCenterController {
         'last_active': createdAt,
       };
       await _model.insertFCMToken(data);
-      await insertActvityLog('User ${username} login and insert token FCM');  // add log
-      status = true;
+      await insertActvityLog('User ${username} login and insert token FCM');
     } catch (err, stackTrace) {
-      userEntity.clearUserPerfer();
+      await userEntity.clearUserPerfer();
       await logError(err.toString(), stackTrace.toString());
     }
     return status;
@@ -86,7 +79,7 @@ class VisitorServiceCenterController {
       if(deviceId != null) {
         String formatDateTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
         await userEntity.setUserPerfer(userEntity.created_token_at, formatDateTime);
-        _model.activeFCM_TOKEN(deviceId, formatDateTime);
+        await _model.activeFCM_TOKEN(deviceId, formatDateTime);
       }
     } catch (err, stackTrace) {
       await logError(err.toString(), stackTrace.toString());

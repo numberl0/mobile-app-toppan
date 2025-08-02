@@ -1,10 +1,8 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:device_preview/device_preview.dart';
-import 'package:toppan_app/config/api_config.dart';
 
 
 import 'firebase/firebase_message.dart';
@@ -13,6 +11,8 @@ import 'home/home_view.dart';
 import 'visitorService/visitorServiceCenter_view.dart';
 
 import 'package:responsive_framework/responsive_framework.dart';
+
+final RouteObserver<ModalRoute<void>> routeObserver = RouteObserver<ModalRoute<void>>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +33,7 @@ void main() async {
 
 final GoRouter _router =  GoRouter(
   initialLocation: '/login',
+  observers: [routeObserver],
   routes: <RouteBase>[
     GoRoute(
       path: '/login',

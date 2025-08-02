@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:toppan_app/clear_temporary.dart';
 import 'package:toppan_app/config/api_config.dart';
+import 'package:toppan_app/main.dart';
 
 import 'search_controller.dart';
 
@@ -20,8 +21,7 @@ class SearchPage extends StatefulWidget {
   _SearchPageState createState() => _SearchPageState();
 }
 
-class _SearchPageState extends State<SearchPage> {
-
+class _SearchPageState extends State<SearchPage> with RouteAware {
   Cleartemporary cleartemporary = Cleartemporary();
   double _fontSize = ApiConfig.fontSize;
 
@@ -44,19 +44,38 @@ class _SearchPageState extends State<SearchPage> {
         }
       });
     });
+    // Clear Flutter's image cache
+    imageCache.clear();
+    imageCache.clearLiveImages();
+  }
+
+    @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void didPopNext() {
+    imageCache.clear();
+    imageCache.clearLiveImages();
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
   }
 
   void preparePage() async {
     _controller.selectedType = _controller.typeOptions[0];
     await _controller.preparePage(context);
-
     setState(() {
       _controller.filteredDocument = _controller.list_Request;
       filterDocuments();
     });
   }
 
-  
   void filterDocuments() {
     setState(() {
       _controller.startAnimation = false;
@@ -81,171 +100,234 @@ class _SearchPageState extends State<SearchPage> {
           FocusManager.instance.primaryFocus?.unfocus();
         },
         child: Column(
-            children: [
-              SizedBox(height: 5,),
-              Padding(
-                padding: EdgeInsets.all(16.0),
-                child: SearchInputBar(),
-              ), 
-              listForm(),
-            ],
-          ),
+          children: [
+            SizedBox(
+              height: 5,
+            ),
+            Padding(
+              padding: EdgeInsets.all(16.0),
+              child: SearchInputBar(),
+            ),
+            listForm(),
+          ],
+        ),
       ),
     );
   }
 
   Widget SearchInputBar() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-
-        SizedBox(height: 5,),
-
-        //Select Type Search (Dropdown)
-        DropdownButtonFormField<String>(
-          value: _controller.selectedType,
-          decoration: InputDecoration(
-            labelText: 'ประเภท (Employee/Visitor)',
-            labelStyle: TextStyle(color: Colors.white, fontSize: _fontSize + 2),
-            prefixIcon: Icon(Icons.search, color: Colors.white),
-            border: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.white),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.white), // White border
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.white), // White border on focus
-            ),
-          ),
-          items: _controller.typeOptions.map((String type) {
-            Icon icon;
-            switch (type) {
-              case 'Employee':
-                icon = Icon(Icons.layers_rounded, color: Colors.orange);
-                break;
-              case 'Visitor':
-                icon = Icon(Icons.layers_rounded, color: Colors.green);
-                break;
-              default:
-                icon = Icon(Icons.layers_rounded, color:Colors.white);
-            }
-  
-            return DropdownMenuItem<String>(
-              value: type,
-              child: Row(
-                  children: [
-                    icon,
-                    SizedBox(width: 10),
-                    Text(
-                      type,
-                      style: TextStyle(color: Colors.white, fontSize: _fontSize),
-                    ),
-                  ],
+    final ScrollController controller = ScrollController();
+    return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          FocusManager.instance.primaryFocus?.unfocus();
+        },
+        child: Container(
+            margin: EdgeInsets.all(
+                MediaQuery.of(context).size.width > 799 ? 14 : 7),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [
+                  Color.fromARGB(255, 255, 255, 255),
+                  Color.fromARGB(255, 255, 255, 255),
+                ],
+              ),
+              borderRadius: BorderRadius.all(Radius.circular(20)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  spreadRadius: 2,
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
                 ),
-            );
-          }).toList(),
-          onChanged: (String? newValue) {
-            setState(() {
-              _controller.selectedType = newValue;
-            });
-            filterDocuments();
-          },
-          style: TextStyle(color: Colors.white),
-          iconEnabledColor: Colors.white,
-          iconDisabledColor: Colors.white,
-          dropdownColor: Colors.black.withOpacity(0.8),
-          
-        ),
+              ],
+            ),
+            child: ScrollConfiguration(
+                behavior: ScrollConfiguration.of(context).copyWith(
+                  dragDevices: {
+                    PointerDeviceKind.touch,
+                    PointerDeviceKind.mouse,
+                  },
+                  scrollbars: false,
+                ),
+                child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: SingleChildScrollView(
+                        controller:
+                            controller, // Use the controller for scrolling
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              height: 5,
+                            ),
 
-        SizedBox(height: 20),
+                            //Select Type Search (Dropdown)
+                            DropdownButtonFormField<String>(
+                              value: _controller.selectedType,
+                              decoration: InputDecoration(
+                                labelText: 'ประเภท (Employee/Visitor)',
+                                labelStyle: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: _fontSize + 2),
+                                prefixIcon:
+                                    Icon(Icons.search, color: Colors.blue),
+                                border: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.black),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                      color: Colors.black), // White border
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                      color: Colors
+                                          .black), // White border on focus
+                                ),
+                              ),
+                              items: _controller.typeOptions.map((String type) {
+                                Icon icon;
+                                switch (type) {
+                                  case 'Employee':
+                                    icon = Icon(Icons.layers_rounded,
+                                        color: Colors.orange);
+                                    break;
+                                  case 'Visitor':
+                                    icon = Icon(Icons.layers_rounded,
+                                        color: Colors.green);
+                                    break;
+                                  default:
+                                    icon = Icon(Icons.layers_rounded,
+                                        color: Colors.blue);
+                                }
 
-        //Select Company Search
-        TextField(
-          controller: _controller.companyController,
-          cursorColor: Colors.white,
-          style: TextStyle(color: Colors.white, fontSize: _fontSize),
-          decoration: InputDecoration(
-            labelText: 'บริษัท',
-            labelStyle: TextStyle(color: Colors.white, fontSize: _fontSize + 2),
-            prefixIcon: Icon(Icons.business_rounded, color: Colors.white),
-            border: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.white),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.white), // White border
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.white), // White border on focus
-            ),
-          ),
-          onChanged: (_) => filterDocuments(),
-          
-        ),
-        
-        SizedBox(height: 20),
+                                return DropdownMenuItem<String>(
+                                  value: type,
+                                  child: Row(
+                                    children: [
+                                      icon,
+                                      SizedBox(width: 10),
+                                      Text(
+                                        type,
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: _fontSize),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  _controller.selectedType = newValue;
+                                });
+                                filterDocuments();
+                              },
+                              style: TextStyle(color: Colors.black),
+                              iconEnabledColor: Colors.black,
+                              iconDisabledColor: Colors.black,
+                              dropdownColor: Colors.white.withOpacity(0.8),
+                            ),
 
-        //Select Name Search
-        TextField(
-          controller: _controller.nameController,
-          cursorColor: Colors.white,
-          style: TextStyle(color: Colors.white, fontSize: _fontSize),
-          decoration: InputDecoration(
-            labelText: 'ชื่อ',
-            labelStyle: TextStyle(color: Colors.white, fontSize: _fontSize + 2),
-            prefixIcon: Icon(Icons.person, color: Colors.white),
-            border: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.white),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.white), // White border
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.white), // White border on focus
-            ),
-          ),
-          onChanged: (_) => filterDocuments(),
-          
-        ),
-        
-      ],
-    );
+                            SizedBox(height: 20),
+
+                            //Select Company Search
+                            TextField(
+                              controller: _controller.companyController,
+                              cursorColor: Colors.black,
+                              style: TextStyle(
+                                  color: Colors.black, fontSize: _fontSize),
+                              decoration: InputDecoration(
+                                labelText: 'องค์กร',
+                                labelStyle: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: _fontSize + 2),
+                                prefixIcon: Icon(Icons.business_rounded,
+                                    color: Colors.black),
+                                border: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.black),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.black),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.black),
+                                ),
+                              ),
+                              onChanged: (_) => filterDocuments(),
+                            ),
+
+                            SizedBox(height: 20),
+
+                            //Select Name Search
+                            TextField(
+                              controller: _controller.nameController,
+                              cursorColor: Colors.black,
+                              style: TextStyle(
+                                  color: Colors.black, fontSize: _fontSize),
+                              decoration: InputDecoration(
+                                labelText: 'ชื่อ',
+                                labelStyle: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: _fontSize + 2),
+                                prefixIcon:
+                                    Icon(Icons.person, color: Colors.black),
+                                border: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.black),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                      color: Colors.black), // White border
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                      color: Colors
+                                          .black), // White border on focus
+                                ),
+                              ),
+                              onChanged: (_) => filterDocuments(),
+                            ),
+                          ],
+                        ))))));
   }
-
 
   Widget listForm() {
     final ScrollController controller = ScrollController();
     return Expanded(
-      child:  _controller.filteredDocument.isEmpty
-        ? SingleChildScrollView(
-            child: SizedBox(
-              height: MediaQuery.of(context).size.height * 0.4, // Adjust height dynamically
-              child: Center(
-                child: Text(
-                  '-------- ยังไม่มีรายการในตอนนี้ --------',
-                  style: TextStyle(fontSize: 18, color: Colors.grey.shade300),
+      child: _controller.filteredDocument.isEmpty
+          ? SingleChildScrollView(
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height *
+                    0.4,
+                child: Center(
+                  child: Text(
+                    '-------- ยังไม่มีรายการในตอนนี้ --------',
+                    style: TextStyle(fontSize: 18, color: Colors.grey.shade300),
+                  ),
                 ),
               ),
+            )
+          : ScrollConfiguration(
+              behavior: ScrollConfiguration.of(context).copyWith(
+                dragDevices: {
+                  PointerDeviceKind.touch,
+                  PointerDeviceKind.mouse,
+                },
+              ),
+              child: ListView.builder(
+                controller: controller,
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                itemCount: _controller.filteredDocument.length,
+                itemBuilder: (context, index) {
+                  Map<String, dynamic> entry =
+                      _controller.filteredDocument[index];
+                  return itemForm(index, entry);
+                },
+              ),
             ),
-          )
-      : ScrollConfiguration(
-        behavior: ScrollConfiguration.of(context).copyWith(
-          dragDevices: {
-            PointerDeviceKind.touch,
-            PointerDeviceKind.mouse,
-          },
-        ),
-        child: ListView.builder(
-          controller: controller,
-          shrinkWrap: true,
-          padding: EdgeInsets.zero,
-          itemCount: _controller.filteredDocument.length,
-          itemBuilder: (context, index) {
-            Map<String, dynamic> entry = _controller.filteredDocument[index];
-            return itemForm(index, entry);
-          },
-        ),
-      ),
     );
   }
 
@@ -253,24 +335,42 @@ class _SearchPageState extends State<SearchPage> {
     await initializeDateFormatting('th_TH', null);
   }
 
-
   Widget itemForm(int index, Map<String, dynamic> entry) {
     // Color
     Color borderColor = Colors.black;
     String timeRanges = '';
-    String formattedDateIn = '';
+    String formattedDate = '';
     // DateTime
     initializeDateThaiFormatting();
-    if (entry['request_type'] == 'VISITOR' ) {
-      borderColor = Colors.green; // Green for visitors
-      timeRanges = entry['time_in'].substring(0, 5) + ' ถึง ' + entry['time_out'].substring(0, 5);
-      formattedDateIn = DateFormat("d MMMM yyyy", "th_TH").format(DateTime.parse(entry['date_in']).toLocal());
+    final dateIn = DateTime.parse(entry['date_in']).toLocal();
+    final dateOut = DateTime.parse(entry['date_out']).toLocal();
+
+    final timeIn = entry['time_in'].substring(0, 5);
+    final timeOut = entry['time_out'].substring(0, 5);
+
+
+    final bool sameDate = dateIn.year == dateOut.year &&
+      dateIn.month == dateOut.month &&
+      dateIn.day == dateOut.day;
+    final bool sameTime = timeIn == timeOut;
+
+    // Set styles and display
+    if (entry['request_type'] == 'VISITOR') {
+      borderColor = Colors.green;
+
+      formattedDate = DateFormat("d MMMM yyyy", "th_TH").format(dateIn);
+      timeRanges = '$timeIn ถึง $timeOut';
     } else if (entry['request_type'] == 'EMPLOYEE') {
-      borderColor = Colors.orange; // Orange for employees
-      timeRanges = entry['time_out'].substring(0, 5) + ' ถึง ' + entry['time_in'].substring(0, 5);
-      formattedDateIn = DateFormat("d MMMM yyyy", "th_TH").format(DateTime.parse(entry['date_out']).toLocal());
+      borderColor = Colors.orange;
+
+      formattedDate = DateFormat("d MMMM yyyy", "th_TH").format(dateOut);
+
+      if (sameDate && sameTime) {
+        timeRanges = '$timeOut';
+      } else {
+        timeRanges = '$timeOut ถึง $timeIn';
+      }
     }
-    
 
     double screenWidth = MediaQuery.of(context).size.width;
     return AnimatedContainer(
@@ -278,84 +378,86 @@ class _SearchPageState extends State<SearchPage> {
       padding: EdgeInsets.all(0),
       curve: Curves.easeInOut,
       duration: Duration(milliseconds: 300 + (index * 200)),
-      transform:
-          Matrix4.translationValues(_controller.startAnimation ? 0 : screenWidth, 0, 0),
-      child: Container(
-        margin: EdgeInsets.all(16),
-        width: double.infinity,
-        height: 150,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          // color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.6),
-              blurRadius: 5.0,
-              offset: Offset(0, 5),
-            ),
-            BoxShadow(
+      transform: Matrix4.translationValues(
+          _controller.startAnimation ? 0 : screenWidth, 0, 0),
+      child: Stack(
+        children: [
+          Container(
+            margin: EdgeInsets.all(16),
+            width: double.infinity,
+            height: 150,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
               // color: Colors.white,
-              color: borderColor,
-              offset: Offset(-5, 0),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.6),
+                  blurRadius: 5.0,
+                  offset: Offset(0, 5),
+                ),
+                BoxShadow(
+                  // color: Colors.white,
+                  color: borderColor,
+                  offset: Offset(-5, 0),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20.0),
-          child: Slidable(
-              // startActionPane: ActionPane(motion: ScrollMotion(), children: [
-              //   CustomSlidableAction(
-              //     onPressed: (BuildContext context) {
-              //       notApproveDocument();
-              //     },
-              //     backgroundColor: Color(0xFFFE4A49),
-              //     foregroundColor: Colors.white,
-              //     child: Column(
-              //       mainAxisAlignment: MainAxisAlignment.center,
-              //       children: [
-              //         Icon(
-              //           Icons.delete,
-              //           size: 40,
-              //         ),
-              //         SizedBox(
-              //           height: 5,
-              //         ),
-              //         Text(
-              //           "Delete",
-              //           style:
-              //               TextStyle(fontSize: _fontSize, color: Colors.white),
-              //         ),
-              //       ],
-              //     ),
-              //   ),
-              // ]),
-              // endActionPane: ActionPane(motion: ScrollMotion(), children: [
-              //   CustomSlidableAction(
-              //     onPressed: (BuildContext context) {
-              //       approveDocument();
-              //     },
-              //     backgroundColor: Colors.blue,
-              //     foregroundColor: Colors.white,
-              //     child: Column(
-              //       mainAxisAlignment: MainAxisAlignment.center,
-              //       children: [
-              //         Icon(
-              //           Icons.library_add_check,
-              //           size: 40,
-              //         ),
-              //         SizedBox(
-              //           height: 5,
-              //         ),
-              //         Text(
-              //           "Approve",
-              //           style:
-              //               TextStyle(fontSize: _fontSize, color: Colors.white),
-              //         ),
-              //       ],
-              //     ),
-              //   ),
-              // ]),
-              child: Material(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20.0),
+              child: Slidable(
+                  // startActionPane: ActionPane(motion: ScrollMotion(), children: [
+                  //   CustomSlidableAction(
+                  //     onPressed: (BuildContext context) {
+                  //       notApproveDocument();
+                  //     },
+                  //     backgroundColor: Color(0xFFFE4A49),
+                  //     foregroundColor: Colors.white,
+                  //     child: Column(
+                  //       mainAxisAlignment: MainAxisAlignment.center,
+                  //       children: [
+                  //         Icon(
+                  //           Icons.delete,
+                  //           size: 40,
+                  //         ),
+                  //         SizedBox(
+                  //           height: 5,
+                  //         ),
+                  //         Text(
+                  //           "Delete",
+                  //           style:
+                  //               TextStyle(fontSize: _fontSize, color: Colors.white),
+                  //         ),
+                  //       ],
+                  //     ),
+                  //   ),
+                  // ]),
+                  // endActionPane: ActionPane(motion: ScrollMotion(), children: [
+                  //   CustomSlidableAction(
+                  //     onPressed: (BuildContext context) {
+                  //       approveDocument();
+                  //     },
+                  //     backgroundColor: Colors.blue,
+                  //     foregroundColor: Colors.white,
+                  //     child: Column(
+                  //       mainAxisAlignment: MainAxisAlignment.center,
+                  //       children: [
+                  //         Icon(
+                  //           Icons.library_add_check,
+                  //           size: 40,
+                  //         ),
+                  //         SizedBox(
+                  //           height: 5,
+                  //         ),
+                  //         Text(
+                  //           "Approve",
+                  //           style:
+                  //               TextStyle(fontSize: _fontSize, color: Colors.white),
+                  //         ),
+                  //       ],
+                  //     ),
+                  //   ),
+                  // ]),
+                  child: Material(
                 // color: borderColor,
                 color: const Color.fromARGB(185, 255, 255, 255),
                 child: InkWell(
@@ -373,8 +475,8 @@ class _SearchPageState extends State<SearchPage> {
                             Container(
                               padding: EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                  border: Border.all(
-                                      color: borderColor, width: 3.0),
+                                  border:
+                                      Border.all(color: borderColor, width: 3.0),
                                   shape: BoxShape.circle),
                               child: Icon(
                                 Icons.feed,
@@ -390,7 +492,7 @@ class _SearchPageState extends State<SearchPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'บริษัท : ${entry['company']}',
+                                    'องค์กร : ${entry['company']}',
                                     style: TextStyle(
                                       fontSize: _fontSize + 4,
                                       color: Colors.black,
@@ -401,61 +503,62 @@ class _SearchPageState extends State<SearchPage> {
                                     softWrap: true,
                                   ),
                                   Divider(
-                                      color: borderColor,
-                                      thickness: 2,
-                                    ),
+                                    color: borderColor,
+                                    thickness: 2,
+                                  ),
                                   SizedBox(height: 3),
                                   Text(
                                     'ประเภท ${entry['request_type'][0] + entry['request_type'].substring(1).toLowerCase()}',
                                     style: TextStyle(
-                                        fontSize: _fontSize,
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      fontSize: _fontSize,
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                     overflow: TextOverflow.ellipsis,
                                     maxLines: 1,
                                     softWrap: true,
                                   ),
                                   SizedBox(height: 5),
-
                                   if (MediaQuery.of(context).size.width > 799) ...[
                                     Row(
-                                        mainAxisAlignment: MainAxisAlignment.start,
-                                        crossAxisAlignment: CrossAxisAlignment.center,
-                                        children: [
-                                            Text(
-                                              'วันที่: ${formattedDateIn}',
-                                              style: TextStyle(
-                                                  fontSize: _fontSize,
-                                                  color: Colors.black,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              overflow: TextOverflow.ellipsis,
-                                              maxLines: 1,
-                                              softWrap: true,
-                                            ),
-                                            SizedBox(width: 30,),
-                                            Text(
-                                              'เวลา: ${timeRanges}',
-                                              style: TextStyle(
-                                                  fontSize: _fontSize,
-                                                  color: Colors.black,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              overflow: TextOverflow.ellipsis,
-                                              maxLines: 1,
-                                              softWrap: true,
-                                            ),
-                                        ],
-                                      )
-                                  ]else ...[
-                                    Text(
-                                      'วันที่: ${formattedDateIn}',
-                                      style: TextStyle(
-                                          fontSize: _fontSize,
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.bold,
+                                      mainAxisAlignment: MainAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          'วันที่: ${formattedDate}',
+                                          style: TextStyle(
+                                            fontSize: _fontSize,
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                          softWrap: true,
                                         ),
+                                        SizedBox(
+                                          width: 30,
+                                        ),
+                                        Text(
+                                          'เวลา: ${timeRanges}',
+                                          style: TextStyle(
+                                            fontSize: _fontSize,
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                          softWrap: true,
+                                        ),
+                                      ],
+                                    )
+                                  ] else ...[
+                                    Text(
+                                      'วันที่: ${formattedDate}',
+                                      style: TextStyle(
+                                        fontSize: _fontSize,
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: 1,
                                       softWrap: true,
@@ -464,16 +567,15 @@ class _SearchPageState extends State<SearchPage> {
                                     Text(
                                       'เวลา: ${timeRanges}',
                                       style: TextStyle(
-                                          fontSize: _fontSize,
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                        fontSize: _fontSize,
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: 1,
                                       softWrap: true,
                                     ),
                                   ],
-                                  
                                 ],
                               ),
                             ),
@@ -487,156 +589,183 @@ class _SearchPageState extends State<SearchPage> {
                   },
                 ),
               )),
-        ),
+            ),
+          ),
+
+          if (entry['approved_status'] == 0)
+            Positioned(
+              top: 6,
+              left: 23,
+              child: Icon(
+                Icons.turned_in,
+                color: Colors.red,
+                size: 50,
+              ),
+          ),
+
+        ],
       ),
     );
   }
 
   void popUpShowInformationForm(Map<String, dynamic> entry) {
-  final ScrollController dialogScrollController = ScrollController();
+    final ScrollController dialogScrollController = ScrollController();
 
-  // Color
-  Color? _colorHeader;
-  if (entry['request_type'] == 'VISITOR') {
-    _colorHeader = Colors.green; // Green for visitors
-  } else if (entry['request_type'] == 'EMPLOYEE') {
-    _colorHeader = Colors.orange; // Orange for employees
+    // Color
+    Color? _colorHeader;
+    if (entry['request_type'] == 'VISITOR') {
+      _colorHeader = Colors.green; // Green for visitors
+    } else if (entry['request_type'] == 'EMPLOYEE') {
+      _colorHeader = Colors.orange; // Orange for employees
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(builder: (context, setStateDialog) {
+          double screenWidth = MediaQuery.of(context).size.width;
+
+          return Dialog(
+            insetPadding:
+                screenWidth > 799 ? null : EdgeInsets.only(left: 16, right: 16),
+            child: Container(
+              width: screenWidth > 799 ? 600 : double.infinity,
+              height: MediaQuery.of(context).size.height * (3 / 4),
+              child: Stack(
+                children: [
+                  Positioned(
+                    //Close
+                    top: 3,
+                    right: 5,
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.cancel_rounded,
+                        color: Color(0xFFFE4A49),
+                        size: 45,
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      // Header
+                      Padding(
+                        padding: EdgeInsets.only(top: 20, left: 10, right: 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.assignment_outlined,
+                              size: 36,
+                              color: _colorHeader,
+                            ),
+                            SizedBox(width: 10),
+                            Text(
+                              '${entry['request_type'][0] + entry['request_type'].substring(1).toLowerCase()}',
+                              style: TextStyle(
+                                  fontSize: _fontSize + 4,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Divider(
+                        color: _colorHeader,
+                        thickness: 1.5,
+                        height: 10,
+                      ),
+                      Expanded(
+                        child: ScrollConfiguration(
+                          behavior: ScrollConfiguration.of(context).copyWith(
+                            dragDevices: {
+                              PointerDeviceKind.touch,
+                              PointerDeviceKind.mouse,
+                            },
+                            scrollbars: false,
+                          ),
+                          child: SingleChildScrollView(
+                            controller: dialogScrollController,
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 10),
+                              child: contentViewOnlyDocument(
+                                  setStateDialog, entry),
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Footer
+                      Divider(
+                        color: _colorHeader,
+                        thickness: 1.5,
+                        height: 10,
+                      ),
+                      Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(10),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _colorHeader,
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: () async {
+                            switch (entry['request_type']
+                                .toString()
+                                .toLowerCase()) {
+                              case 'visitor':
+                                await GoRouter.of(context).push('/visitor?option=visitor',extra: entry);
+                                break;
+                              case 'employee':
+                                await GoRouter.of(context).push('/visitor?option=employee',extra: entry);
+                                break;
+                            }
+                          },
+                          child: Text(
+                            "แก้ไข",
+                            style: TextStyle(fontSize: 16, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        });
+      },
+    );
   }
 
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return StatefulBuilder(builder: (context, setStateDialog) {
-        double screenWidth = MediaQuery.of(context).size.width;
-
-        return Dialog(
-          insetPadding:
-              screenWidth > 799 ? null : EdgeInsets.only(left: 16, right: 16),
-          child: Container(
-            width: screenWidth > 799 ? 600 : double.infinity,
-            height: MediaQuery.of(context).size.height * (3 / 4),
-            child: Stack(
-              children: [
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: IconButton(
-                    icon: Icon(
-                      Icons.close,
-                      color: Color(0xFFFE4A49),
-                      size: 32,
-                    ),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    // Header
-                    Padding(
-                      padding: EdgeInsets.only(top: 20, left: 10, right: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.assignment_outlined,
-                            size: 36,
-                            color: _colorHeader,
-                          ),
-                          SizedBox(width: 10),
-                          Text(
-                            '${entry['request_type'][0] + entry['request_type'].substring(1).toLowerCase()}',
-                            style: TextStyle(
-                                fontSize: _fontSize + 4,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Divider(
-                      color: _colorHeader,
-                      thickness: 1.5,
-                      height: 10,
-                    ),
-                    Expanded(
-                      child: ScrollConfiguration(
-                        behavior: ScrollConfiguration.of(context).copyWith(
-                          dragDevices: {
-                            PointerDeviceKind.touch,
-                            PointerDeviceKind.mouse,
-                          },
-                          scrollbars: false,
-                        ),
-                        child: SingleChildScrollView(
-                          controller: dialogScrollController,
-                          child: Padding(
-                            padding:
-                                EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                            child: contentViewOnlyDocument(setStateDialog, entry),
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Footer
-                    Divider(
-                      color: _colorHeader,
-                      thickness: 1.5,
-                      height: 10,
-                    ),
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(10),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _colorHeader,
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        onPressed: () async {
-                          switch (entry['request_type'].toString().toLowerCase()) {
-                            case 'visitor':
-                              GoRouter.of(context).pushReplacement('/visitor?option=visitor', extra: entry);
-                            break;
-                            case 'employee':
-                              GoRouter.of(context).pushReplacement('/visitor?option=employee', extra: entry);
-                            break;
-                          }
-                        },
-                        child: Text(
-                          "แก้ไข",
-                          style: TextStyle(fontSize: 16, color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      });
-    },
-  );
-}
-
   Widget contentViewOnlyDocument(
-    StateSetter setStateDialog, Map<String, dynamic> entry) {
+      StateSetter setStateDialog, Map<String, dynamic> entry) {
     String objectiveType = '';
-    switch(entry['objective_type']) {
-      case 1: 
+    switch (entry['objective_type']) {
+      case 1:
         objectiveType = 'ออกนอกโรงงาน';
-      break;
-      case 2: 
+        break;
+      case 2:
         objectiveType = 'นำสินค้า/สิ่งของออกพื้นที่การผลิต';
-      break;
-      case 3: 
+        break;
+      case 3:
         objectiveType = 'นำสินค้า/สิ่งของออกโรงงาน';
-      break;
+        break;
     }
+    final dateOut = DateTime.parse(entry['date_out']).toLocal();
+    final dateIn = DateTime.parse(entry['date_in']).toLocal();
+    final formattedDateOut = DateFormat("d MMMM yyyy", "th_TH").format(dateOut);
+    final formattedDateIn = DateFormat("d MMMM yyyy", "th_TH").format(dateIn);
+    final timeOut = entry['time_out'].substring(0, 5);
+    final timeIn = entry['time_in'].substring(0, 5);
+    bool isDateSame = formattedDateOut == formattedDateIn;
+    bool isTimeSame = timeOut == timeIn;
+    bool isDateTime = isDateSame && isTimeSame;
     return Container(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -654,16 +783,16 @@ class _SearchPageState extends State<SearchPage> {
                     SizedBox(height: 25),
                     InfoRow(
                         label: 'เวลาออก:',
-                        value: DateFormat("d MMMM yyyy", "th_TH")
-                            .format(DateTime.parse(entry['date_out']).toLocal()) + '     ' + entry['time_out'].substring(0, 5) + ' น.',
+                        value: '$formattedDateOut     $timeOut น.',
                         fontSize: _fontSize),
                     SizedBox(height: 25),
-                    InfoRow(
-                        label: 'เวลากลับ:',
-                        value: DateFormat("d MMMM yyyy", "th_TH")
-                            .format(DateTime.parse(entry['date_in']).toLocal()) + '     ' + entry['time_in'].substring(0, 5) + ' น.',
-                        fontSize: _fontSize),
-                    SizedBox(height: 25),
+                    if (!isDateTime) ...[
+                      InfoRow(
+                          label: 'เวลากลับ:',
+                          value: '$formattedDateIn     $timeIn น.',
+                          fontSize: _fontSize),
+                      SizedBox(height: 25),
+                    ],
                     InfoRow(
                         label: 'วัตถุประสงค์:',
                         value: entry['objective'],
@@ -675,22 +804,30 @@ class _SearchPageState extends State<SearchPage> {
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    SizedBox(height: 10,),
+                    SizedBox(
+                      height: 10,
+                    ),
                     InfoRow(
-                        label: 'บริษัท:',
+                        label: 'องค์กร:',
                         value: entry['company'],
                         fontSize: _fontSize),
                     SizedBox(height: 25),
                     InfoRow(
                         label: 'เวลาเข้า:',
-                        value: DateFormat("d MMMM yyyy", "th_TH")
-                            .format(DateTime.parse(entry['date_in']).toLocal()) + '     ' + entry['time_in'].substring(0, 5) + ' น.',
+                        value: DateFormat("d MMMM yyyy", "th_TH").format(
+                                DateTime.parse(entry['date_in']).toLocal()) +
+                            '     ' +
+                            entry['time_in'].substring(0, 5) +
+                            ' น.',
                         fontSize: _fontSize),
                     SizedBox(height: 25),
                     InfoRow(
                         label: 'เวลาออก:',
-                        value: DateFormat("d MMMM yyyy", "th_TH")
-                            .format(DateTime.parse(entry['date_out']).toLocal()) + '     ' + entry['time_out'].substring(0, 5) + ' น.',
+                        value: DateFormat("d MMMM yyyy", "th_TH").format(
+                                DateTime.parse(entry['date_out']).toLocal()) +
+                            '     ' +
+                            entry['time_out'].substring(0, 5) +
+                            ' น.',
                         fontSize: _fontSize),
                     SizedBox(height: 25),
                     InfoRow(
@@ -723,7 +860,9 @@ class _SearchPageState extends State<SearchPage> {
             ),
             child: Column(
               children: [
-                SizedBox(height: 10,),
+                SizedBox(
+                  height: 10,
+                ),
                 Row(
                   children: [
                     Expanded(
@@ -769,7 +908,8 @@ class _SearchPageState extends State<SearchPage> {
                 generatePeopleList(entry['people']),
 
                 // Show Item in/out
-                contentItemDisplay(entry['item_in'], entry['item_out']),
+                contentItemDisplay(
+                    entry['item_in'], entry['item_out'], entry['request_type']),
               ],
             ),
           ),
@@ -779,284 +919,251 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Widget generatePeopleList(List<dynamic> personList) {
-  return personList.isNotEmpty
-      ? Column(
-          children: personList.map((entry) {
-            return Card(
-              margin: EdgeInsets.symmetric(vertical: 5),
-              elevation: 2.0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: Colors.white,
-                  width: 0.5,
-                ),
-              ),
-              color: Colors.white,
-              child: Padding(
-                padding: const EdgeInsets.all(5),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    entry['Signature'] == null
-                    ?Icon(Icons.check_box_outline_blank, color: Colors.black, size: 40)
-                    :Icon(Icons.check_box_outlined, color: Colors.black, size: 40),
-                    SizedBox(width: 15),
-                    Expanded(
-                      child: Text(
-                        '${entry['TitleName']} ${entry['FullName']}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: _fontSize,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        softWrap: true,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        )
-      : Container();
-}
-
-  Widget contentItemDisplay(Map<String, dynamic>? list_in, Map<String, dynamic>? list_out) {
-    bool _isImageItems = false;
-    if(list_in?['type'] == 'image' || list_out?['type'] == 'image') {
-       _isImageItems = true;
-    }
-    return Column(
-      children: [
-        (list_in == null || list_in['item'] == null)
-            ? Container()
-            : Column(
-                children: [
-                  SizedBox(
-                    height: 30,
+    return personList.isNotEmpty
+        ? Column(
+            children: personList.map((entry) {
+              return Card(
+                margin: EdgeInsets.symmetric(vertical: 5),
+                elevation: 2.0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    color: Colors.white,
+                    width: 0.5,
                   ),
-                  Row(
+                ),
+                color: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(5),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      entry['Signature'] == null
+                          ? Icon(Icons.check_box_outline_blank,
+                              color: Colors.black, size: 40)
+                          : Icon(Icons.check_box_outlined,
+                              color: Colors.black, size: 40),
+                      SizedBox(width: 15),
                       Expanded(
-                        child: Row(
-                          children: [
-                            SizedBox(width: 5),
-                            Expanded(
-                              child: Divider(
-                                color: Colors.black,
-                                thickness: 1,
-                              ),
-                            ),
-                            Icon(
-                              Icons.shopping_bag,
-                              color: Colors.black,
-                              size: 36,
-                            ),
-                            SizedBox(width: 5),
-                            Text(
-                              "สิ่งของนำเข้า",
-                              style: TextStyle(
-                                fontSize: _fontSize + 4,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(width: 5),
-                            Expanded(
-                              child: Divider(
-                                color: Colors.black,
-                                thickness: 1,
-                              ),
-                            ),
-                            SizedBox(width: 5),
-                          ],
+                        child: Text(
+                          '${entry['TitleName']} ${entry['FullName']}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: _fontSize,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          softWrap: true,
                         ),
                       ),
                     ],
                   ),
-                  // Display the items
-                  _isImageItems
-                      ? generateItemImage(list_in['item'])
-                      : generateItemList(list_in['item']),
-                ],
-              ),
-        (list_out == null || list_out['item'] == null)
-            ? Container()
-            : Column(
-                children: [
-                  SizedBox(
-                    height: 30,
-                  ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Row(
-                          children: [
-                            SizedBox(width: 5),
-                            Expanded(
-                              child: Divider(
-                                color: Colors.black,
-                                thickness: 1,
-                              ),
-                            ),
-                            Icon(
-                              Icons.shopping_bag,
-                              color: Colors.black,
-                              size: 36,
-                            ),
-                            SizedBox(width: 5),
-                            Text(
-                              "สิ่งของนำออก",
-                              style: TextStyle(
-                                fontSize: _fontSize + 4,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(width: 5),
-                            Expanded(
-                              child: Divider(
-                                color: Colors.black,
-                                thickness: 1,
-                              ),
-                            ),
-                            SizedBox(width: 5),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  // Display item
-                  _isImageItems
-                      ? generateItemImage(list_out['item'])
-                      : generateItemList(list_out['item']),
-                ],
-              ),
-      ],
-    );
+                ),
+              );
+            }).toList(),
+          )
+        : Container();
   }
 
-  Widget generateItemList(List<dynamic> itemList) {
-    return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: itemList.map<Widget>((entry) {
-      return Card(
-        color: Colors.white,
-        margin: EdgeInsets.symmetric(vertical: 5),
-        elevation: 2.0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: Colors.white, width: 0.5),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+  Widget contentItemDisplay(
+    Map<String, dynamic>? item_in,
+    Map<String, dynamic>? item_out,
+    String docType,
+  ) {
+    final List<dynamic>? itemsIn = item_in?['items'] as List<dynamic>?;
+    final List<dynamic>? imagesIn = item_in?['images'] as List<dynamic>?;
+
+    final List<dynamic>? itemsOut = item_out?['items'] as List<dynamic>?;
+    final List<dynamic>? imagesOut = item_out?['images'] as List<dynamic>?;
+
+    bool isItemsInEmpty = itemsIn == null ||
+        itemsIn.isEmpty ||
+        itemsIn.every((item) => (item as String?)?.trim().isEmpty ?? true);
+    bool isImagesInEmpty = imagesIn == null ||
+        imagesIn.isEmpty ||
+        imagesIn.every((img) => (img as String?)?.trim().isEmpty ?? true);
+
+    bool isItemsOutEmpty = itemsOut == null ||
+        itemsOut.isEmpty ||
+        itemsOut.every((item) => (item as String?)?.trim().isEmpty ?? true);
+    bool isImagesOutEmpty = imagesOut == null ||
+        imagesOut.isEmpty ||
+        imagesOut.every((img) => (img as String?)?.trim().isEmpty ?? true);
+
+    bool isInDataEmpty = isItemsInEmpty && isImagesInEmpty;
+    bool isOutDataEmpty = isItemsOutEmpty && isImagesOutEmpty;
+
+    Widget buildSection(
+        String title, List<dynamic>? images, List<dynamic>? items) {
+      if ((images == null || images.isEmpty) &&
+          (items == null || items.isEmpty)) {
+        return SizedBox.shrink();
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(height: 30),
+          Row(
             children: [
-              Icon(Icons.shopping_bag, color: Colors.black, size: 40),
-              SizedBox(width: 15),
               Expanded(
-                child: Text(
-                  entry,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: _fontSize,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: true,
+                child: Row(
+                  children: [
+                    SizedBox(width: 5),
+                    Expanded(child: Divider(color: Colors.black, thickness: 1)),
+                    Icon(Icons.shopping_bag, color: Colors.black, size: 36),
+                    SizedBox(width: 5),
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: _fontSize + 4,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(width: 5),
+                    Expanded(child: Divider(color: Colors.black, thickness: 1)),
+                    SizedBox(width: 5),
+                  ],
                 ),
               ),
             ],
           ),
-        ),
+          generateItemImage(images ?? []),
+          SizedBox(height: 15),
+          generateItemList(items ?? []),
+        ],
       );
-    }).toList(),
-  );
+    }
+
+    final normalizedDocType = docType.toUpperCase();
+    List<Widget> sections = [];
+    if (normalizedDocType == 'VISITOR') {
+      if (!isInDataEmpty)
+        sections.add(buildSection("สิ่งของนำเข้า", imagesIn, itemsIn));
+      if (!isOutDataEmpty)
+        sections.add(buildSection("สิ่งของนำออก", imagesOut, itemsOut));
+    } else if (normalizedDocType == 'EMPLOYEE') {
+      if (!isOutDataEmpty)
+        sections.add(buildSection("สิ่งของนำออก", imagesOut, itemsOut));
+      if (!isInDataEmpty)
+        sections.add(buildSection("สิ่งของนำเข้า", imagesIn, itemsIn));
+    }
+
+    if (sections.isEmpty) return Container();
+
+    return Column(children: sections);
   }
 
-
-
+  Widget generateItemList(List<dynamic> itemList) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: itemList.map<Widget>((entry) {
+        return Card(
+          color: Colors.white,
+          margin: EdgeInsets.symmetric(vertical: 5),
+          elevation: 2.0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: Colors.white, width: 0.5),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(Icons.shopping_bag, color: Colors.black, size: 40),
+                SizedBox(width: 15),
+                Expanded(
+                  child: Text(
+                    entry,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: _fontSize,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
 
   Widget generateItemImage(List<dynamic> imageList) {
     if (imageList.isEmpty) {
       return Container();
     }
     double screenWidth = MediaQuery.of(context).size.width;
-  //   if (kIsWeb) {
-  //   return Container(
-  //     child: Center(
-  //       child: Text('This feature is not available on the web'),
-  //     ),
-  //   );
-  // }
-     return Column(
-    children: [
-      if (screenWidth < 799) ...[
-        Column(
-          children: imageList.map((imageUrl) {
-            return Container(
-              margin: EdgeInsets.symmetric(vertical: 10),
-              height: 200,
-              width: 300,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-              ),
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.fill,
-                errorBuilder: (context, error, stackTrace) => Icon(Icons.broken_image, size: 50, color: Colors.red),
-              ),
-            );
-          }).toList(),
-        ),
-      ] else ...[
-        if (imageList.length > 1) 
-          GridView.builder(
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-            ),
-            itemCount: imageList.length,
-            itemBuilder: (context, index) {
+    return Column(
+      children: [
+        if (screenWidth < 799) ...[
+          Column(
+            children: imageList.map((imageUrl) {
               return Container(
+                margin: EdgeInsets.symmetric(vertical: 10),
                 height: 200,
                 width: 300,
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey),
                 ),
                 child: Image.network(
-                  imageList[index],
+                  imageUrl,
                   fit: BoxFit.fill,
-                  errorBuilder: (context, error, stackTrace) => Icon(Icons.broken_image, size: 50, color: Colors.red),
+                  errorBuilder: (context, error, stackTrace) =>
+                      Icon(Icons.broken_image, size: 50, color: Colors.red),
                 ),
               );
-            },
-          )
-        else 
-          Container(
-            height: 200,
-            width: 300,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-            ),
-            child: Image.network(
-              imageList[0],
-              fit: BoxFit.fill,
-              errorBuilder: (context, error, stackTrace) => Icon(Icons.broken_image, size: 50, color: Colors.red),
-            ),
+            }).toList(),
           ),
+        ] else ...[
+          if (imageList.length > 1)
+            GridView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+              ),
+              itemCount: imageList.length,
+              itemBuilder: (context, index) {
+                return Container(
+                  height: 200,
+                  width: 300,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                  ),
+                  child: Image.network(
+                    imageList[index],
+                    fit: BoxFit.fill,
+                    errorBuilder: (context, error, stackTrace) =>
+                        Icon(Icons.broken_image, size: 50, color: Colors.red),
+                  ),
+                );
+              },
+            )
+          else
+            Container(
+              height: 200,
+              width: 300,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey),
+              ),
+              child: Image.network(
+                imageList[0],
+                fit: BoxFit.fill,
+                errorBuilder: (context, error, stackTrace) =>
+                    Icon(Icons.broken_image, size: 50, color: Colors.red),
+              ),
+            ),
+        ],
       ],
-    ],
-  );
+    );
+  }
 }
-
-
-}
-
 
 class InfoRow extends StatelessWidget {
   final String label;
@@ -1092,7 +1199,7 @@ class InfoRow extends StatelessWidget {
         SizedBox(width: 10),
         Expanded(
           child: Text(
-            value?? '-',
+            value ?? '-',
             style: TextStyle(fontSize: fontSize),
             softWrap: true,
           ),
@@ -1102,7 +1209,6 @@ class InfoRow extends StatelessWidget {
     );
   }
 }
-
 
 class MyCustomScrollBehavior extends MaterialScrollBehavior {
   @override

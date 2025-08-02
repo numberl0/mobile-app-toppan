@@ -40,7 +40,8 @@ class ApproveController {
           break; // exit loop
         }
         switch (role) {
-          case 'Manager' :
+          case 'Manager':
+          case 'SecurityManager':
             if (!building_card.contains('N')) building_card.add('N');
             break;
           case 'CardManager':
@@ -52,7 +53,7 @@ class ApproveController {
       
       list_Request = await approveModel.getRequestApproved(building_card);
     } catch (err, stackTrace) {
-      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
     } finally {
       await Future.delayed(Duration(seconds: 1));
       _loadingDialog.hide();
@@ -89,13 +90,23 @@ class ApproveController {
         return matchesType && matchesCompany && matchesPerson;
       }).toList();
     } catch (err, stackTrace) {
-      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
     }
   }
 
   Future<bool> approvedDocument(Map<String,dynamic> entry) async {
     bool status = false;
     try {
+      String dateStr;
+      if(entry['request_type'].toLowerCase() == 'visitor'){
+        dateStr = entry['date_in'];
+      }else{
+        dateStr = entry['date_out'];
+      }
+      DateTime parsedDate = DateTime.parse(dateStr);
+      String year = parsedDate.year.toString();
+      String month = parsedDate.month.toString().padLeft(2, '0');
+
       String approvedBy = await userEntity.getUserPerfer(userEntity.username);
       String signaturFilename = await approveModel.getSignatureFilenameByUsername(approvedBy);
       Map<String,dynamic> data = {
@@ -104,13 +115,13 @@ class ApproveController {
         'approved_datetime': DateTime.now().toString(),
         'approved_by': approvedBy,
       };
-      status = await approveModel.approvedDocument(entry['tno_pass'], entry['request_type'], data);
+      status = await approveModel.approvedDocument(entry['tno_pass'], entry['request_type'], year, month, data);
       if(status) {
         await _controllerServiceCenter.insertActvityLog('$approvedBy approved document TNO_PASS : ${entry['tno_pass']}');
       }
 
       } catch (err, stackTrace) {
-        _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+        await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
       }
     return status;
   }
@@ -120,10 +131,31 @@ class ApproveController {
     try {
       String approvedBy = await userEntity.getUserPerfer(userEntity.username);
       String signaturFilename = await approveModel.getSignatureFilenameByUsername(approvedBy);
-      List<Map<String, dynamic>> tno_listMap = filteredDocument.map((item) => {
-        'tno_pass': item['tno_pass'].toString(),
-        'type': item['request_type'].toString()
+      // List<Map<String, dynamic>> tno_listMap = filteredDocument.map((item) => {
+      //   'tno_pass': item['tno_pass'].toString(),
+      //   'type': item['request_type'].toString(),
+      // }).toList();
+      List<Map<String, dynamic>> tno_listMap = filteredDocument.map((item) {
+        String dateStr;
+
+        if (item['request_type'].toString().toLowerCase() == 'visitor') {
+          dateStr = item['date_in'];
+        } else {
+          dateStr = item['date_out'];
+        }
+
+        DateTime parsedDate = DateTime.parse(dateStr);
+        String year = parsedDate.year.toString();
+        String month = parsedDate.month.toString().padLeft(2, '0');
+
+        return {
+          'tno_pass': item['tno_pass'].toString(),
+          'type': item['request_type'].toString(),
+          'year': year,
+          'month': month,
+        };
       }).toList();
+
       Map<String,dynamic> data = {
         'approved_status': 1,
         'approved_sign': signaturFilename,
@@ -135,7 +167,7 @@ class ApproveController {
         await _controllerServiceCenter.insertActvityLog('Approved documents : [${tno_listMap.map((e) => e['tno_pass']).join(", ")}]');
       }
       } catch (err, stackTrace) {
-        _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+        await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
       }
     return status;
   }
@@ -145,7 +177,7 @@ class ApproveController {
       List<String> roles = await userEntity.getUserPerfer(userEntity.roles_visitorService);
       return roles.contains('Administrator');
     } catch (err, stackTrace) {
-      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
       return false;
     }
   }

@@ -68,7 +68,11 @@ class HomeModel {
       if(response.statusCode >= 200 && response.statusCode <= 299) {
         var responseDecode = jsonDecode(response.body);
         data = responseDecode['data'];
-      }else{
+      }
+      else if (response.statusCode == 404){ //Not found roles
+        return data;
+      }
+      else{
         throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
       }
     } catch (err) {

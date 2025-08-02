@@ -19,8 +19,14 @@ class HomeController {
 
   ServiceManager serviceManager = ServiceManager();
 
+  String displayName = '';
+
   Future<void> preparePage(BuildContext context) async {
     try {
+      //displayName
+      final rawName = await userEntity.getUserPerfer(userEntity.displayName);
+      displayName = formatDisplayName(rawName);
+
       await checkConnectionService(context);
       var fcm_token = await userEntity.getUserPerfer(userEntity.fcm_token);
 
@@ -36,7 +42,7 @@ class HomeController {
         List<bool> resultsInsert = await Future.wait(serviceInsert);
         bool servicesHaveFCMToken = resultsInsert.every((r) => r == true);
         if(!servicesHaveFCMToken) {
-          GoRouter.of(context).push('/login');
+          GoRouter.of(context).go('/login');
           return;
         }
       }
@@ -44,15 +50,17 @@ class HomeController {
       // List service #FIX
       List<Future<bool>> serviceCheck = [
         _controllerVisistorServiceCenter.checkFCMToken(),
+        // Add other service check FCM token
       ];
       List<bool> resultsCheck = await Future.wait(serviceCheck);
       bool notHaveFCM = resultsCheck.every((r) => r == false);
       if(notHaveFCM){
         await userEntity.clearUserPerfer();
-        GoRouter.of(context).push('/login');
+        GoRouter.of(context).go('/login');
         return;
       }
     } catch (err) {
+      print(err);
       // _controllerVisistorServiceCenter.logError(err.toString(), stackTrace.toString());
     }
   }
@@ -93,6 +101,26 @@ class HomeController {
       await _controllerVisistorServiceCenter.logError(err.toString(), stackTrace.toString());
     }
     return isLogout;
+  }
+
+  String formatDisplayName(String fullName) {
+    final parts = fullName.trim().split(RegExp(r'\s+'));
+
+    // If the name has at least 3 parts, assume first is title
+    if (parts.length >= 3) {
+      final firstName = parts[1];
+      final lastInitial = parts[2][0].toUpperCase();
+      return '$firstName $lastInitial.';
+    }
+
+    // If only 2 parts, assume first name and last name
+    if (parts.length == 2) {
+      final firstName = parts[0];
+      final lastInitial = parts[1][0].toUpperCase();
+      return '$firstName $lastInitial.';
+    }
+
+    return parts.isNotEmpty ? parts[0] : fullName;
   }
 
 }

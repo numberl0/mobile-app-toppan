@@ -1,6 +1,8 @@
 //visitorApp server.js
 const express = require('express');
 const mysql = require('mysql2');
+const mssql = require('mssql');
+
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
@@ -28,13 +30,14 @@ const http = require("http");
 const authenticateToken = require('../../shared/middlewares/authenticateToken');
 const errorHandler = require('../../shared/middlewares/errorHandler');
 
-const { gateWayConfig, visitorDB, visitorConfig } = require('../../shared/config');
-// Domain
+const { gateWayConfig, hrisDB, visitorDB, visitorConfig } = require('../../shared/config');
+
 const domain = gateWayConfig.domain;
-// Pipeline
 const pipe = visitorConfig.pipe;
-// Connection database MYSQL-Front
+
+
 const db = mysql.createConnection(visitorDB);
+
 
 const app = express();
 
@@ -52,12 +55,90 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(errorHandler);
 
-// Test MySQL connection
+// MySQL connection
 db.connect(err => {
   if (err) {
-    console.error('Error connecting to MySQL:', err.stack);
+    console.error('[Error] connecting to MySQL database VISITOR:', err.stack);
   } else {
-    console.log('Connected to MySQL database');
+    console.log('[Successful] connected to MySQL database VISITOR');
+  }
+});
+
+let mssqlPool;
+// SQL Server connection
+mssql.connect(hrisDB)
+  .then(pool => {
+    mssqlPool = pool;
+    console.log('[Successful] connected to SQL Server database HRIS');
+  })
+  .catch(err => {
+    console.error('[Error] connecting to SQL Server database HRIS:', err);
+    process.exit(1);
+  });
+
+// ---------------------------------------------- HRIS API ---------------------------------------------- //
+// Get dept
+app.get('/getDepartments', authenticateToken, async (req, res, next) => {
+  if (!mssqlPool) {
+    return res.status(503).json({ error: 'Database connection not ready' });
+  }
+
+  try {
+    const query = `
+      SELECT DepartmentName_Thai
+      FROM VIEW_EMPLOYEE_INFO
+      WHERE DepartmentName_Thai IS NOT NULL
+        AND DepartmentName_Thai != ''
+        AND DepartmentName_Thai != 'บริษัท ปันสาร เอเชีย จำกัด'
+        AND DepartmentName_Thai != 'Admin'
+      GROUP BY DepartmentName_Thai
+      HAVING SUM(CASE WHEN Status != 'N' THEN 1 ELSE 0 END) > 0
+      ORDER BY DepartmentName_Thai;
+    `;
+
+    const results = await mssqlPool.request().query(query);
+
+    if (results.recordset.length === 0) {
+      return next(new ApiError(404, 'Departments Not Found'));
+    }
+
+    const departments = results.recordset.map(row => row.DepartmentName_Thai);
+    res.status(200).json({ message: 'Departments Found', data: departments });
+  } catch (err) {
+    next(err);
+  }
+});
+
+//Get Employee By dept
+app.get('/getEmployeeNameByDept', authenticateToken, async (req, res, next) => {
+  if (!mssqlPool) {
+    return res.status(503).json({ error: 'Database connection not ready' });
+  }
+  try {
+    const { dept } = req.query
+    if (!dept) {
+      return res.status(400).json({ error: 'Department name (dept) is required' });
+    }
+    const query = `
+      SELECT
+          FirstName_Thai + ' ' + LastName_Thai AS FullName_Thai
+        FROM VIEW_EMPLOYEE_INFO
+        WHERE DepartmentName_Thai = @dept
+          AND Status = 'Y';
+      `;
+
+    const request = mssqlPool.request();
+    request.input('dept', mssql.VarChar, dept);
+    const results = await request.query(query);
+
+    if (results.recordset.length === 0) {
+      return next(new ApiError(404, "Employee not found"));
+    }
+
+    const employees = results.recordset.map(row => row.FullName_Thai);
+    res.status(200).json({ message: `Employee data for department: ${dept}.`, data: employees });
+  } catch (err) {
+    next(err);
   }
 });
 
@@ -209,7 +290,6 @@ app.get(`/getRequestFormByDate`, authenticateToken, async (req, res, next) => {
       return next(new ApiError(400, 'Date parameter (yyyy-MM-dd) is missing'));
     }
 
-    // Calculate the previous date
     const prevDate = new Date(dateToDay);
     prevDate.setDate(prevDate.getDate() - 1);
     const datePrevDay = prevDate.toISOString().split('T')[0];
@@ -253,7 +333,6 @@ app.get(`/getRequestFormByDate`, authenticateToken, async (req, res, next) => {
       AND NOT EXISTS (SELECT 1 FROM PASS_REQUEST pr WHERE pr.tno_ref = ve.tno);
     `;
 
-    // Execute queries
     const [passResults, normalResults, expressResults] = await Promise.all([
       dbQuery(queryPassRequest, [dateToDay, datePrevDay, dateToDay, datePrevDay]),
       dbQuery(queryVisitorNormal, [dateToDay, datePrevDay]),
@@ -271,9 +350,9 @@ app.get(`/getRequestFormByDate`, authenticateToken, async (req, res, next) => {
         'time_in': entry['timerang'] ? entry['timerang'].split(' ถึง ')[0] : null,
         'date_out': entry['date_visitor2'],
         'time_out': entry['timerang'] ? entry['timerang'].split(' ถึง ')[1] : null, 
-        'contact': null,
-        'dept': null,
-        'objective_type': 0,   // visitorType = 0
+        'contact': entry['response_name']? entry['response_name']:null,
+        'dept': entry['dept']? entry['dept']:null,
+        'objective_type': 0,
         'objective': entry['purpose']? entry['purpose']:null,
         'building_card': entry['building_card']? entry['building_card']:null,
         'area': entry['area']? entry['area']:null,
@@ -298,7 +377,7 @@ app.get(`/getRequestFormByDate`, authenticateToken, async (req, res, next) => {
         'proArea_datetime': null,
         'proArea_by': null,
         'tno_ref': entry['tno']? entry['tno']:null,
-        'visitorType': entry['visitorType']? entry['visitorType']:null,
+        'visitorType': 0,
         'people': entry['people']? entry['people']:null,
         'item_in': null,
         'item_out': null,
@@ -319,7 +398,7 @@ app.get(`/getRequestFormByDate`, authenticateToken, async (req, res, next) => {
         'time_out': entry['timerang'] ? entry['timerang'].split(' ถึง ')[1] : null, 
         'contact': entry['to_visit_name']? entry['to_visit_name']:null,
         'dept': entry['to_visit_dept']? entry['to_visit_dept']:null,
-        'objective_type': 0,   // visitorType = 0
+        'objective_type': 0,
         'objective': entry['purpose']? entry['purpose']:null,
         'building_card': entry['building_card']? entry['building_card']:null,
         'area': entry['area']? entry['area']:null,
@@ -344,7 +423,7 @@ app.get(`/getRequestFormByDate`, authenticateToken, async (req, res, next) => {
         'proArea_datetime': null,
         'proArea_by': null,
         'tno_ref': entry['tno']? entry['tno']:null,
-        'visitorType': entry['visitorType']? entry['visitorType']:null,
+        'visitorType': 0,
         'people': entry['people']? entry['people']:null,
         'item_in': null,
         'item_out': null,
@@ -362,7 +441,6 @@ app.get(`/getRequestFormByDate`, authenticateToken, async (req, res, next) => {
         let date = isEmployee ? item.date_out : item.date_in;
         let time = isEmployee ? item.time_out : item.time_in;
     
-        // Default time if missing
         if (!time) time = '00:00';
     
         // If date is not a string or is already a Date object
@@ -374,21 +452,18 @@ app.get(`/getRequestFormByDate`, authenticateToken, async (req, res, next) => {
         if (typeof date === 'string' && date.includes('-')) {
           const parts = date.split('-');
           if (parts[0].length === 2) {
-            // Assuming format is DD-MM-YYYY
             const [day, month, year] = parts;
             date = `${year}-${month}-${day}`;
           }
         }
     
-        // Final ISO string
         const isoDateTime = `${date}T${time}`;
         return new Date(isoDateTime);
       };
     
       const dateTimeA = getDateTime(a);
       const dateTimeB = getDateTime(b);
-    
-      return dateTimeA - dateTimeB;
+      return dateTimeB - dateTimeA;
     });
     
 
@@ -436,7 +511,7 @@ app.get(`/getRequestApproved`, authenticateToken, async (req, res, next) => {
       return next(new ApiError(400, 'Missing building_card parameter'));
     }
     if (!Array.isArray(building_card)) {
-      building_card = [building_card]; // Convert single value to array
+      building_card = [building_card];
     }
 
     if (building_card.length === 0) {
@@ -456,10 +531,52 @@ app.get(`/getRequestApproved`, authenticateToken, async (req, res, next) => {
         CASE 
           WHEN pr.request_type = 'EMPLOYEE' THEN CONCAT(pr.date_out, ' ', pr.time_out)
           ELSE CONCAT(pr.date_in, ' ', pr.time_in)
-        END ASC
+        END DESC
     `;
 
     const results = await dbQuery(query, [building_card]);
+    const transformResults = transformFilenameToUrl(results);
+
+    
+
+    res.status(200).json({
+      message: "Query successful",
+      data: transformResults,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get(`/getLogBook`, authenticateToken, async (req, res, next) => {
+  try {
+    let { start_date, end_date } = req.query;
+    if (!start_date || !end_date) {
+      return next(new ApiError(400, 'Missing start_date or end_date parameter'));
+    }
+
+    const query = `
+      SELECT 
+        pr.*,
+        pf.people,
+        pf.item_in,
+        pf.item_out
+      FROM PASS_REQUEST pr 
+      LEFT JOIN PASS_FORM pf ON pr.tno_pass = pf.tno_pass
+      WHERE 
+        (
+          (pr.request_type = 'EMPLOYEE' AND DATE(pr.date_out) BETWEEN ? AND ?)
+          OR
+          (pr.request_type = 'VISITOR' AND DATE(pr.date_in) BETWEEN ? AND ?)
+        )
+      ORDER BY 
+        CASE 
+          WHEN pr.request_type = 'EMPLOYEE' THEN CONCAT(pr.date_out, ' ', pr.time_out)
+          ELSE CONCAT(pr.date_in, ' ', pr.time_in)
+        END ASC
+    `;
+
+    const results = await dbQuery(query, [start_date, end_date, start_date, end_date]);
     const transformResults = transformFilenameToUrl(results);
 
     
@@ -649,12 +766,14 @@ app.post(`/updatePassRequest`, authenticateToken, async (req, res, next) => {
 //update approved document
 app.post(`/approvedDocument`, authenticateToken, async (req, res, next) => {
   try {
-    const { tno, type, data } = req.body
+    const { tno, type, year, month, data } = req.body
     if(!tno || !type || !data) {
       return next(new ApiError(400, 'Invalid or missing data'));
     }
 
-    const filename = await copySignatureFile(type, tno, data.approved_sign);
+    const filename = await copySignatureFile(type, tno, year, month, data.approved_sign);
+    console.log("--------------");
+    console.log(filename);
     if(!filename){
       return next(new ApiError(404, 'Failed to move signature file.'));
     }
@@ -678,7 +797,6 @@ app.post(`/approvedAll`, authenticateToken, async (req, res, next) => {
   try {
     const { tno_listMap, sign_info } = req.body
 
-    // Check req
     if (!tno_listMap || !sign_info) {
       return next(new ApiError(400, 'Invalid or missing data.'));
     }
@@ -686,7 +804,7 @@ app.post(`/approvedAll`, authenticateToken, async (req, res, next) => {
     // Duplicate image to traget folder and change name
     let filename = '';
     for (const item of tno_listMap) {
-      filename = await copySignatureFile(item.type, item.tno_pass, sign_info.approved_sign);
+      filename = await copySignatureFile(item.type, item.tno_pass, item.year, item.month, sign_info.approved_sign);
       if(!filename){
         return next(new ApiError(500, 'Failed to move signature file.'));
       }
@@ -721,7 +839,6 @@ app.post(`/updateActiveFCMToken`, authenticateToken, async (req, res, next) => {
   try {
     const {device_id, last_active} = req.body;
 
-    // Basic validation
     if (!device_id || !last_active) {
       return next(new ApiError(400, 'Missing device_id or last_active'));
     }
@@ -903,11 +1020,9 @@ const transformFilenameToUrl = (data) =>
     }
 
     ["item_in", "item_out"].forEach(type => {
-      if (record[type]?.type === "image" && 
-        Array.isArray(record[type]?.item) &&
-        record[type].item.length > 0) 
+      if (record[type] &&  Array.isArray(record[type].images) && record[type].images.length > 0) 
         {
-        record[type].item = record[type].item.map(filename =>
+        record[type].images = record[type].images.map(filename =>
           convertFilenameToUrl(filename, `${record.request_type}/${ymFolder}/${record.tno_pass}/${type}`)
         );
       }
@@ -916,7 +1031,7 @@ const transformFilenameToUrl = (data) =>
     return record;
   });
 
-  async function copySignatureFile(type, tno, filenameOld) {
+  async function copySignatureFile(type, tno, year, month, filenameOld) {
     try {
       if (!filenameOld) {
         console.error("Filename is missing.");
@@ -929,7 +1044,7 @@ const transformFilenameToUrl = (data) =>
       const filenameTarget = `approved${fileExtension}`;
   
       //Paste Image
-      const targetFolder = path.join(visitorConfig.pathImageDocuments, type, tno, "signatures");
+      const targetFolder = path.join(visitorConfig.pathImageDocuments, type, year, month, tno, "signatures");
       if (!fs.existsSync(targetFolder)) fs.mkdirSync(targetFolder);
   
       const targetPath = path.join(targetFolder, filenameTarget);
@@ -1011,8 +1126,8 @@ cron.schedule(visitorConfig.notifyTime, async () => {
 
     const buildingCardConditions = {
       Y: "Administrator,CardManager",
-      N: "Administrator,Manager",
-      O: "Administrator,Manager,CardManager",
+      N: "Administrator,SecurityManager,Manager",
+      O: "Administrator,SecurityManager,Manager,CardManager",
     };
 
     const roleConditions = new Set();
@@ -1066,6 +1181,31 @@ cron.schedule(visitorConfig.clearFCMToken, async () => {
 // ---------------------------------------------- LoadImage ---------------------------------------------- //
 // load image directory
 app.use(`/loadImages`, express.static(visitorConfig.pathImageDocuments));
+
+// ---------------------------------------------- LoadManual---------------------------------------------- //
+// download manual
+app.get('/manual', (req, res) => {
+  const role = req.query.role?.toLowerCase();
+
+  // Validate role
+  if (!['user', 'approver'].includes(role)) {
+    return res.status(400).send('Invalid or missing role. Use ?role=user or ?role=approver');
+  }
+
+  const filename = `${visitorConfig.manualFilename}${role}.pdf`;
+  const filePath = path.join(__dirname, 'manual', filename);
+
+  console.log('Serving file:', filePath);
+
+  res.download(filePath, filename, err => {
+    if (err) {
+      console.error('Error sending file:', err);
+      if (!res.headersSent) {
+        res.status(500).send('Failed to download file');
+      }
+    }
+  });
+});
 
 
 // ---------------------------------------------- logError ---------------------------------------------- //

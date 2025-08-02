@@ -11,5 +11,6 @@ class ApiConfig {
 
   static const String authPipe  = 'auth';
   static const String visitorPipe = 'visitor';
-  static const double fontSize = 16.0;    // standard gobal font size
+  static const double fontSize = 16.0;
+  static const String fontFamily = 'NotoSans';
 }

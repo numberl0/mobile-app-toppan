@@ -9,8 +9,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // double _fontSize = 16.0;
-
   LoginController _controller = LoginController();
 
    @override

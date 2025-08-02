@@ -67,7 +67,7 @@ class ApproveModel {
     return data;
   }
 
-  Future<bool> approvedDocument(String tno, String type, Map<String,dynamic> sign_info) async {
+  Future<bool> approvedDocument(String tno, String type, String year, String month, Map<String,dynamic> sign_info) async {
     bool status = false;
     final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/approvedDocument');
     String token = await userEntity.getUserPerfer(userEntity.token);
@@ -81,6 +81,8 @@ class ApproveModel {
         body: jsonEncode({
           'tno': tno,
           'type': type,
+          'year': year,
+          'month': month,
           'data': sign_info
           }),
       ).timeout(

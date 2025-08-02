@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:intl/intl.dart';
 import 'package:toppan_app/config/api_config.dart';
 import 'package:toppan_app/userEntity.dart';

@@ -16,7 +16,6 @@ import 'package:toppan_app/visitorService/visitorServiceCenter_controller.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:image/image.dart' as img;
-import 'package:uuid/v4.dart';
 
 class VisitorFormController {
   VisitorformModule visitorformModule = VisitorformModule();
@@ -27,6 +26,8 @@ class VisitorFormController {
   Cleartemporary cleartemporary = Cleartemporary();
 
   bool flagUpdateForm = false;
+  bool logBook = false;
+
   String tno_pass = '';
   String? tno_ref = null;
 
@@ -49,8 +50,6 @@ class VisitorFormController {
   TimeOfDay? flagTimeOut;
   TextEditingController timeOutController = TextEditingController();
 
-  TextEditingController contactController = TextEditingController();
-  TextEditingController departmentController = TextEditingController();
   TextEditingController objectiveController = TextEditingController();
   TextEditingController otherBuildingController = TextEditingController();
 
@@ -63,10 +62,10 @@ class VisitorFormController {
     // 'DateTime' :
   ];
   List<Map<String, String>> listItem_In = [
-    // 'name':
+    // 'item':
   ];
   List<Map<String, String>> listItem_Out = [
-    // 'name':
+    // 'item':
   ];
 
   //Storage In / Out Items by Image
@@ -99,12 +98,9 @@ class VisitorFormController {
   final Map<String, List<dynamic>> signatureSectionMap = {
     'Approved': [null, null, 'ผู้อนุมัติ', null],
     'Media': [null, null, 'ผู้ตรวจสอบสื่อ', null],
-    'Security': [null, null, 'รปภ. หน้าโรงงาน', null],
-    'Production': [null, null, 'รปภ. card', null],
+    'Security': [null, null, 'รปภ.', null],
+    'Production': [null, null, 'รปภ. การผลิต', null],
   };
-
-  //is item image list
-  bool isSwitchImagePicker = false;
 
   //Global SignPad
   final signatureGlobalKey = GlobalKey<SfSignaturePadState>();
@@ -116,6 +112,16 @@ class VisitorFormController {
   bool isExpanded_listPerson = true; //Visitor List
   bool isExpanded_listItem = true; //Items List
 
+
+  // Departments
+  String selectDept = '';
+  List<String> deptList = [];
+
+  // Contacts
+   TextEditingController contactControl = TextEditingController();
+   List<String> contactList = [];
+
+
   final LoadingDialog _loadingDialog = LoadingDialog();
 
   Future<String> validateUpload() async {
@@ -125,8 +131,7 @@ class VisitorFormController {
       "กรุณาเลือกวันที่ออก": dateOutController.text,
       "กรุณาเพิ่มเวลาเข้า": timeInController.text,
       "กรุณาเพิ่มเวลาออก": timeOutController.text,
-      "กรุณาใส่ข้อมูลผู้ติดต่อ": contactController.text,
-      "กรุณาใส่แผนกติดต่อ": departmentController.text,
+      "กรุณาใส่ข้อมูลผู้ติดต่อ": contactControl.text,
       "กรุณาระบุวัตถุประสงค์ในการเยี่ยมชม": objectiveController.text,
     };
     for (var entry in fields.entries) {
@@ -134,6 +139,9 @@ class VisitorFormController {
         scrollToSection(inputSectionKey);
         return entry.key;
       }
+    }
+    if (!contactList.contains(contactControl.text)) {
+      return 'รายชื่อผู้ติดต่อไม่ตรงกับระบบ';
     }
     if (personList.isEmpty) {
       scrollToSection(visitorSectionKey);
@@ -173,6 +181,13 @@ class VisitorFormController {
       sequenceRunning += 1;
       formatSequenceRunning = sequenceRunning.toString().padLeft(6, '0');
 
+      // Departments
+      deptList = await visitorformModule.getDepartments();
+      selectDept = deptList[0];
+
+      // Contact
+      contactList = await visitorformModule.getContactByDept(selectDept);
+
       // Building
       buildingList = await visitorformModule.getBuilding();
       this.selectedBuilding = this.buildingList[0]['id'];
@@ -192,7 +207,7 @@ class VisitorFormController {
       timeInController.text = formatTime(flagTimeIn!);
 
     } catch (err, stackTrace) {
-      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
     } finally {
       await Future.delayed(Duration(seconds: 1));
       _loadingDialog.hide();
@@ -207,6 +222,9 @@ class VisitorFormController {
 
       // For update recode
       flagUpdateForm = data['tno_pass'] != null? true : false; //case pull in visitor normal
+
+      // logBook
+      logBook = data['logBook'] == true;
 
       // Agreement Warning
       Map<String, dynamic> aggrementText = await visitorformModule.getAgreementText();
@@ -293,16 +311,24 @@ class VisitorFormController {
         timeOutController.text = formatTime24(flagTimeOut);
       }
 
-      //Map Data
-      contactController.text = data['contact'] != null ? data['contact'] : '';
-      departmentController.text = data['dept'] != null ? data['dept'] : '';
-      objectiveController.text =
-          data['objective'] != null ? data['objective'] : '';
+      // Departments
+      deptList = await visitorformModule.getDepartments();
+      selectDept = data['dept'] != null ? data['dept'] : deptList[0];
 
+      // Contact
+      contactList = await visitorformModule.getContactByDept(selectDept);
+      contactControl.text = data['contact'] != null ? data['contact'] : '';
+
+      // Objective
+      objectiveController.text = data['objective'] != null ? data['objective'] : '';
 
       // personList
+      List<Map<String, dynamic>> copiedPeople = (data['people'] as List<dynamic>)
+      .map((e) => Map<String, dynamic>.from(e as Map))
+      .toList();
+      
       var uuid = Uuid();
-      for (var person in data['people']) {
+      for (var person in copiedPeople) {
         person.putIfAbsent('ID', () =>  uuid.v4() );
         person.putIfAbsent('Card_Id', () => null);
         person.putIfAbsent('DateTime', () => DateTime.now().toString());
@@ -315,51 +341,41 @@ class VisitorFormController {
           person['Signature'] = null;
         }
       }
-      personList = (data['people'] as List<dynamic>)
-          .map((e) => e as Map<String, dynamic>)
-          .toList();
+      personList = copiedPeople;
 
-      //item_in / item_out
-      if(data['item_in'] != null && data['item_out'] != null){      // in case pull in visitor normal
-        if (data['item_in']['type'] == data['item_out']['type']) {
-          if (data['item_in']['type'] == 'image' &&
-              data['item_out']['type'] == 'image') {
-            //in case image
-            isSwitchImagePicker = true;
-            if (data['item_in']['item'] != null &&
-                data['item_in']['item'] is List) {
-              for (String imageUrl
-                  in List<String>.from(data['item_in']['item'])) {
-                File? file = await visitorformModule.loadImageToFile(imageUrl);
-                if (file != null) {
-                  imageList_In.add(file);
-                }
-              }
-            }
-            if (data['item_out']['item'] != null &&
-                data['item_out']['item'] is List) {
-              for (String imageUrl
-                  in List<String>.from(data['item_out']['item'])) {
-                File? file = await visitorformModule.loadImageToFile(imageUrl);
-                if (file != null) {
-                  imageList_Out.add(file);
-                }
-              }
-            }
-          } else {
-            // in case list
-            if (data['item_in']['item'] != null) {
-              listItem_In = List<Map<String, String>>.from(
-                  (data['item_in']['item'] as List)
-                      .map((e) => {"name": e.toString()}));
-            }
-            if (data['item_out']['item'] != null) {
-              listItem_Out = List<Map<String, String>>.from(
-                  (data['item_out']['item'] as List)
-                      .map((e) => {"name": e.toString()}));
+      // item_in
+      if(data['item_in'] != null) {
+        if (data['item_in']['images'] != null && data['item_in']['images'] is List) {
+          for (String imageUrl in List<String>.from(data['item_in']['images'])) {
+            File? file = await visitorformModule.loadImageToFile(imageUrl);
+            if (file != null) {
+              imageList_In.add(file);
             }
           }
         }
+        // in case list
+        if (data['item_in']['items'] != null) {
+          listItem_In = List<Map<String, String>>.from(
+              (data['item_in']['items'] as List)
+                  .map((e) => {"item": e.toString()}));
+        }
+      }
+
+      // item_out
+      if(data['item_out'] != null) {
+        if (data['item_out']['images'] != null && data['item_out']['images'] is List) {
+          for (String imageUrl in List<String>.from(data['item_out']['images'])) {
+            File? file = await visitorformModule.loadImageToFile(imageUrl);
+            if (file != null) {
+              imageList_Out.add(file);
+            }
+          }
+        }
+        if (data['item_out']['items'] != null) {
+        listItem_Out = List<Map<String, String>>.from(
+            (data['item_out']['items'] as List)
+                .map((e) => {"item": e.toString()}));
+       }
       }
 
       // Signature
@@ -386,7 +402,7 @@ class VisitorFormController {
       }
 
     } catch (err, stackTrace) {
-      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
     } finally {
       await Future.delayed(Duration(seconds: 1));
       _loadingDialog.hide();
@@ -440,14 +456,14 @@ class VisitorFormController {
         entry['Signature'] = signatureData;
       }
     } catch (err, stackTrace) {
-      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
     }
   }
 
   Future<void> addItemTypeList(String type) async {
     if (itemNameController.text.isNotEmpty) {
       Map<String, String> item = {
-        'name': itemNameController.text,
+        'item': itemNameController.text,
       };
       if (type == 'in') {
         listItem_In.add(item); //add item in
@@ -461,7 +477,7 @@ class VisitorFormController {
 
   Future<void> editItemTypeList(Map<String, String> entry) async {
     if (itemNameController.text.isNotEmpty) {
-      entry['name'] = itemNameController.text;
+      entry['item'] = itemNameController.text;
     }
   }
 
@@ -491,9 +507,43 @@ class VisitorFormController {
     try {
       final outDate = DateTime(flagDateOut!.year, flagDateOut!.month, flagDateOut!.day);
       final inDate = DateTime(flagDateIn!.year, flagDateIn!.month, flagDateIn!.day);
-      return !inDate.isAfter(outDate);
+      return inDate.isBefore(outDate);
     } catch (err, stackTrace) {
-      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      return false;
+    }
+  }
+
+    Future<bool> checkTimeOutNotPastInSameDay() async {
+      try {
+        final sameDate = flagDateIn!.year == flagDateOut!.year &&
+                     flagDateIn!.month == flagDateOut!.month &&
+                     flagDateIn!.day == flagDateOut!.day;
+        if (sameDate) {
+          final date = DateTime(flagDateIn!.year, flagDateIn!.month, flagDateIn!.day);
+          final dateTimeIn = DateTime(date.year, date.month, date.day, flagTimeIn!.hour, flagTimeIn!.minute);
+          final dateTimeOut = DateTime(date.year, date.month, date.day, flagTimeOut!.hour, flagTimeOut!.minute);
+          return !dateTimeOut.isBefore(dateTimeIn);
+        }
+    return false;
+    } catch (err, stackTrace) {
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      return false;
+    }
+  }
+
+  Future<bool> checkDateTimeError() async {
+    try {
+      if(flagDateIn != null && flagDateOut != null && flagTimeIn != null && flagTimeOut != null){
+        bool isDateValid = await checkDateInFrist();
+        bool isTimeValid = await checkTimeOutNotPastInSameDay();
+        if (!isDateValid && !isTimeValid) {
+          return false;
+        }
+      }
+      return true;
+    } catch (err, stackTrace) {
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
       return false;
     }
   }
@@ -505,19 +555,17 @@ class VisitorFormController {
     try {
       // Upload image client(mobile) to server
       Map<String, dynamic>? filenamesData = await uploadImageToServer(tno_pass,'VISITOR', dateInController.text); //1st
-
         // Upload to Request_FORM table
-      bool uploadRequest =
-          await uploadToPassRequest(tno_pass, filenamesData); //2nd
-      if (!uploadRequest) {
-        throw Exception('Error uploading to PASS_REQUEST');
-      }
+      bool uploadRequest = await uploadToPassRequest(tno_pass, filenamesData); //2nd
+      // if (!uploadRequest) {
+      //   throw Exception('Error uploading to PASS_REQUEST');
+      // }
 
        //Upload in PASS_Form table
       bool uploadForm = await uploadToPassForm(tno_pass, filenamesData); //3rd
-      if (!uploadForm) {
-        throw Exception('Error uploading to PASS_FORM');
-      }
+      // if (!uploadForm) {
+      //   throw Exception('Error uploading to PASS_FORM');
+      // }
 
       
       if(uploadForm && uploadRequest && !flagUpdateForm) {
@@ -530,7 +578,7 @@ class VisitorFormController {
 
       }
     } catch (err, stackTrace) {
-      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
     }
     return status;
   }
@@ -538,8 +586,7 @@ class VisitorFormController {
   // -------------------------------------------------------------- Upload  -------------------------------------------------------------- //
 
   // Upload to PASS_FORM table
-  Future<bool> uploadToPassForm(
-      String tno_pass, Map<String, dynamic>? filenamesData) async {
+  Future<bool> uploadToPassForm(String tno_pass, Map<String, dynamic>? filenamesData) async {
     bool uploadStatus = false;
     try {
       //initial
@@ -549,7 +596,6 @@ class VisitorFormController {
       var visitorFilenames = filenamesData?['visitor'];
       var itemInFilenames = filenamesData?['item_in'];
       var itemOutFilenames = filenamesData?['item_out'];
-
       personList.asMap().forEach((index, person) {
         peopleList.add({
           "ID": person["ID"],
@@ -561,32 +607,15 @@ class VisitorFormController {
         });
       });
 
-      //Item In/Out
-      //Check item is image
-      String typeItem = '';
-      if (isSwitchImagePicker) {
-        typeItem = 'image';
-      } else {
-        typeItem = 'list';
-      }
-      // Prepare item data
-      Map<String, dynamic> itemIn_Json = {
-        "type": typeItem,
-        'item': itemInFilenames
-      };
-      Map<String, dynamic> itemOut_Json = {
-        "type": typeItem,
-        'item': itemOutFilenames
-      };
-
       // Prepare all data
       Map<String, dynamic> data = {
         'tno_pass': tno_pass,
         'visitorType': 0,
         'people': peopleList,
-        'item_in': itemIn_Json,
-        'item_out': itemOut_Json,
+        'item_in': itemInFilenames,
+        'item_out': itemOutFilenames,
       };
+
       // call api
       if(!flagUpdateForm) {
         uploadStatus = await visitorformModule.uploadPassForm(data); //<------------- Upload Pass Form
@@ -595,7 +624,7 @@ class VisitorFormController {
       }
 
     } catch (err, stackTrace) {
-      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
     }
     return uploadStatus;
   }
@@ -656,8 +685,8 @@ class VisitorFormController {
         'time_in': formattedTimeIn,
         'date_out': formattedDateOut,
         'time_out': formattedTimeOut,
-        'contact': contactController.text,
-        'dept': departmentController.text,
+        'contact': contactControl.text,
+        'dept': selectDept,
         'objective_type': 0, //visitor type = 0
         'objective': objectiveController.text,
         'building_card': buildingData['building_card'],
@@ -696,7 +725,7 @@ class VisitorFormController {
 
 
     } catch (err, stackTrace) {
-      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
     }
     return uploadStatus;
   }
@@ -746,8 +775,8 @@ class VisitorFormController {
       }
 
       //item
-      List<File> item_in = [];
-      List<File> item_out = [];
+      List<File> image_list_in = [];
+      List<File> image_list_out = [];
       Future<File> processImage(File imageFile, String newFileName) async {
         final bytes = await imageFile.readAsBytes();
         final decodedImage = img.decodeImage(bytes);
@@ -756,29 +785,26 @@ class VisitorFormController {
         final directory = await getTemporaryDirectory();
         final newPath = join(directory.path, '$newFileName.jpg'); // Force .jpg to avoid weird formats
 
-        final encodedImage = img.encodeJpg(decodedImage, quality: 90);
+        final encodedImage = img.encodeJpg(decodedImage, quality: 70);
         final newFile = File(newPath);
         await newFile.writeAsBytes(encodedImage);
         return newFile;
       }
 
-      if (isSwitchImagePicker) {
-        // item_in
-        for (int index = 0; index < imageList_In.length; index++) {
-          final item = imageList_In[index];
-          if (item != null) {
-            final processed = await processImage(item, 'in_$index');
-            item_in.add(processed);
-          }
+      // item_in (image)
+      for (int index = 0; index < imageList_In.length; index++) {
+        final item = imageList_In[index];
+        if (item != null) {
+          final processed = await processImage(item, 'in_$index');
+          image_list_in.add(processed);
         }
-
-        // item_out
-        for (int index = 0; index < imageList_Out.length; index++) {
-          final item = imageList_Out[index];
-          if (item != null) {
-            final processed = await processImage(item, 'out_$index');
-            item_out.add(processed);
-          }
+      }
+      // item_out (image)
+      for (int index = 0; index < imageList_Out.length; index++) {
+        final item = imageList_Out[index];
+        if (item != null) {
+          final processed = await processImage(item, 'out_$index');
+          image_list_out.add(processed);
         }
       }
 
@@ -802,8 +828,8 @@ class VisitorFormController {
         'people': visitorSignatureFiles.isEmpty
             ? null
             : visitorSignatureFiles, //visitor signature
-        'item_in': item_in.isEmpty ? null : item_in, //item in image
-        'item_out': item_out.isEmpty ? null : item_out, //item out image
+        'item_in': image_list_in.isEmpty ? null : image_list_in, //item in image
+        'item_out': image_list_out.isEmpty ? null : image_list_out, //item out image
         'approver': signatureApprover.isEmpty
             ? null
             : signatureApprover, //approver signature
@@ -813,23 +839,24 @@ class VisitorFormController {
       await visitorformModule.uploadImageFiles(tno_pass, folderName, dataFileImage, date); //<---------------------------- upload image to server
 
       // Prepare only filename
-      List<String?> visitorFilenames = visitorSignatureFiles
-          .map((file) => file != null ? basename(file.path) : null)
-          .toList();
+      List<String?> visitorFilenames = visitorSignatureFiles.map((file) => file != null ? basename(file.path) : null).toList();
+
       //prepare item filename
-      var item_In_Filenames;
-      var item_Out_Filenames;
-      if (isSwitchImagePicker) {
-        item_In_Filenames = item_in.map((file) => basename(file.path)).toList();
-        item_Out_Filenames =
-            item_out.map((file) => basename(file.path)).toList();
-      } else {
-        //user name is not image
-        item_In_Filenames =
-            listItem_In.map((item) => item['name'] as String).toList();
-        item_Out_Filenames =
-            listItem_Out.map((item) => item['name'] as String).toList();
-      }
+      //item in
+      final itemsIN = listItem_In.map((e) => e['item'] as String?).where((item) => item != null && item.trim().isNotEmpty).cast<String>().toList();
+      final imagesIN = image_list_in.where((file) => file != null && file.path != null).map((file) => basename(file.path)).toList();
+      final Map<String, List<String>> item_In_Filenames = {
+        "items": itemsIN,
+        "images": imagesIN,
+      };
+      //item out
+      final itemsOUT = listItem_Out.map((e) => e['item'] as String?).where((item) => item != null && item.trim().isNotEmpty).cast<String>().toList();
+      final imagesOUT = image_list_out.where((file) => file != null && file.path != null).map((file) => basename(file.path)).toList();
+      final Map<String, List<String>> item_Out_Filenames = {
+        "items": itemsOUT,
+        "images": imagesOUT,
+      };
+
       //prepare approver filename
       List<String?> approverFilenames = signatureApprover
           .map((file) => file != null ? basename(file.path) : null)
@@ -852,9 +879,14 @@ class VisitorFormController {
         'approver[]': [approverMap],
       };
     } catch (err, stackTrace) {
-      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
     }
     return data;
+  }
+
+  Future<void> loadContactByDepartment(String dept) async{
+    contactList = await visitorformModule.getContactByDept(dept);
+    contactControl.clear();
   }
 
   // ------------------------------------------------- Jumper!! ----------------------------------------------- //

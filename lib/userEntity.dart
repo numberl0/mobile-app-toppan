@@ -14,6 +14,7 @@ class UserEntity {
   String app_version = 'app_version';
 
   String username = 'username';
+  String displayName = 'displayName';
   String token = 'token';
   String roles_visitorService = 'roles_visitorService'; // list<String> = []
 
@@ -152,7 +153,7 @@ class UserEntity {
       String savedVersion = await getUserPerfer(this.app_version);
 
       if (savedVersion != currentVersion) {
-        clearUserPerfer();
+        await clearUserPerfer();
         await setUserPerfer(this.app_version, currentVersion);
       }
     } catch (err) {
@@ -171,7 +172,7 @@ class UserEntity {
 
       // Filter out the device_preview related keys
       keys.removeWhere((key) => excludedKeys.contains(key));
-      printAllSharedPreferences();
+      await printAllSharedPreferences();
       if (keys.isEmpty) {
         status = true;
       } else {

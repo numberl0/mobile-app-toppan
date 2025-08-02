@@ -8,7 +8,7 @@ class LoadingDialog {
   OverlayEntry? _overlayEntry;
 
   void show(BuildContext context) {
-    if (_overlayEntry != null) return; // Prevent multiple overlays
+    if (_overlayEntry != null) return;
 
     _overlayEntry = OverlayEntry(
       builder: (context) => Stack(

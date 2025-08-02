@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:toppan_app/visitorService/approve/approve_view.dart';
 import 'package:toppan_app/visitorService/employee/employee_view.dart';
+import 'package:toppan_app/visitorService/logBook/logBook_view.dart';
 import 'package:toppan_app/visitorService/search/search_view.dart';
 import 'package:toppan_app/visitorService/visitor/visitor_view.dart';
 
@@ -14,7 +14,7 @@ class VisitorPage extends StatelessWidget {
   final EmployeeForm _employeeForm = EmployeeForm();
   final SearchForm _searchForm =   SearchForm();
   final ApproveView _approveForm = ApproveView();
-  
+  final LogBookView _logBookForm = LogBookView();
   
   @override
   Widget build(BuildContext context) {
@@ -39,9 +39,9 @@ class VisitorPage extends StatelessWidget {
             title: Text(
               _getPageTitle(selectedOption),
               style: TextStyle(
-                fontSize: _fontSize, // Dynamic font size for the title
-                fontWeight: FontWeight.bold, // Optional: Make it bold
-                color: Colors.black, // Optional: Set text color
+                fontSize: _fontSize,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
               ),
             ),
             centerTitle: true,
@@ -58,25 +58,14 @@ class VisitorPage extends StatelessWidget {
                 ),
               ),
             ),
-            // actions: [
-            //   IconButton(
-            //     icon: Icon(
-            //       Icons.notifications,
-            //       color: Colors.black87,
-            //       size: 28, 
-            //     ),
-            //     onPressed: () {
-                  
-            //     },
-            //   ),
-            // ],
             leading: IconButton(
             icon: Icon(
               Icons.arrow_back_ios,
               color: Colors.black,
             ),
             onPressed: () {
-              GoRouter.of(context).push('/home');
+              // GoRouter.of(context).push('/home');
+              Navigator.of(context).pop();
             },
           ),
           ),
@@ -86,28 +75,25 @@ class VisitorPage extends StatelessWidget {
     );
   }
 
-
-// Simplify the title getter function
   String _getPageTitle(String selectedOption) {
     const titles = {
       'visitor': 'ใบผ่านผู้มาติดต่อ',
       'employee': 'ใบผ่านพนักงาน',
       'search': 'ค้นหาใบผ่าน',
       'approve': 'อนุมัติใบผ่าน',
+      'logBook': 'ล็อกบุ๊ค',
     };
     return titles[selectedOption] ?? 'Unknown';
   }
 
-  // Simplify page content function with a map for readability
   Widget _getPageContent(BuildContext context) {
     final Map<String, Widget Function(BuildContext)> formMap = {
       'visitor': (context) => _visitorForm.visitorFormWidget(documentData),
       'employee': (context) => _employeeForm.employeeFormWidget(documentData),
       'search': (context) => _searchForm.searchFormWidget(context),
       'approve': (context) => _approveForm.approveFormWidget(context),
+      'logBook': (context) => _logBookForm.LogDocFormWidget(context),
     };
-
-    // Return the correct widget based on the selected option
     return formMap[selectedOption]?.call(context) ?? Container();
   }
 

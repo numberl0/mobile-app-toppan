@@ -8,9 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_signaturepad/signaturepad.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter_switch/flutter_switch.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import 'package:toppan_app/clear_temporary.dart';
@@ -36,6 +36,8 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
   Color? _cancelBtnColor = Colors.red[400];
   Color? _acceptBtnColor = Colors.blue[400];
   double _fontSize = ApiConfig.fontSize;
+  String _fontFamily = ApiConfig.fontFamily;
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
@@ -52,6 +54,12 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
     });
   }
 
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
   void prepareForm() async {
     if (widget.documentData != null) {
       final data = widget.documentData;
@@ -59,12 +67,12 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
     } else {
       await _controller.prepareNewForm(context);
     }
-    _showAgreementWarning(context);
+    await _showAgreementWarning(context, false);
     setState(() {});
   }
 
   // Function to show the pop-up dialog PDPA
-  Future<void> _showAgreementWarning(BuildContext context) async {
+  Future<void> _showAgreementWarning(BuildContext context, bool firstLoad) async {
     ScrollController _scrollController = ScrollController();
     bool _isScrolledToEnd = false;
     String _selectedLanguage = 'Thai'; // Default language
@@ -76,7 +84,6 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              // Check if scrolling is needed
               if (_scrollController.position.maxScrollExtent == 0) {
                 setState(() {
                   _isScrolledToEnd = true;
@@ -138,7 +145,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                         ),
                         child: SingleChildScrollView(
                           controller:
-                              _scrollController, // Attach scroll controller
+                              _scrollController,
                           child: RichText(
                             text: TextSpan(
                               style: Theme.of(context)
@@ -163,7 +170,6 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                     TextButton.icon(
                       onPressed: () {
                         setState(() {
-                          // Switch language
                           _selectedLanguage = _selectedLanguage == 'English'
                               ? 'Thai'
                               : 'English';
@@ -193,16 +199,18 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
               ),
               actionsAlignment: MainAxisAlignment.spaceBetween,
               actions: [
-                TextButton(
-                  onPressed: () {
-                    GoRouter.of(context).go('/home');
-                  },
-                  child: Text(
-                    'ยกเลิก',
-                    style:
-                        TextStyle(color: _cancelBtnColor, fontSize: _fontSize),
-                  ),
-                ),
+                firstLoad
+                    ? TextButton(
+                        onPressed: () {
+                          GoRouter.of(context).pushReplacement('/home');
+                        },
+                        child: Text(
+                          'ยกเลิก',
+                          style: TextStyle(
+                              color: _cancelBtnColor, fontSize: _fontSize),
+                        ),
+                      )
+                    : SizedBox.shrink(), // returns an empty widget if false
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
@@ -249,6 +257,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
     );
   }
 
+
   //Page Content
   Widget _getPageContent(BuildContext context) {
     final ScrollController controller = ScrollController();
@@ -268,7 +277,6 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
             colors: [
               Color.fromARGB(255, 255, 255, 255),
               Color.fromARGB(255, 255, 255, 255),
-              // Color.fromARGB(255, 236, 236, 236),
             ],
           ),
           borderRadius: BorderRadius.all(Radius.circular(20)),
@@ -284,636 +292,397 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: SingleChildScrollView(
-              controller: controller, // Use the controller for scrolling
+              controller: controller,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Center(
-                    key: _controller.inputSectionKey,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                  IgnorePointer(
+                    ignoring: _controller.logBook,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.assignment_outlined,
-                          size: 36,
-                          color: Colors.green,
-                        ),
-                        SizedBox(
-                          width: 10,
-                        ),
-                        Text('No. ${_controller.formatSequenceRunning}',
-                            style: TextStyle(
-                                fontSize: _fontSize + 4,
-                                fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                  ),
-
-                  SizedBox(
-                    height: 15,
-                  ),
-
-                  Divider(
-                    color: Colors.black,
-                    thickness: 0.5,
-                    height: 0,
-                  ),
-
-                  SizedBox(
-                    height: 15,
-                  ),
-                  // Company Name
-                  InputField(
-                    title: 'บริษัท:',
-                    hint: '',
-                    controller: _controller.companyController,
-                    maxLength: 255,
-                  ),
-                  SizedBox(height: 15),
-
-                  FractionallySizedBox(
-                    widthFactor: 0.4, // 40% width
-                    alignment: Alignment.centerLeft,
-                    child: InputField(
-                      title: 'เลขทะเบียนรถ:',
-                      hint: '',
-                      controller: _controller.vehicleLicenseController,
-                      maxLength: 24,
-                    ),
-                  ),
-
-                  SizedBox(height: 15),
-                  //Time In
-                  Row(
-                    children: [
-                      Expanded(
-                        child: InputField(
-                          title: "เวลาเข้า:",
-                          hint: "",
-                          controller: _controller.timeInController,
-                          widget: IconButton(
-                            onPressed: () {
-                              _timePicker(
-                                  context, _controller.flagTimeIn, 'in');
-                            },
-                            icon: Icon(
-                              Icons.access_time_rounded,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 20,
-                      ),
-                      Expanded(
-                        child: InputField(
-                          title: "วันที่เข้า:",
-                          hint: "",
-                          controller: _controller.dateInController,
-                          widget: IconButton(
-                            icon: Icon(
-                              Icons.calendar_today_outlined,
-                              color: Colors.grey,
-                            ),
-                            onPressed: () async {
-                              _datePicker(context, _controller.flagDateIn, 'in');
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  SizedBox(height: 15),
-                  //Time Out
-                  Row(
-                    children: [
-                      Expanded(
-                        child: InputField(
-                          title: "เวลาออก:",
-                          hint: "",
-                          controller: _controller.timeOutController,
-                          widget: IconButton(
-                            onPressed: () {
-                              _timePicker(
-                                  context, _controller.flagTimeOut, 'out');
-                            },
-                            icon: Icon(
-                              Icons.access_time_rounded,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 20,
-                      ),
-                      Expanded(
-                        child: InputField(
-                          title: "วันที่ออก:",
-                          hint: "",
-                          controller: _controller.dateOutController,
-                          widget: IconButton(
-                            icon: Icon(
-                              Icons.calendar_today_outlined,
-                              color: Colors.grey,
-                            ),
-                            onPressed: () async {
-                              _datePicker(context, _controller.flagDateOut, 'out');
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  SizedBox(height: 15),
-
-                  // Contact
-                  InputField(
-                    title: 'ติดต่อ:',
-                    hint: '',
-                    controller: _controller.contactController,
-                    maxLength: 255,
-                  ),
-                  SizedBox(height: 15),
-
-                  // Department
-                  InputField(
-                    title: 'แผนก:',
-                    hint: '',
-                    controller: _controller.departmentController,
-                    maxLength: 255,
-                  ),
-                  SizedBox(height: 15),
-
-                  // Object/Visitor
-                  InputField(
-                    title: 'วัตถุประสงค์:',
-                    hint: '',
-                    controller: _controller.objectiveController,
-                    descriptText: true,
-                    maxLength: 400,
-                  ),
-                  SizedBox(height: 30),
-
-                  // Visitor and follower's
-                  Container(
-                    key: _controller.visitorSectionKey,
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Colors.black,
-                        width: 1,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        Center(
+                          key: _controller.inputSectionKey,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.person,
-                                      color: Colors.black,
-                                      size: 50,
-                                    ),
-                                    SizedBox(
-                                      width: 5,
-                                    ),
-                                    Text(
-                                      "รายชื่อผู้มาติดต่อ:",
-                                      style: TextStyle(
-                                          fontSize: _fontSize,
-                                          fontWeight: FontWeight.bold),
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              IconButton(
-                                onPressed: _togglePersonList,
-                                icon: Icon(
-                                  _controller.isExpanded_listPerson
-                                      ? Icons.keyboard_double_arrow_down
-                                      : Icons.keyboard_double_arrow_up,
-                                  size: 24,
-                                ),
-                              )
-                            ],
-                          ),
-                          Divider(
-                            color: Colors.black,
-                            thickness: 1,
-                            height: 10,
-                          ),
-                          SizedBox(height: 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              ElevatedButton(
-                                onPressed: popUpAddPerson,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green.shade600,
-                                  padding: EdgeInsets.symmetric(
-                                      vertical: 12, horizontal: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  elevation: 5,
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.group_add,
-                                        color: Colors.white, size: 24),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      "เพิ่ม", // Button text
-                                      style: TextStyle(
-                                        fontSize: _fontSize - 4,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Text(
-                                "${_controller.personList.length}",
-                                style: TextStyle(
-                                    fontSize: _fontSize,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.green.shade600),
-                              ),
-                            ],
-                          ),
-
-                          SizedBox(height: 10),
-
-                          //Show Visitor List
-                          AnimatedCrossFade(
-                            firstChild:
-                                Container(), // Empty container when collapsed
-                            secondChild:
-                                personListGenerate(), // Show list when expanded
-                            crossFadeState: _controller.isExpanded_listPerson
-                                ? CrossFadeState.showSecond
-                                : CrossFadeState.showFirst,
-                            duration: Duration(milliseconds: 300),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(
-                    height: 30,
-                  ),
-
-                  //Item In/Out
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Colors.black,
-                        width: 1,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.shopping_bag,
-                                      color: Colors.black,
-                                      size: 50,
-                                    ),
-                                    SizedBox(
-                                      width: 5,
-                                    ),
-                                    Text(
-                                      "นำสิ่งของ เข้า/ออก",
-                                      style: TextStyle(
-                                          fontSize: _fontSize,
-                                          fontWeight: FontWeight.bold),
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                    ),
-                                  ],
-                                ),
+                              Icon(
+                                Icons.assignment_outlined,
+                                size: 36,
+                                color: Colors.green,
                               ),
                               SizedBox(
-                                width: 20.0,
+                                width: 10,
                               ),
-                              IconButton(
-                                onPressed: _toggleItemList,
-                                icon: Icon(
-                                  _controller.isExpanded_listItem
-                                      ? Icons.keyboard_double_arrow_down
-                                      : Icons.keyboard_double_arrow_up,
-                                  size: 24,
-                                ),
-                              ),
+                              Text('No. ${_controller.formatSequenceRunning}',
+                                  style: TextStyle(
+                                      fontSize: _fontSize + 4,
+                                      fontWeight: FontWeight.bold)),
                             ],
                           ),
-                          Divider(
-                            color: Colors.black,
-                            thickness: 1,
-                            height: 10,
-                          ),
-                          SizedBox(
-                            height: 5,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: <Widget>[
-                              FlutterSwitch(
-                                width: 70.0,
-                                height: 40.0,
-                                toggleSize: 70.0,
-                                value: _controller.isSwitchImagePicker,
-                                borderRadius: 30.0,
-                                padding: 2.0,
-                                activeToggleColor:
-                                    Color.fromARGB(255, 255, 255, 255),
-                                inactiveToggleColor:
-                                    Color.fromARGB(255, 255, 255, 255),
-                                activeSwitchBorder: Border.all(
-                                  color: Color.fromARGB(255, 202, 202, 202),
-                                  width: 1.5,
-                                  style: BorderStyle.solid,
-                                ),
-                                inactiveSwitchBorder: Border.all(
-                                  color: Color.fromARGB(255, 202, 202, 202),
-                                  width: 1.5,
-                                  style: BorderStyle.solid,
-                                ),
-                                activeColor: Colors.green,
-                                inactiveColor:
-                                    Color.fromARGB(255, 255, 255, 255),
-                                activeIcon: Icon(Icons.view_list),
-                                inactiveIcon: Icon(Icons.camera_alt),
-                                onToggle: (val) {
-                                  AwesomeDialog(
-                                    context: context,
-                                    dialogType: DialogType.info,
-                                    buttonsBorderRadius: const BorderRadius.all(
-                                      Radius.circular(2),
-                                    ),
-                                    dismissOnTouchOutside: true,
-                                    dismissOnBackKeyPress: false,
-                                    // onDismissCallback: (type) {
-                                    //   ScaffoldMessenger.of(context).showSnackBar(
-                                    //     SnackBar(
-                                    //       content: Text('Dismissed by $type'),
-                                    //     ),
-                                    //   );
-                                    // },
-                                    headerAnimationLoop: false,
-                                    animType: AnimType.bottomSlide,
-                                    title: 'คำเตือน',
-                                    titleTextStyle: TextStyle(
-                                        fontSize: _fontSize + 10,
-                                        fontWeight: FontWeight.bold),
-                                    desc:
-                                        'ข้อมูลสิ่งของ เข้า/ออก จะสูญหาย ท่านต้องการเปลี่ยนการทำงานหรือไม่?',
-                                    descTextStyle: TextStyle(
-                                        fontSize: _fontSize,
-                                        fontWeight: FontWeight.bold),
-                                    showCloseIcon: true,
-                                    btnOkText: 'ยืนยัน',
-                                    btnOkColor: Colors.green.shade600,
-                                    btnOkOnPress: () async {
-                                      await _controller
-                                          .itemListClear(); // Clear the lists
-                                      setState(() {
-                                        _controller.isSwitchImagePicker = val;
-                                        if (!_controller.isExpanded_listItem) {
-                                          _toggleItemList();
-                                        }
-                                      });
-                                    },
-                                    btnCancel: ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: _cancelBtnColor,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                              30), // Circular shape
-                                        ),
-                                        padding: EdgeInsets.symmetric(
-                                            vertical: 12, horizontal: 24),
-                                        elevation:
-                                            8, // Add elevation (shadow effect)
-                                        shadowColor: Colors.black
-                                            .withOpacity(1), // Shadow color
-                                      ),
-                                      child: Text(
-                                        'ยกเลิก',
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: _fontSize,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ),
-                                    btnOk: ElevatedButton(
-                                      onPressed: () async {
-                                        await _controller
-                                            .itemListClear(); // Clear the lists
-                                        setState(() {
-                                          _controller.isSwitchImagePicker = val;
-                                          if (!_controller
-                                              .isExpanded_listItem) {
-                                            _toggleItemList();
-                                          }
-                                        });
-                                        Navigator.pop(context);
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: _acceptBtnColor,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                              30), // Circular shape
-                                        ),
-                                        padding: EdgeInsets.symmetric(
-                                            vertical: 12, horizontal: 24),
-                                        elevation:
-                                            8, // Add elevation (shadow effect)
-                                        shadowColor: Colors.black
-                                            .withOpacity(1), // Shadow color
-                                      ),
-                                      child: Text(
-                                        'ยืนยัน',
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: _fontSize,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ),
-                                  ).show();
-                                },
-                              ),
-                              Text(
-                                _controller.isSwitchImagePicker
-                                    ? "${_controller.imageList_In.length} : ${_controller.imageList_Out.length}"
-                                    : "${_controller.listItem_In.length} : ${_controller.listItem_Out.length}",
-                                style: TextStyle(
-                                    fontSize: _fontSize,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.green.shade600),
-                              ),
-                            ],
-                          ),
-                          AnimatedCrossFade(
-                            firstChild: Container(),
-                            secondChild: _controller
-                                    .isSwitchImagePicker //switchImagePicker
-                                ? Column(
-                                    children: [
-                                      SizedBox(
-                                        height: 5,
-                                      ),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Divider(
-                                              color: Colors.black,
-                                              thickness: 1,
-                                            ),
-                                          ),
-                                          Padding(
-                                            padding: EdgeInsets.symmetric(
-                                                horizontal: 10),
-                                            child: Text(
-                                              'นำเข้า', // "Items Out" text
-                                              style: TextStyle(
-                                                fontSize: _fontSize,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            child: Divider(
-                                              color: Colors.black,
-                                              thickness: 1,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      SizedBox(
-                                        height: 10,
-                                      ),
-                                      _contentItemImage(
-                                          _controller.imageList_In),
-                                      SizedBox(
-                                        height: 10,
-                                      ),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Divider(
-                                              color: Colors
-                                                  .black, // Color of the line
-                                              thickness:
-                                                  1, // Thickness of the line
-                                            ),
-                                          ),
-                                          Padding(
-                                            padding: EdgeInsets.symmetric(
-                                                horizontal:
-                                                    10), // Space around the text
-                                            child: Text(
-                                              'นำออก', // "Items Out" text
-                                              style: TextStyle(
-                                                fontSize: _fontSize,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            child: Divider(
-                                              color: Colors.black,
-                                              thickness: 1,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      SizedBox(
-                                        height: 10,
-                                      ),
-                                      _contentItemImage(
-                                          _controller.imageList_Out),
-                                    ],
-                                  )
-                                : _contentItemList(),
-                            crossFadeState: _controller.isExpanded_listItem
-                                ? CrossFadeState.showSecond
-                                : CrossFadeState.showFirst,
-                            duration: Duration(milliseconds: 300),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                        ),
+                        
+                        SizedBox(
+                          height: 15,
+                        ),
+                        
+                        Divider(
+                          color: Colors.black,
+                          thickness: 0.5,
+                          height: 0,
+                        ),
+                        
+                        SizedBox(
+                          height: 15,
+                        ),
 
-                  SizedBox(height: 40),
-                  Container(
-                    key: _controller.buildingSectionKey,
-                    child: Column(
-                      children: [
-                        dropDownBuilding(_controller.buildingList),
-                        SizedBox(height: 10),
-                        AnimatedSwitcher(
-                          duration: Duration(milliseconds: 300),
-                          transitionBuilder: (widget, animation) =>
-                              FadeTransition(
-                            opacity: animation,
-                            child: SizeTransition(
-                              sizeFactor: animation,
-                              child: widget,
+                        InputField(
+                          title: 'องค์กร:',
+                          hint: '',
+                          controller: _controller.companyController,
+                          maxLength: 255,
+                        ),
+                        SizedBox(height: 15),
+                        
+                        FractionallySizedBox(
+                          widthFactor: 0.4,
+                          alignment: Alignment.centerLeft,
+                          child: InputField(
+                            title: 'เลขทะเบียนรถ:',
+                            hint: '',
+                            controller: _controller.vehicleLicenseController,
+                            maxLength: 24,
+                          ),
+                        ),
+                        
+                        SizedBox(height: 15),
+                        //Time In
+                        Row(
+                          children: [
+                            Expanded(
+                              child: InputField(
+                                title: "เวลาเข้า:",
+                                hint: "",
+                                controller: _controller.timeInController,
+                                widget: IconButton(
+                                  onPressed: () {
+                                    _timePicker(
+                                        context, _controller.flagTimeIn, 'in');
+                                  },
+                                  icon: Icon(
+                                    Icons.access_time_rounded,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 20,
+                            ),
+                            Expanded(
+                              child: InputField(
+                                title: "วันที่เข้า:",
+                                hint: "",
+                                controller: _controller.dateInController,
+                                widget: IconButton(
+                                  icon: Icon(
+                                    Icons.calendar_today_outlined,
+                                    color: Colors.grey,
+                                  ),
+                                  onPressed: () async {
+                                    await _datePicker(
+                                        context, _controller.flagDateIn, 'in');
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        
+                        SizedBox(height: 15),
+                        //Time Out
+                        Row(
+                          children: [
+                            Expanded(
+                              child: InputField(
+                                title: "เวลาออก:",
+                                hint: "",
+                                controller: _controller.timeOutController,
+                                widget: IconButton(
+                                  onPressed: () {
+                                    _timePicker(
+                                        context, _controller.flagTimeOut, 'out');
+                                  },
+                                  icon: Icon(
+                                    Icons.access_time_rounded,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 20,
+                            ),
+                            Expanded(
+                              child: InputField(
+                                title: "วันที่ออก:",
+                                hint: "",
+                                controller: _controller.dateOutController,
+                                widget: IconButton(
+                                  icon: Icon(
+                                    Icons.calendar_today_outlined,
+                                    color: Colors.grey,
+                                  ),
+                                  onPressed: () async {
+                                    await _datePicker(
+                                        context, _controller.flagDateOut, 'out');
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        
+                        SizedBox(height: 20),
+                        
+                        dropDownDept(_controller.deptList),
+                        SizedBox(height: 20),
+                        
+                        // Object/Visitor
+                        InputField(
+                          title: 'วัตถุประสงค์:',
+                          hint: '',
+                          controller: _controller.objectiveController,
+                          descriptText: true,
+                          maxLength: 400,
+                        ),
+                        SizedBox(height: 30),
+                        
+                        // Visitor and follower's
+                        Container(
+                          key: _controller.visitorSectionKey,
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.black,
+                              width: 1,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.person,
+                                            color: Colors.black,
+                                            size: 50,
+                                          ),
+                                          SizedBox(
+                                            width: 5,
+                                          ),
+                                          Text(
+                                            "รายชื่อผู้มาติดต่อ:",
+                                            style: TextStyle(
+                                                fontSize: _fontSize,
+                                                fontWeight: FontWeight.bold),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    IconButton(
+                                      onPressed: _togglePersonList,
+                                      icon: Icon(
+                                        _controller.isExpanded_listPerson
+                                            ? Icons.keyboard_double_arrow_down
+                                            : Icons.keyboard_double_arrow_up,
+                                        size: 24,
+                                      ),
+                                    )
+                                  ],
+                                ),
+                                Divider(
+                                  color: Colors.black,
+                                  thickness: 1,
+                                  height: 10,
+                                ),
+                                SizedBox(height: 10),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    ElevatedButton(
+                                      onPressed: popUpAddPerson,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.green.shade600,
+                                        padding: EdgeInsets.symmetric(
+                                            vertical: 12, horizontal: 16),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        elevation: 5,
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.group_add,
+                                              color: Colors.white, size: 24),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            "เพิ่ม",
+                                            style: TextStyle(
+                                              fontSize: _fontSize - 4,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Text(
+                                      "${_controller.personList.length}",
+                                      style: TextStyle(
+                                          fontSize: _fontSize,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.green.shade600),
+                                    ),
+                                  ],
+                                ),
+                        
+                                SizedBox(height: 10),
+                        
+                                //Show Visitor List
+                                AnimatedCrossFade(
+                                  firstChild:
+                                      Container(),
+                                  secondChild:
+                                      personListGenerate(),
+                                  crossFadeState: _controller.isExpanded_listPerson
+                                      ? CrossFadeState.showSecond
+                                      : CrossFadeState.showFirst,
+                                  duration: Duration(milliseconds: 300),
+                                ),
+                              ],
                             ),
                           ),
-                          child: _controller.isExpandedBuilding
-                              ? InputField(
-                                  key: ValueKey('inputField'),
-                                  title: 'บริเวณ*',
-                                  hint: '',
-                                  controller:
-                                      _controller.otherBuildingController,
-                                  isRequired: true,
-                                  maxLength: 100,
-                                )
-                              : SizedBox.shrink(),
+                        ),
+                        
+                        SizedBox(
+                          height: 30,
+                        ),
+                        
+                        //Item In/Out
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.black,
+                              width: 1,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.shopping_bag,
+                                            color: Colors.black,
+                                            size: 50,
+                                          ),
+                                          SizedBox(
+                                            width: 5,
+                                          ),
+                                          Text(
+                                            "นำสิ่งของ เข้า/ออก",
+                                            style: TextStyle(
+                                                fontSize: _fontSize,
+                                                fontWeight: FontWeight.bold),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 20.0,
+                                    ),
+                                    IconButton(
+                                      onPressed: _toggleItemList,
+                                      icon: Icon(
+                                        _controller.isExpanded_listItem
+                                            ? Icons.keyboard_double_arrow_down
+                                            : Icons.keyboard_double_arrow_up,
+                                        size: 24,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Divider(
+                                  color: Colors.black,
+                                  thickness: 1,
+                                  height: 10,
+                                ),
+                                SizedBox(
+                                  height: 5,
+                                ),
+                                
+                                _contentItemList(),
+                              ],
+                            ),
+                          ),
+                        ),
+                        
+                        SizedBox(height: 40),
+                        Container(
+                          key: _controller.buildingSectionKey,
+                          child: Column(
+                            children: [
+                              dropDownBuilding(_controller.buildingList),
+                              SizedBox(height: 10),
+                              AnimatedSwitcher(
+                                duration: Duration(milliseconds: 300),
+                                transitionBuilder: (widget, animation) =>
+                                    FadeTransition(
+                                  opacity: animation,
+                                  child: SizeTransition(
+                                    sizeFactor: animation,
+                                    child: widget,
+                                  ),
+                                ),
+                                child: _controller.isExpandedBuilding
+                                    ? InputField(
+                                        key: ValueKey('inputField'),
+                                        title: 'บริเวณ*',
+                                        hint: '',
+                                        controller:
+                                            _controller.otherBuildingController,
+                                        isRequired: true,
+                                        maxLength: 100,
+                                      )
+                                    : SizedBox.shrink(),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(height: 15),
 
-                  // Divider(
-                  //   color: Colors.black,
-                  //   thickness: 0.5,
-                  //   height: 10,
-                  // ),
-                  SizedBox(height: 10),
+                  SizedBox(height: 25),
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -955,83 +724,81 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 10),
-                  // Divider(
-                  //   color: Colors.black,
-                  //   thickness: 0.5,
-                  //   height: 10,
-                  // ),
+
                   SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        // Makes button take up full available width
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            String valiMessage =
-                                await _controller.validateUpload();
-                            if (valiMessage.isNotEmpty) {
-                              showTopSnackBar(
-                                Overlay.of(context),
-                                CustomSnackBar.error(
-                                  backgroundColor: Colors.red.shade700,
-                                  icon: Icon(Icons.sentiment_very_satisfied,
-                                      color: Colors.red.shade900, size: 120),
-                                  message: valiMessage,
-                                ),
-                              );
-                            } else {
-                              bool uploadSuccess =
-                                  await _controller.uploadVisitorForm();
-                              if (uploadSuccess) {
-                                showTopSnackBar(
-                                  Overlay.of(context),
-                                  CustomSnackBar.success(
-                                    backgroundColor: Colors.green.shade500,
-                                    icon: Icon(Icons.sentiment_very_satisfied,
-                                        color: Colors.green.shade600,
-                                        size: 120),
-                                    message: "กรอกเอกสารสำเร็จ",
-                                  ),
-                                );
-                                Future.delayed(const Duration(seconds: 1), () {
-                                  GoRouter.of(context).push('/home');
-                                });
-                              } else {
+                  if (!_controller.logBook)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              String valiMessage =
+                                  await _controller.validateUpload();
+                              if (valiMessage.isNotEmpty) {
                                 showTopSnackBar(
                                   Overlay.of(context),
                                   CustomSnackBar.error(
                                     backgroundColor: Colors.red.shade700,
                                     icon: Icon(Icons.sentiment_very_satisfied,
                                         color: Colors.red.shade900, size: 120),
-                                    message: "Upload Error",
+                                    message: valiMessage,
                                   ),
                                 );
+                              } else {
+                                bool uploadSuccess =
+                                    await _controller.uploadVisitorForm();
+                                if (uploadSuccess) {
+                                  showTopSnackBar(
+                                    Overlay.of(context),
+                                    CustomSnackBar.success(
+                                      backgroundColor: Colors.green.shade500,
+                                      icon: Icon(Icons.sentiment_very_satisfied,
+                                          color: Colors.green.shade600,
+                                          size: 120),
+                                      message: "กรอกเอกสารสำเร็จ",
+                                    ),
+                                  );
+                                  Future.delayed(const Duration(seconds: 1),
+                                      () {
+                                    GoRouter.of(context)
+                                        .pushReplacement('/home');
+                                  });
+                                } else {
+                                  showTopSnackBar(
+                                    Overlay.of(context),
+                                    CustomSnackBar.error(
+                                      backgroundColor: Colors.red.shade700,
+                                      icon: Icon(Icons.sentiment_very_satisfied,
+                                          color: Colors.red.shade900,
+                                          size: 120),
+                                      message: "Upload Error",
+                                    ),
+                                  );
+                                }
                               }
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(
-                                vertical: 16), // Increases button height
-                            backgroundColor:
-                                Colors.green, // Change color if needed
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(12), // Rounded corners
+                            },
+                            style: ElevatedButton.styleFrom(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 16),
+                              backgroundColor:
+                                  Colors.green,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                    12), // Rounded corners
+                              ),
+                            ),
+                            child: Text(
+                              'ส่งเอกสาร',
+                              style: TextStyle(
+                                  fontSize: _fontSize,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
                             ),
                           ),
-                          child: Text(
-                            'ส่งเอกสาร',
-                            style: TextStyle(
-                                fontSize: _fontSize,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white),
-                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
                 ],
               ),
             ),
@@ -1040,6 +807,163 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
       ),
     );
     // return
+  }
+
+  Widget dropDownDept(List<String> _listDept) {
+    if (_listDept.isEmpty) {
+      return Center(child: CircularProgressIndicator());
+    }
+    return Container(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'แผนก:',
+            style:
+                TextStyle(fontSize: _fontSize + 2, fontWeight: FontWeight.bold),
+          ),
+
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey, width: 1.5),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: EdgeInsets.symmetric(horizontal: 10),
+            child: DropdownMenu(
+              requestFocusOnTap: false,
+              initialSelection: _controller.selectDept,
+              width: MediaQuery.of(context).size.width*0.85,
+              textStyle: TextStyle(
+                fontSize: _fontSize,
+              ),
+              inputDecorationTheme: InputDecorationTheme(
+                border: InputBorder.none,
+              ),
+              menuStyle: MenuStyle(
+                maximumSize: MaterialStateProperty.all<Size>(
+                  Size(double.infinity, 500),
+                ),
+              ),
+              dropdownMenuEntries:
+                  _listDept.map<DropdownMenuEntry<dynamic>>((item) {
+                return DropdownMenuEntry<dynamic>(
+                  value: item,
+                  label: item,
+                  style: ButtonStyle(
+                    textStyle: WidgetStatePropertyAll<TextStyle>(
+                      TextStyle(
+                        color: Colors.black,
+                        fontSize: _fontSize,
+                        fontFamily: _fontFamily,
+                      ),
+                    ),
+                    backgroundColor: WidgetStatePropertyAll<Color>(
+                      Colors.green.shade50,
+                    ),
+                  ),
+                );
+              }).toList(),
+              onSelected: (value) async {
+                setState(() {
+                  _controller.selectDept = value;
+                });
+                await _controller.loadContactByDepartment(value);
+                setState(() {});
+              },
+            ),
+          ),
+
+          SizedBox(height: 20,),
+
+          Text(
+            'ผู้ประสานงาน:',
+            style:
+                TextStyle(fontSize: _fontSize + 2, fontWeight: FontWeight.bold),
+          ),
+
+          // auto complete
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey, width: 1.5),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: EdgeInsets.symmetric(horizontal: 10),
+            child: RawAutocomplete(
+              key: ValueKey('${_controller.selectDept}-${_controller.contactList.length}'),
+              textEditingController: _controller.contactControl,
+              focusNode: _focusNode,
+              optionsBuilder: (TextEditingValue textEditingValue) {
+                return  _controller.contactList.where((String item) {
+                  return item.contains(textEditingValue.text);
+                });
+              },
+              fieldViewBuilder: (
+                BuildContext context,
+                TextEditingController textEditingController,
+                FocusNode focusNode,
+                VoidCallback onFieldSubmitted,
+              ) {
+                return Container(
+                  child: TextFormField(
+                    controller: textEditingController,
+                    focusNode: focusNode,
+                    style: TextStyle(
+                      fontSize: _fontSize,
+                      fontFamily: _fontFamily,
+                    ),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                    ),
+                    onFieldSubmitted: (String value) {
+                      onFieldSubmitted();
+                    },
+                  ),
+                );
+              },
+              optionsViewBuilder: (
+                BuildContext context,
+                AutocompleteOnSelected<String> onSelected,
+                Iterable<String> options,
+              ) {
+                return Align(
+                  alignment: Alignment.topLeft,
+                  child: Container(
+                    child: Material(
+                      color: Colors.green.shade50,
+                      elevation: 4.0,
+                      child: SizedBox(
+                        height: 200.0,
+                        width: MediaQuery.of(context).size.width*0.8,
+                        child: ListView.builder(
+                          itemCount: options.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final String option = options.elementAt(index);
+                            return ListTile(
+                              title: Text(
+                                option,
+                                style: TextStyle(
+                                  fontSize: _fontSize,
+                                  fontFamily: _fontFamily,
+                                ),
+                              ),
+                             onTap: () {
+                                onSelected(option);
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+
+        ],
+      ),
+    );
   }
 
   Widget dropDownBuilding(List<dynamic> _listBuilding) {
@@ -1056,7 +980,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
             fontSize: _fontSize + 6,
             fontWeight: FontWeight.bold),
       ),
-      width: MediaQuery.of(context).size.width,
+      width: MediaQuery.of(context).size.width*0.85,
       textStyle: TextStyle(
         fontSize: _fontSize,
       ),
@@ -1069,7 +993,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
             textStyle: WidgetStatePropertyAll<TextStyle>(TextStyle(
                 color: Colors.black,
                 fontSize: _fontSize,
-                fontFamily: 'NotoSans')),
+                fontFamily: _fontFamily)),
             backgroundColor:
                 WidgetStatePropertyAll<Color>(Colors.green.shade50),
           ),
@@ -1341,296 +1265,299 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
       return Stack(
         children: [
           // Signature Card
-          Container(
-            width: double.infinity,
-            child: Card(
-              color: Colors.white,
-              elevation: 6.0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: Colors.black.withOpacity(0.5),
-                  width: 0.5,
+          IgnorePointer(
+            ignoring: _controller.logBook,
+            child: Container(
+              width: double.infinity,
+              child: Card(
+                color: Colors.white,
+                elevation: 6.0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    color: Colors.black.withOpacity(0.5),
+                    width: 0.5,
+                  ),
                 ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          _controller.signatureSectionMap[
-                              sectionKeys[currentIndex]]?[2],
-                          style: TextStyle(
-                            fontSize: _fontSize + 8,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blueGrey[800],
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 10),
-                    Divider(
-                      color: Colors.black.withOpacity(0.5),
-                      thickness: 1.0,
-                      height: 10,
-                    ),
-                    SizedBox(height: 10),
-
-                    // Signature Pad
-                    Container(
-                      constraints: BoxConstraints(maxHeight: 250),
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey[300]!),
-                        borderRadius: BorderRadius.circular(8),
-                        color: Colors.grey[50],
-                      ),
-                      child: _controller.signatureSectionMap[
-                                      sectionKeys[currentIndex]]?[0] !=
-                                  null &&
-                              _controller.signatureSectionMap[
-                                      sectionKeys[currentIndex]]?[1] !=
-                                  null
-                          ? Image.memory(signatureDisplay!)
-                          : SfSignaturePad(
-                              key: _controller.signatureGlobalKey,
-                              backgroundColor: Colors.transparent,
-                              strokeColor: Colors.black,
-                              minimumStrokeWidth: 3.0,
-                              maximumStrokeWidth: 6.0,
-                            ),
-                    ),
-
-                    SizedBox(
-                      height: 10,
-                    ),
-                    Container(
-                      height: 52,
-                      margin: EdgeInsets.only(top: 2.5),
-                      padding: EdgeInsets.only(left: 10),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Colors.grey,
-                          width: 1.5,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Expanded(
-                            child: TextFormField(
-                              onEditingComplete: () {
-                                FocusScope.of(context)
-                                    .unfocus(); // Also remove focus on enter
-                              },
-                              cursorColor: Colors.green.shade600,
-                              readOnly: signaturesByDisplay.text.isNotEmpty,
-                              autofocus: false,
-                              controller: signaturesByDisplay,
-                              maxLines: null,
-                              minLines: 1,
-                              decoration: InputDecoration(
-                                hintText: 'ลงชื่อ*',
-                                border: InputBorder.none,
-                              ),
-                              style: TextStyle(fontSize: _fontSize + 2),
+                          Text(
+                            _controller.signatureSectionMap[
+                                sectionKeys[currentIndex]]?[2],
+                            style: TextStyle(
+                              fontSize: _fontSize + 8,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blueGrey[800],
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    SizedBox(
-                      height: 10,
-                    ),
-
-                    // Buttons
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        double screenWidth = constraints.maxWidth;
-                        double buttonPadding = screenWidth < 799 ? 10.0 : 20.0;
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      SizedBox(height: 10),
+                      Divider(
+                        color: Colors.black.withOpacity(0.5),
+                        thickness: 1.0,
+                        height: 10,
+                      ),
+                      SizedBox(height: 10),
+            
+                      // Signature Pad
+                      Container(
+                        constraints: BoxConstraints(maxHeight: 250),
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey[300]!),
+                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.grey[50],
+                        ),
+                        child: _controller.signatureSectionMap[
+                                        sectionKeys[currentIndex]]?[0] !=
+                                    null &&
+                                _controller.signatureSectionMap[
+                                        sectionKeys[currentIndex]]?[1] !=
+                                    null
+                            ? Image.memory(signatureDisplay!)
+                            : SfSignaturePad(
+                                key: _controller.signatureGlobalKey,
+                                backgroundColor: Colors.transparent,
+                                strokeColor: Colors.black,
+                                minimumStrokeWidth: 3.0,
+                                maximumStrokeWidth: 6.0,
+                              ),
+                      ),
+            
+                      SizedBox(
+                        height: 10,
+                      ),
+                      Container(
+                        height: 52,
+                        margin: EdgeInsets.only(top: 2.5),
+                        padding: EdgeInsets.only(left: 10),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Colors.grey,
+                            width: 1.5,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
                           children: [
-                            ElevatedButton(
-                              onPressed: () {
-                                if (_controller.signatureSectionMap[
-                                            sectionKeys[currentIndex]]?[0] !=
-                                        null &&
-                                    _controller.signatureSectionMap[
-                                            sectionKeys[currentIndex]]?[1] !=
-                                        null &&
-                                    _controller.signatureSectionMap[
-                                            sectionKeys[currentIndex]]?[3] !=
-                                        null) {
-                                  warningDialog(
-                                      'คุณต้องการจะลบลายเซ็น ${sectionKeys[currentIndex]} ใช่หรือไม่?',
-                                      () {
-                                    setState(() {
-                                      _controller.signatureSectionMap[
-                                              sectionKeys[currentIndex]]?[0] =
-                                          null; // signatures
-                                      _controller.signatureSectionMap[
-                                              sectionKeys[currentIndex]]?[1] =
-                                          null; // date
-                                      _controller.signatureSectionMap[
-                                              sectionKeys[currentIndex]]?[3] =
-                                          null; // by
-                                      clearStateSignature();
-                                      setStateDialog(() {});
-                                      Navigator.of(context).pop();
-                                    });
-                                  });
-                                } else if (_controller
-                                    .signatureGlobalKey.currentState!
-                                    .toPathList()
-                                    .isNotEmpty) {
-                                  _controller.signatureGlobalKey.currentState!
-                                      .clear();
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _cancelBtnColor,
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: buttonPadding, vertical: 10),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                            Expanded(
+                              child: TextFormField(
+                                onEditingComplete: () {
+                                  FocusScope.of(context)
+                                      .unfocus(); // Also remove focus on enter
+                                },
+                                cursorColor: Colors.green.shade600,
+                                readOnly: signaturesByDisplay.text.isNotEmpty,
+                                autofocus: false,
+                                controller: signaturesByDisplay,
+                                maxLines: null,
+                                minLines: 1,
+                                decoration: InputDecoration(
+                                  hintText: 'ลงชื่อ*',
+                                  border: InputBorder.none,
                                 ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.cleaning_services_outlined,
-                                      color: Colors.white, size: _fontSize),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'ล้าง',
-                                    style: TextStyle(
-                                        fontSize: _fontSize,
-                                        color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            ElevatedButton(
-                              onPressed: _controller.signatureSectionMap[
-                                              sectionKeys[currentIndex]]?[0] ==
-                                          null &&
-                                      _controller.signatureSectionMap[
-                                              sectionKeys[currentIndex]]?[1] ==
-                                          null &&
-                                      _controller.signatureSectionMap[
-                                              sectionKeys[currentIndex]]?[3] ==
-                                          null
-                                  ? () async {
-                                      if (_controller
-                                              .signatureGlobalKey.currentState!
-                                              .toPathList()
-                                              .isNotEmpty &&
-                                          signaturesByDisplay.text.isNotEmpty) {
-                                        await stampSignatureApprove(
-                                            DateTime.now(),
-                                            _controller.signatureGlobalKey);
-                                        setStateDialog(() {});
-                                      } else {
-                                        showTopSnackBar(
-                                          Overlay.of(context),
-                                          CustomSnackBar.error(
-                                            backgroundColor:
-                                                Colors.red.shade700,
-                                            icon: Icon(
-                                                Icons.sentiment_very_satisfied,
-                                                color: Colors.red.shade900,
-                                                size: 120),
-                                            message:
-                                                "กรุณากรอกข้อมูลให้ครบถ้วน",
-                                          ),
-                                        );
-                                      }
-                                    }
-                                  : null, // Disable button
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _acceptBtnColor,
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: buttonPadding, vertical: 10),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.save_alt_outlined,
-                                      color: Colors.white, size: _fontSize),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'ลงนาม',
-                                    style: TextStyle(
-                                        fontSize: _fontSize,
-                                        color: Colors.white),
-                                  ),
-                                ],
+                                style: TextStyle(fontSize: _fontSize + 2),
                               ),
                             ),
                           ],
-                        );
-                      },
-                    ),
-
-                    SizedBox(height: 10),
-
-                    // Time and Date Fields
-                    Row(
-                      children: [
-                        Expanded(
-                          child: InputField(
-                            title: 'เวลา',
-                            hint: '',
-                            controller: TextEditingController(
-                                text: dateTimeSignDisplay == null
-                                    ? ''
-                                    : DateFormat('HH:mm')
-                                        .format(dateTimeSignDisplay!)),
-                            widget: IgnorePointer(
-                              ignoring: true,
-                              child: MouseRegion(
-                                child: IconButton(
-                                  onPressed: () {},
-                                  icon: Icon(Icons.access_time_rounded,
-                                      color: Colors.grey[600]),
+                        ),
+                      ),
+                      SizedBox(
+                        height: 10,
+                      ),
+            
+                      // Buttons
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          double screenWidth = constraints.maxWidth;
+                          double buttonPadding = screenWidth < 799 ? 10.0 : 20.0;
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              ElevatedButton(
+                                onPressed: () {
+                                  if (_controller.signatureSectionMap[
+                                              sectionKeys[currentIndex]]?[0] !=
+                                          null &&
+                                      _controller.signatureSectionMap[
+                                              sectionKeys[currentIndex]]?[1] !=
+                                          null &&
+                                      _controller.signatureSectionMap[
+                                              sectionKeys[currentIndex]]?[3] !=
+                                          null) {
+                                    warningDialog(
+                                        'คุณต้องการจะลบลายเซ็น ${sectionKeys[currentIndex]} ใช่หรือไม่?',
+                                        () {
+                                      setState(() {
+                                        _controller.signatureSectionMap[
+                                                sectionKeys[currentIndex]]?[0] =
+                                            null; // signatures
+                                        _controller.signatureSectionMap[
+                                                sectionKeys[currentIndex]]?[1] =
+                                            null; // date
+                                        _controller.signatureSectionMap[
+                                                sectionKeys[currentIndex]]?[3] =
+                                            null; // by
+                                        clearStateSignature();
+                                        setStateDialog(() {});
+                                        Navigator.of(context).pop();
+                                      });
+                                    });
+                                  } else if (_controller
+                                      .signatureGlobalKey.currentState!
+                                      .toPathList()
+                                      .isNotEmpty) {
+                                    _controller.signatureGlobalKey.currentState!
+                                        .clear();
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _cancelBtnColor,
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: buttonPadding, vertical: 10),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.cleaning_services_outlined,
+                                        color: Colors.white, size: _fontSize),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'ล้าง',
+                                      style: TextStyle(
+                                          fontSize: _fontSize,
+                                          color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              ElevatedButton(
+                                onPressed: _controller.signatureSectionMap[
+                                                sectionKeys[currentIndex]]?[0] ==
+                                            null &&
+                                        _controller.signatureSectionMap[
+                                                sectionKeys[currentIndex]]?[1] ==
+                                            null &&
+                                        _controller.signatureSectionMap[
+                                                sectionKeys[currentIndex]]?[3] ==
+                                            null
+                                    ? () async {
+                                        if (_controller
+                                                .signatureGlobalKey.currentState!
+                                                .toPathList()
+                                                .isNotEmpty &&
+                                            signaturesByDisplay.text.isNotEmpty) {
+                                          await stampSignatureApprove(
+                                              DateTime.now(),
+                                              _controller.signatureGlobalKey);
+                                          setStateDialog(() {});
+                                        } else {
+                                          showTopSnackBar(
+                                            Overlay.of(context),
+                                            CustomSnackBar.error(
+                                              backgroundColor:
+                                                  Colors.red.shade700,
+                                              icon: Icon(
+                                                  Icons.sentiment_very_satisfied,
+                                                  color: Colors.red.shade900,
+                                                  size: 120),
+                                              message:
+                                                  "กรุณากรอกข้อมูลให้ครบถ้วน",
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    : null, // Disable button
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _acceptBtnColor,
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: buttonPadding, vertical: 10),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.save_alt_outlined,
+                                        color: Colors.white, size: _fontSize),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'ลงนาม',
+                                      style: TextStyle(
+                                          fontSize: _fontSize,
+                                          color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+            
+                      SizedBox(height: 10),
+            
+                      // Time and Date Fields
+                      Row(
+                        children: [
+                          Expanded(
+                            child: InputField(
+                              title: 'เวลา',
+                              hint: '',
+                              controller: TextEditingController(
+                                  text: dateTimeSignDisplay == null
+                                      ? ''
+                                      : DateFormat('HH:mm')
+                                          .format(dateTimeSignDisplay!)),
+                              widget: IgnorePointer(
+                                ignoring: true,
+                                child: MouseRegion(
+                                  child: IconButton(
+                                    onPressed: () {},
+                                    icon: Icon(Icons.access_time_rounded,
+                                        color: Colors.grey[600]),
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: InputField(
-                            title: 'วันที่',
-                            hint: '',
-                            controller: TextEditingController(
-                                text: dateTimeSignDisplay == null
-                                    ? ''
-                                    : DateFormat('yyyy-MM-dd')
-                                        .format(dateTimeSignDisplay!)),
-                            widget: IgnorePointer(
-                              ignoring: true,
-                              child: MouseRegion(
-                                child: IconButton(
-                                  onPressed: () {},
-                                  icon: Icon(Icons.calendar_month,
-                                      color: Colors.grey[600]),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: InputField(
+                              title: 'วันที่',
+                              hint: '',
+                              controller: TextEditingController(
+                                  text: dateTimeSignDisplay == null
+                                      ? ''
+                                      : DateFormat('yyyy-MM-dd')
+                                          .format(dateTimeSignDisplay!)),
+                              widget: IgnorePointer(
+                                ignoring: true,
+                                child: MouseRegion(
+                                  child: IconButton(
+                                    onPressed: () {},
+                                    icon: Icon(Icons.calendar_month,
+                                        color: Colors.grey[600]),
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -1645,9 +1572,9 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                 Navigator.of(context).pop();
               },
               icon: Icon(
-                Icons.exit_to_app_rounded,
+                Icons.cancel_rounded,
                 color: _cancelBtnColor,
-                size: 40,
+                size: 50,
               ),
               tooltip: "Close",
             ),
@@ -1744,24 +1671,10 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
               child: Column(
                 children: [
                   Container(
-                    margin: EdgeInsets.symmetric(vertical: 5),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        ElevatedButton(
-                          onPressed: () => popUpAddItem('in'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green.shade600,
-                            padding: EdgeInsets.all(0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            elevation: 5,
-                          ),
-                          child: Icon(Icons.add_box_outlined,
-                              color: Colors.white, size: 24),
-                        ),
                         SizedBox(width: 10),
                         Expanded(
                           child: Divider(
@@ -1789,31 +1702,51 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                       ],
                     ),
                   ),
-                  // Build the item list for "Items In"
-                  _itemListGenerate(_controller.listItem_In, 'in'),
-
+                  // Button add Item IN
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () => popUpAddItem('in'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green.shade600,
+                          padding: EdgeInsets.all(0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 5,
+                        ),
+                        child: Icon(Icons.add_box_outlined,
+                            color: Colors.white, size: 24),
+                      ),
+                      Text(
+                        "${_controller.listItem_In.length} : ${_controller.imageList_In.length}",
+                        style: TextStyle(
+                            fontSize: _fontSize,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green.shade600),
+                      ),
+                    ],
+                  ),
                   SizedBox(
                     height: 10,
+                  ),
+                  // Build the item list for "Items In"
+                  _itemListGenerate(_controller.listItem_In, 'in'),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  _contentItemImage(_controller.imageList_In),
+
+                  SizedBox(
+                    height: 30,
                   ),
 
                   // "Items Out" Section with Line and Centered Text
                   Container(
-                    margin: EdgeInsets.symmetric(vertical: 5),
                     child: Row(
                       children: [
-                        ElevatedButton(
-                          onPressed: () => popUpAddItem('out'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green.shade600,
-                            padding: EdgeInsets.all(0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            elevation: 5,
-                          ),
-                          child: Icon(Icons.add_box_outlined,
-                              color: Colors.white, size: 24),
-                        ),
                         SizedBox(width: 10),
                         Expanded(
                           child: Divider(
@@ -1841,9 +1774,42 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                       ],
                     ),
                   ),
-
+                  // Button add Item OUT
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () => popUpAddItem('out'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green.shade600,
+                          padding: EdgeInsets.all(0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 5,
+                        ),
+                        child: Icon(Icons.add_box_outlined,
+                            color: Colors.white, size: 24),
+                      ),
+                      Text(
+                        "${_controller.listItem_Out.length} : ${_controller.imageList_Out.length}",
+                        style: TextStyle(
+                            fontSize: _fontSize,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green.shade600),
+                      ),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 10,
+                  ),
                   // Build the item list for "Items Out"
                   _itemListGenerate(_controller.listItem_Out, 'out'),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  _contentItemImage(_controller.imageList_Out),
                 ],
               ),
             ),
@@ -1865,9 +1831,6 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
               style: TextStyle(
                   fontSize: _fontSize + 2, fontWeight: FontWeight.bold),
             ),
-          ),
-          SizedBox(
-            height: 10,
           ),
           if (_imageList.isEmpty) ...[
             Center(
@@ -1934,6 +1897,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                 child: _image != null
                     ? Image.file(
                         _image.absolute,
+                        key: ValueKey(_image.absolute.path + DateTime.now().millisecondsSinceEpoch.toString()),
                         fit: BoxFit.fill,
                       )
                     : Center(
@@ -1944,7 +1908,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                       )),
           ),
           SizedBox(
-            height: 20,
+            height: 10,
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -2073,7 +2037,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
 
                               // Card ID
                               InputField(
-                                title: 'หมายเลขบัตร:',
+                                title: 'หมายเลขบัตร Visitor:',
                                 hint: '',
                                 controller: _controller.cardIdController,
                                 // isRequired: true,
@@ -2135,7 +2099,33 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 20),
+                              SizedBox(height: 7),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  IconButton(
+                                    onPressed: () async {
+                                      await _showAgreementWarning(
+                                          context, false);
+                                    },
+                                    icon: Icon(
+                                      Icons.content_paste_search_rounded,
+                                      color: Color.fromARGB(255, 128, 128, 128),
+                                      size: 30,
+                                    ),
+                                  ),
+                                  SizedBox(width: 2),
+                                  Flexible(
+                                    child: Text(
+                                      '** ข้าพเจ้ายินยอมที่จะทำตามข้อกำหนดและกฎระเบียบที่ทางบริษัทได้กำหนดเอาไว้',
+                                      style:
+                                          TextStyle(fontSize: _fontSize / 1.8),
+                                      overflow: TextOverflow.visible,
+                                      softWrap: true,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ],
                           ),
                         ),
@@ -2198,7 +2188,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                   await _controller.addPersonInList();
                                   setState(() {});
                                   Navigator.of(context).pop();
-                                  _controller.clearPersonController();
+                                  await _controller.clearPersonController();
                                 }
                               },
                               style: ElevatedButton.styleFrom(
@@ -2317,7 +2307,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
 
                               // Card ID
                               InputField(
-                                  title: 'หมายเลขบัตร:',
+                                  title: 'หมายเลขบัตร Visitor:',
                                   hint: '',
                                   controller: _controller.cardIdController),
                               SizedBox(height: 20),
@@ -2330,22 +2320,21 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                               SizedBox(height: 5),
                               Stack(
                                 children: [
-                                  // Signature Pad Container with Rounded Corners
                                   Container(
                                     constraints: BoxConstraints(maxHeight: 200),
                                     width: double.infinity,
                                     decoration: BoxDecoration(
                                       border: Border.all(color: Colors.grey),
                                       borderRadius: BorderRadius.circular(
-                                          12), // Rounded corners
+                                          12),
                                     ),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(
-                                          12), // Ensures child (Signature Pad) is clipped
+                                          12),
                                       child: SfSignaturePad(
                                         key: _controller.signatureGlobalKey,
                                         backgroundColor: Colors
-                                            .white, // Set background for better visibility
+                                            .white,
                                         strokeColor: Colors.black,
                                         minimumStrokeWidth: 3.0,
                                         maximumStrokeWidth: 6.0,
@@ -2366,13 +2355,39 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                       child: CircleAvatar(
                                         radius: 20,
                                         backgroundColor: Colors.black.withOpacity(
-                                            0.5), // Semi-transparent background
+                                            0.5),
                                         child: Icon(
                                           Icons.cached,
                                           color: Colors.white,
                                           size: 24,
                                         ),
                                       ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  IconButton(
+                                    onPressed: () async {
+                                      await _showAgreementWarning(
+                                          context, false);
+                                    },
+                                    icon: Icon(
+                                      Icons.content_paste_search_rounded,
+                                      color: Color.fromARGB(255, 128, 128, 128),
+                                      size: 30,
+                                    ),
+                                  ),
+                                  SizedBox(width: 2),
+                                  Flexible(
+                                    child: Text(
+                                      '** ข้าพเจ้ายินยอมที่จะทำตามข้อกำหนดและกฎระเบียบที่ทางบริษัทได้กำหนดเอาไว้',
+                                      style:
+                                          TextStyle(fontSize: _fontSize / 1.8),
+                                      overflow: TextOverflow.visible,
+                                      softWrap: true,
                                     ),
                                   ),
                                 ],
@@ -2423,7 +2438,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                 await _controller.editPersonInList(entry);
                                 setState(() {});
                                 Navigator.of(context).pop();
-                                _controller.clearPersonController();
+                                await _controller.clearPersonController();
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: _acceptBtnColor,
@@ -2552,7 +2567,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                           ),
                                           SizedBox(height: 8),
                                           Text(
-                                            'Card : ${entry['Card_Id'] ?? ''}',
+                                            'รหัสบัตร : ${entry['Card_Id'] ?? ''}',
                                             style: TextStyle(
                                               fontSize: _fontSize - 2,
                                               fontWeight: FontWeight.bold,
@@ -2595,7 +2610,8 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                           )
                                         : Text(
                                             'No Signature Available',
-                                            style: TextStyle(color: Colors.grey),
+                                            style:
+                                                TextStyle(color: Colors.grey),
                                           ),
                                   ),
                                 ],
@@ -2667,7 +2683,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                       Expanded(
                         // Name item
                         child: Text(
-                          '${entry['name']}',
+                          '${entry['item']}',
                           style: TextStyle(
                               fontWeight: FontWeight.bold, fontSize: _fontSize),
                           overflow: TextOverflow.ellipsis,
@@ -2687,7 +2703,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                           color: _cancelBtnColor,
                         ),
                         onPressed: () => warningDialog(
-                            'ต้องการลบรายการ ${entry['name']} ใช่หรือไม่?', () {
+                            'ต้องการลบรายการ ${entry['item']} ใช่หรือไม่?', () {
                           setState(() {
                             if (type == 'in') {
                               _controller.listItem_In
@@ -2710,7 +2726,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
   }
 
   void popUpEditItem(Map<String, String> entry) {
-    _controller.itemNameController.text = entry['name']!;
+    _controller.itemNameController.text = entry['item']!;
 
     showDialog(
       context: context,
@@ -3051,12 +3067,34 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
           _controller.timeOutController.text = initialTime.format(context);
         }
       });
+
+      if (_controller.flagTimeOut != null && _controller.flagTimeIn != null) {
+        bool checkTime = await _controller.checkDateTimeError();
+        if (!checkTime) {
+          showTopSnackBar(
+            Overlay.of(context),
+            CustomSnackBar.error(
+              backgroundColor: Colors.red.shade700,
+              icon: Icon(Icons.sentiment_very_satisfied,
+                  color: Colors.red.shade900, size: 120),
+              message: "เวลาออกต้องมากกว่า",
+            ),
+          );
+          if (type == 'out') {
+            _controller.flagTimeOut = null;
+            _controller.timeOutController.text = '';
+          } else if (type == 'in') {
+            _controller.flagTimeIn = null;
+            _controller.timeInController.text = '';
+          }
+        }
+      }
     }
   }
 
   //Function Date Picker
   Future<void> _datePicker(BuildContext context, DateTime? _date, String type) async {
-    DateTime initialDate = DateTime.now();
+    DateTime initialDate = _date ?? DateTime.now();
     DateTime? _pickerDate = await showDatePicker(
         context: context,
         initialDate: initialDate,
@@ -3087,17 +3125,19 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
       initialDate = _pickerDate;
       initialDate = _pickerDate;
       setState(() {
-        if(type == 'out'){
+        if (type == 'out') {
           _controller.flagDateOut = initialDate;
-          _controller.dateOutController.text = DateFormat('yyyy-MM-dd').format(initialDate);
-        }else if (type == 'in') {
+          _controller.dateOutController.text =
+              DateFormat('yyyy-MM-dd').format(initialDate);
+        } else if (type == 'in') {
           _controller.flagDateIn = initialDate;
-          _controller.dateInController.text = DateFormat('yyyy-MM-dd').format(initialDate);
+          _controller.dateInController.text =
+              DateFormat('yyyy-MM-dd').format(initialDate);
         }
       });
-      
-      if(_controller.flagDateOut != null && _controller.flagDateIn != null) {
-        bool checkInFrist = await _controller.checkDateInFrist();
+
+      if (_controller.flagDateOut != null && _controller.flagDateIn != null) {
+        bool checkInFrist = await _controller.checkDateTimeError();
         if (!checkInFrist) {
           showTopSnackBar(
             Overlay.of(context),
@@ -3108,10 +3148,10 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
               message: "วันที่ออกต้องมากกว่าวันที่เข้าเสมอ",
             ),
           );
-          if(type == 'out'){
+          if (type == 'out') {
             _controller.flagDateOut = null;
             _controller.dateOutController.text = '';
-          }else if (type == 'in') {
+          } else if (type == 'in') {
             _controller.flagDateIn = null;
             _controller.dateInController.text = '';
           }
@@ -3184,6 +3224,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
       try {
         _imageList[index]!.deleteSync();
         _imageList.removeAt(index);
+          
       } catch (err, stackTrace) {
         print("Error deleting file: $err");
         print("StackTrace: $stackTrace");
@@ -3297,7 +3338,6 @@ class _InputFieldState extends State<InputField> {
     });
   }
 
-
   void _validateInput() {
     if (widget.isRequired) {
       setState(() {
@@ -3309,9 +3349,9 @@ class _InputFieldState extends State<InputField> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      behavior: HitTestBehavior.opaque, // Ensures taps outside are detected
+      behavior: HitTestBehavior.opaque,
       onTap: () {
-        FocusScope.of(context).unfocus(); // Remove focus when tapping outside
+        FocusScope.of(context).unfocus();
       },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3321,7 +3361,6 @@ class _InputFieldState extends State<InputField> {
             style:
                 TextStyle(fontSize: _fontSize + 2, fontWeight: FontWeight.bold),
           ),
-          // SizedBox(height: 5),
           Container(
             height: widget.descriptText == true ? 52 * 2.5 : 52,
             margin: EdgeInsets.only(top: 2.5),
@@ -3337,16 +3376,16 @@ class _InputFieldState extends State<InputField> {
               children: [
                 Expanded(
                   child: TextFormField(
-                    inputFormatters: widget.maxLength != null
-                    ? [LengthLimitingTextInputFormatter(widget.maxLength)]
-                    : [LengthLimitingTextInputFormatter(100)],
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(widget.maxLength ?? 100)
+                    ],
                     onChanged: (value) => _validateInput(),
                     onEditingComplete: () => FocusScope.of(context).unfocus(),
                     cursorColor: Colors.green.shade600,
                     readOnly: widget.widget != null,
                     autofocus: false,
                     controller: widget.controller,
-                    maxLines: null,
+                    maxLines: widget.descriptText == true ? null : 1,
                     minLines: widget.descriptText == true ? null : 1,
                     expands: widget.descriptText == true,
                     decoration: InputDecoration(
@@ -3366,7 +3405,6 @@ class _InputFieldState extends State<InputField> {
   }
 }
 
-//Class for scroll by mouse and touch
 class MyCustomScrollBehavior extends MaterialScrollBehavior {
   @override
   Set<PointerDeviceKind> get dragDevices => {
