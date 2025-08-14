@@ -38,7 +38,6 @@ class HomeController {
           _controllerVisistorServiceCenter.insertFCMToken(),
           // Other service have insert FCM
         ];
-        
         List<bool> resultsInsert = await Future.wait(serviceInsert);
         bool servicesHaveFCMToken = resultsInsert.every((r) => r == true);
         if(!servicesHaveFCMToken) {

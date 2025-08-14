@@ -46,8 +46,11 @@ class VisitorServiceCenterController {
 
       //roles
       List<dynamic> rolesRaw = await _model.getRoleByUser(username);
+
       List<String> roleList = rolesRaw.cast<String>();
+
       await userEntity.setUserPerfer(userEntity.roles_visitorService, roleList);
+
       String roles = (await userEntity.getUserPerfer(userEntity.roles_visitorService)).join(",");
 
       // FCM Token
@@ -64,8 +67,10 @@ class VisitorServiceCenterController {
         'fcm_token': fcm_token,
         'last_active': createdAt,
       };
+
       await _model.insertFCMToken(data);
       await insertActvityLog('User ${username} login and insert token FCM');
+      status = true;
     } catch (err, stackTrace) {
       await userEntity.clearUserPerfer();
       await logError(err.toString(), stackTrace.toString());

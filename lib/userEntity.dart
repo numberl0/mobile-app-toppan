@@ -98,6 +98,7 @@ class UserEntity {
     try {
       final SharedPreferences _prefs = await SharedPreferences.getInstance();
       await _prefs.clear();
+      print("Clear All SharedPreferences");
     } catch (err) {
       throw err;
     }

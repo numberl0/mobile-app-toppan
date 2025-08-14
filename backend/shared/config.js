@@ -15,7 +15,7 @@ function getLocalIP() {
   return '127.0.0.1'; // fallback
 }
 
-const environment = 'test'; // test, production
+const environment = 'production'; // test, production
 const localIP = getLocalIP();
 const config = {
 
