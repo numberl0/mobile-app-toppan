@@ -1,0 +1,41 @@
+version: '3.9'
+
+services:
+  # vmobile-gateway:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #     args:
+  #       SERVICE_PATH: service/gateway
+  #   image: vmobile-gateway    
+  #   container_name: vmobile-gateway
+  #   ports:
+  #     - "5000:5000"
+  #   restart: always
+  
+  vmobile-auth:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_PATH: service/auth
+    image: vmobile-auth    
+    container_name: vmobile-auth
+    ports:
+      - "20508:20508"
+    restart: always
+  
+  vmobile-visitor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_PATH: service/visitor
+    image: vmobile-visitor    
+    container_name: vmobile-visitor
+    ports:
+      - "20509:20509"
+    volumes:
+      - ./backend/service/visitor/docImage:/app/backend/service/visitor/docImage
+      - ./backend/service/visitor/logError:/app/backend/service/visitor/logError
+    restart: always

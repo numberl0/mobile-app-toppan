@@ -265,9 +265,9 @@ app.get(`/getSequenceRunning`, authenticateToken, async (req, res, next) => {
   }
 });
 
-app.get(`/getSignaturFilenameByUsername`, authenticateToken, async (req, res, next) => {
+app.post(`/getSignaturFilenameByUsername`, authenticateToken, async (req, res, next) => {
   try {
-    const { username } = req.query;
+    const { username } = req.body;
     if(!username) {
       return next(new ApiError(400, 'username missing'));
     }

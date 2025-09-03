@@ -1,22 +1,23 @@
 const path = require('path');
 const os = require('os');
 
-// use for test only
-function getLocalIP() {
-  const interfaces = os.networkInterfaces();
+// // use for test only
+// function getLocalIP() {
+//   const interfaces = os.networkInterfaces();
 
-  for (const name of Object.keys(interfaces)) {
-    for (const iface of interfaces[name]) {
-      if (iface.family === 'IPv4' && !iface.internal) {
-        return iface.address;
-      }
-    }
-  }
-  return '127.0.0.1'; // fallback
-}
+//   for (const name of Object.keys(interfaces)) {
+//     for (const iface of interfaces[name]) {
+//       if (iface.family === 'IPv4' && !iface.internal) {
+//         return iface.address;
+//       }
+//     }
+//   }
+//   return '127.0.0.1'; // fallback
+// }
 
 const environment = 'production'; // test, production
-const localIP = getLocalIP();
+// const localIP = getLocalIP();
+const localIP = '192.168.31.193';
 const config = {
 
     // ------------------------------------------------- Test ---------------------------------------------------------- //
@@ -31,7 +32,7 @@ const config = {
             enable: true,
         },
         ldapConfig: {
-            port: 20505,
+            port: 20508,
             pipe: 'auth',
             domain: 'dptf.com',
             server: '192.168.200.1',
@@ -53,7 +54,7 @@ const config = {
             database: 'TEST_VISITOR_APP',
         },
         visitorConfig: {
-            port: 20506,
+            port: 20509,
             pipe: 'visitor',
             pathImageSignatureUser: 'http://192.168.200.170:81/static/uploads',
             pathImageDocuments: path.join(__dirname, '..', 'service', 'visitor', 'docImage'),
@@ -77,7 +78,7 @@ const config = {
             enable: true,
         },
         ldapConfig: {
-            port: 20505,
+            port: 20508,
             pipe: 'auth',
             domain: 'dptf.com',
             server: '192.168.200.1',
@@ -99,7 +100,7 @@ const config = {
             database: 'VISITORAPP',
         },
         visitorConfig: {
-            port: 20506,
+            port: 20509,
             pipe: 'visitor',
             pathImageSignatureUser: 'http://192.168.200.170:81/static/uploads',
             pathImageDocuments: path.join(__dirname, '..', 'service', 'visitor', 'docImage'),
