@@ -1,10 +1,18 @@
-import 'package:awesome_dialog/awesome_dialog.dart';
+import 'dart:io';
+
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:toppan_app/component/AppDateTime.dart';
 import 'package:toppan_app/loading_dialog.dart';
 import 'package:toppan_app/userEntity.dart';
+import 'package:toppan_app/visitorService/center_controller.dart';
+import 'package:toppan_app/visitorService/center_model.dart';
+import 'package:uuid/uuid.dart';
+import '../component/CustomDIalog.dart';
 import 'login_module.dart';
 
 class LoginController {
@@ -13,12 +21,16 @@ class LoginController {
 
   UserEntity userEntity = UserEntity();
 
+  CenterController _centerController = CenterController();
+
+ CenterModel _centerModel = CenterModel();
+
   TextEditingController usernameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
   final LoadingDialog _loadingDialog = LoadingDialog();
 
-  // Method to handle login
+
   Future<void> login(BuildContext context) async {
     try {
       _loadingDialog.show(context);
@@ -27,75 +39,109 @@ class LoginController {
       final PackageInfo info = await PackageInfo.fromPlatform();
       await userEntity.setUserPerfer(userEntity.app_version, info.version);
 
+      // ===== DEVICE ID (create once, reuse forever) =====
+      String? device_id = await userEntity.getUserPerfer(userEntity.device_id);
+      device_id ??= const Uuid().v4();
+      await userEntity.setUserPerfer(userEntity.device_id, device_id);
+
       String username = usernameController.text;
       String password = passwordController.text;
-      
-      if(username.isNotEmpty && password.isNotEmpty){
-        Map<String, dynamic> data_Req = {
+
+      if (username.isEmpty || password.isEmpty) {
+        _showErrorLoginDialog(context, "กรุณากรอก username และ password");
+        return;
+      }
+
+        Map<String, dynamic> loginReq = {
           'username': username,
-          'password': password
+          'password': password,
+          'deviceId': device_id,
         };
-        Map<String,dynamic> response = await loginModel.validateLogin(data_Req);
-        if(response['canLogin']){
-          final username = response['username'];
-          final displayName = response['displayName'];
-          final token = response['token'];
+        Map<String,dynamic> response = await loginModel.validateLogin(loginReq);
+
+        if(response['canLogin'] == true){
           await userEntity.setUserPerfer(userEntity.username, username);
-          await userEntity.setUserPerfer(userEntity.displayName, displayName);
-          await userEntity.setUserPerfer(userEntity.token, token);
+          await userEntity.setUserPerfer(userEntity.displayName, response['displayName']);
+          await userEntity.saveAccessToken(response['accessToken']);
+          await userEntity.saveRefreshToken(response['refreshToken']);
+
+          await updateFCMToken();
 
           clearLoginInput();
           GoRouter.of(context).push('/home');
         } else {
-          _showErrorLoginDialog(context, response['err']);
+          _showErrorLoginDialog(context, response['err'] ?? 'เกิดข้อผิดพลาด');
         }
-      } else {
-        _showErrorLoginDialog(context, "กรุณากรอก username และ password");
-      }
+
     } catch (err) {
+      print(err);
+      _showErrorLoginDialog(context, 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
     } finally {
       await Future.delayed(Duration(seconds: 1));
       _loadingDialog.hide();
     }
   }
 
-  void _showErrorLoginDialog(BuildContext context, String errMsg) {
-    AwesomeDialog(
-      context: context,
-      dialogType: DialogType.error,
-      animType: AnimType.rightSlide,
-      headerAnimationLoop: false,
-      title: 'เข้าสู่ระบบไม่สำเร็จ',
-      titleTextStyle: TextStyle(fontSize: 28, color: Colors.black, fontWeight: FontWeight.bold),
-      desc: errMsg,
-      descTextStyle: TextStyle(fontSize: 18, color: Colors.black,),
-      btnOkOnPress: () {},
-      btnOkIcon: Icons.cancel,
-      btnOkColor: Colors.red.shade700,
-    ).show();
-  }
+    //insert fcm_token
+  Future<void> updateFCMToken() async {
+    try {
+      // Uuid
+      String device_id = await userEntity.getUserPerfer(userEntity.device_id);
 
-
-
-  Future<void> isTokenValid(BuildContext context) async {
-    try{
-      _loadingDialog.show(context);
-      bool emptyKeys = await userEntity.isKeysEmpty();
-      if(!emptyKeys){
-        await userEntity.checkAndClearPrefsByVersion();
-        final token = await userEntity.getUserPerfer(userEntity.token);
-          if (token != null && !JwtDecoder.isExpired(token)) {
-            GoRouter.of(context).push('/home');
-          }
+      String device_name = '';
+      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+      if(Platform.isAndroid) {
+        AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+        device_name = androidInfo.model;
+      } else if (Platform.isIOS) {
+        IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+        device_name = iosInfo.utsname.machine;
       }
+
+      // Username
+      String username = await userEntity.getUserPerfer(userEntity.username);
+
+      //roles
+      List<dynamic> rolesRaw = await _centerModel.getRoleByUser(username);
+      List<String> roleList = rolesRaw.cast<String>();
+      await userEntity.setUserPerfer(userEntity.roles_visitorService, roleList);
+      String roles = (await userEntity.getUserPerfer(userEntity.roles_visitorService)).join(",");
+
+      //token
+      String? fcm_token = await FirebaseMessaging.instance.getToken();
+
+      // Created_at
+      String datetime_now =  DateFormat('yyyy-MM-dd HH:mm:ss').format(AppDateTime.now());
+
+      Map<String, dynamic> data = {
+        'device_name': device_name,
+        'roles': roles,
+        'fcm_token': fcm_token,
+        'last_active': datetime_now,
+      };
+
+      await loginModel.updateFCMToken(device_id, data);
+      await _centerController.insertActvityLog('User $username has logged in');
     } catch (err, stackTrace) {
       print(err);
-      print(stackTrace);
-    } finally {
-      await Future.delayed(Duration(seconds: 2));
-      _loadingDialog.hide();
+      await userEntity.clearUserPerfer();
+      await _centerModel.logError(err.toString(), stackTrace.toString());
     }
   }
+
+  void _showErrorLoginDialog(BuildContext context, String errMsg) {
+    CustomDialog.show(
+                      context: context,
+                      title: 'คำเตือน',
+                      message: errMsg,
+                      type: DialogType.error,
+                      onConfirm: () {
+                          Navigator.of(context).pop();
+                      },
+                      showCancelButton: false,
+                    );
+  }
+
 
   void clearLoginInput(){
     usernameController.clear();

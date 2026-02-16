@@ -1,483 +1,252 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:toppan_app/userEntity.dart';
+import 'package:toppan_app/api/api_client.dart';
 import 'package:path/path.dart' as path;
 
-import '../../config/api_config.dart';
-
-class VisitorformModule {
-
-  UserEntity userEntity = UserEntity();
-
+class VisitorModule {
+  /// -----------------------------
+  /// Agreement text
   Future<Map<String, dynamic>> getAgreementText() async {
-    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/getAgreement');
-    String token = await userEntity.getUserPerfer(userEntity.token);
-    Map<String, dynamic> data = {};
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${token}',
-          'Connection': 'keep-alive',
-        },
-      ).timeout(
-        Duration(seconds: 10),
-        onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
-      );
-      if(response.statusCode >= 200 && response.statusCode <= 299) {
-        var responseDecode = jsonDecode(response.body);
-        if(responseDecode['data'] != null){
-          data = responseDecode['data'][0];
-        }
-      }else{
-        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
+      final res = await ApiClient.dio.get('/document/agreement');
+
+      if (res.data['data'] != null && res.data['data'].isNotEmpty) {
+        return res.data['data'][0];
       }
-    } catch (err) {
-      throw err;
+      return {};
+    } on DioException catch (e) {
+      print('[getAgreementText] ${e.message}');
+      rethrow;
+    } catch (e) {
+      rethrow;
     }
-    return data;
   }
 
+  /// -----------------------------
+  /// Building list
   Future<List<dynamic>> getBuilding() async {
-    final url = Uri.parse(
-        ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/getBuilding');
-    String token = await userEntity.getUserPerfer(userEntity.token);
-    List<dynamic> data = [];
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${token}'
-        },
-      ).timeout(
-        Duration(seconds: 10),
-        onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
-      );
-
-      if (response.statusCode >= 200 && response.statusCode <= 299) {
-        var responseDecode = jsonDecode(response.body);
-        if (responseDecode['data'] != null) {
-          data = responseDecode['data'];
-        }
-      } else {
-        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
-      }
-    } catch (err) {
-      throw err;
-    }
-    return data;
-  }
-
-
-  Future<List<dynamic>> getManagerRole() async {
-    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/getManagerRole');
-    String token = await userEntity.getUserPerfer(userEntity.token);
-    List<dynamic> data = [];
-    try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${token}'
-        },
-      ).timeout(
-        Duration(seconds: 10),
-        onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
-      );
-      if(response.statusCode >= 200 && response.statusCode <= 299) {
-        var responseDecode = jsonDecode(response.body);
-        if(responseDecode['data'] != null){
-          data = responseDecode['data'];
-        }
-      } else {
-        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
-      }
-    } catch (err) {
-      throw err;
-    }
-    return data;
-  }
-
-  Future<Map<String, dynamic>> getSequeceRunning(String type) async {
-    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/getSequenceRunning' + '?type=${Uri.encodeComponent(type)}');
-    String token = await userEntity.getUserPerfer(userEntity.token);
-    Map<String, dynamic> data = {};
-    try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${token}'
-        },
-      ).timeout(
-        Duration(seconds: 10),
-        onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
-      );
-      if(response.statusCode >= 200 && response.statusCode <= 299) {
-        var responseDecode = jsonDecode(response.body);
-        if(responseDecode['data'] != null && responseDecode['data'].length == 1){
-          data = responseDecode['data'][0];
-        }
-      }else{
-        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
-      }
-    } catch (err) {
-      throw err;
-    }
-    return data;
-  }
-
-  // ---------------------------------------------- Update Table ---------------------------------------------- //
-  // Check tno_pass doees not exist in Pass Request
-  Future<bool?> passRequestDoesNotExist(String tno_pass) async {
-    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/passRequestDoesNotExist' + '?tno_pass=${Uri.encodeComponent(tno_pass)}');
-    String token = await userEntity.getUserPerfer(userEntity.token);
-    try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Authorization': 'Bearer ${token}',
-          "Content-Type": "application/json",
-        },
-      ).timeout(
-        Duration(seconds: 10),
-        onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
-      );
-
-      if (response.statusCode >= 200 && response.statusCode <= 299) {
-        final data = jsonDecode(response.body);
-        return data["doesNotExist"]; 
-      }else{
-        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
-      }
-    } catch (err) {
-      throw err;
+      final res = await ApiClient.dio.get('/document/building');
+      return res.data['data'] ?? [];
+    } on DioException catch (e) {
+      print('[getBuilding] ${e.message}');
+      rethrow;
+    } catch (e) {
+      rethrow;
     }
   }
 
-  Future<void> updateSequeceRunning(String type, int sequence) async {
-    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/updateSequenceRunning');
-    String token = await userEntity.getUserPerfer(userEntity.token);
+  /// -----------------------------
+  /// Insert request form visitor
+  Future<bool> insertRequestFormV(
+    Map<String, dynamic> dataRequest,
+    Map<String, dynamic> dataForm,
+  ) async {
     try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${token}'
+      await ApiClient.dio.post(
+        '/document/request-form-v',
+        data: {
+          'requestRawData': dataRequest,
+          'formRawData': dataForm,
         },
-        body: jsonEncode({
-          'type': type,
-          'sequence': sequence
-        }),
-      ).timeout(
-        Duration(seconds: 10),
-        onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode >= 200 && response.statusCode <= 299) {
-        print('Sequence found, status code: ${response.statusCode}');
-        print('Response body: ${response.body}');
-      }else{
-        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
-      }
-    } catch (err) {
-      throw err;
+      return true;
+    } on DioException catch (e) {
+      print('[insertRequestFormV] ${e.message}');
+      rethrow;
+    } catch (e) {
+      rethrow;
     }
   }
 
-  // Insert Pass Form
-  Future<bool> uploadPassForm(Map<String, dynamic> data) async {
-    bool status = false;
-    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/uploadPassForm');
-    String token = await userEntity.getUserPerfer(userEntity.token);
+  /// -----------------------------
+  /// Update request form visitor
+  Future<bool> updateRequestFormV(
+    String tnoPass,
+    Map<String, dynamic> dataRequest,
+    Map<String, dynamic> dataForm,
+  ) async {
     try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${token}'
+      await ApiClient.dio.put(
+        '/document/request-form-v/$tnoPass',
+        data: {
+          'requestRawData': dataRequest,
+          'formRawData': dataForm,
         },
-        body: jsonEncode(data),
-      ).timeout(
-        Duration(seconds: 10),
-        onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode >= 200 && response.statusCode <= 299) {
-        print('Response body: ${response.body}');
-        status = true;
-      }else{
-        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
-      }
-    } catch (err) {
-      throw err;
+      return true;
+    } on DioException catch (e) {
+      print('[updateRequestFormV] ${e.message}');
+      rethrow;
+    } catch (e) {
+      rethrow;
     }
-    return status;
   }
 
-  // Insert Pass Request
-  Future<bool> uploadPassRequest(Map<String, dynamic> data) async {
-    bool status = false;
-    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/uploadPassRequest');
-    String token = await userEntity.getUserPerfer(userEntity.token);
+  /// -----------------------------
+  /// Upload image files
+  Future<bool> uploadImageFiles(
+    String tno,
+    String folderNameForm,
+    Map<String, dynamic> data,
+    String date,
+  ) async {
     try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${token}'
-        },
-        body: jsonEncode(data),
-      ).timeout(
-        Duration(seconds: 10),
-        onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
-      );
-      if(response.statusCode >= 200 && response.statusCode <= 299) {
-        print('Response body: ${response.body}');
-        status = true;
-      }else{
-        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
-      }
-    } catch (err) {
-      throw err;
-    }
-    return status;
-  }
+      final formData = FormData.fromMap({
+        'tno': tno,
+        'date': date,
+        'typeForm': folderNameForm,
+      });
 
-  // ---------------------------------------------- Update Table ---------------------------------------------- //
-  // Update Table Pass Form
-  Future<bool> updatePassForm(Map<String, dynamic> data) async {
-    bool status = false;
-    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/updatePassForm');
-    String token = await userEntity.getUserPerfer(userEntity.token);
-    try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${token}'
-        },
-        body: jsonEncode({
-          'data': data,
-        }),
-      ).timeout(
-        Duration(seconds: 10),
-        onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
-      );
-      if(response.statusCode >= 200 && response.statusCode <= 299) {
-        print('Response body: ${response.body}');
-        status = true;
-      }else{
-        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
-      }
-    } catch (err) {
-      throw err;
-    }
-    return status;
-  }
-
-  // Update Table Request
-  Future<bool> updatePassRequest(Map<String, dynamic> data) async {
-    bool status = false;
-    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/updatePassRequest');
-    String token = await userEntity.getUserPerfer(userEntity.token);
-    try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${token}'
-        },
-        body: jsonEncode({
-          'data': data,
-        }),
-      ).timeout(
-        Duration(seconds: 10),
-        onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
-      );
-      if(response.statusCode >= 200 && response.statusCode <= 299) {
-        print('Response body: ${response.body}');
-        status = true;
-      }else{
-        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
-      }
-    } catch (err) {
-      throw err;
-    }
-    return status;
-  }
-
-  // Upload Image Pass Request
-  Future<bool> uploadImageFiles(String tno, String folderNameForm, Map<String, dynamic> data, String date) async {
-    bool status = false;
-    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/uploadImageFiles');
-    String token = await userEntity.getUserPerfer(userEntity.token);
-    try {
-      var request = http.MultipartRequest('POST', url)..headers['Authorization'] = 'Bearer $token';;
-
-      // Add other data fields if necessary (e.g., tno, type)
-      request.fields['tno'] = tno;
-      request.fields['date'] = date;
-      request.fields['typeForm'] = folderNameForm;
-
-      // Handle people signatures
-      List<File?> peopleSignList = data['people'];
-      for (int i = 0; i < peopleSignList.length; i++) {
-        File? file = peopleSignList[i];
-        if (file != null) {
-          request.files.add(await http.MultipartFile.fromPath('people[]', file.path));
-        }
-      }
-
-      // Handle item images (itemIn, itemOut, etc.) if available
-      if (data['item_in'] != null) {
-        List<File?> itemInImages = data['item_in'];
-        for (int i = 0; i < itemInImages.length; i++) {
-          File? file = itemInImages[i];
+      Future<void> addFiles(String key, List<File?>? files) async {
+        if (files == null) return;
+        for (final file in files) {
           if (file != null) {
-            request.files.add(await http.MultipartFile.fromPath('item_in[]', file.path));
-          }
-        }
-      }
-      
-
-      if (data['item_out'] != null) {
-        List<File?> itemOutImages = data['item_out'];
-        for (int i = 0; i < itemOutImages.length; i++) {
-          File? file = itemOutImages[i];
-          if (file != null) {
-            request.files.add(await http.MultipartFile.fromPath('item_out[]', file.path));
+            formData.files.add(
+              MapEntry(
+                key,
+                await MultipartFile.fromFile(file.path),
+              ),
+            );
           }
         }
       }
 
-      if (data['approver'] != null) {
-        List<File?> signImages = data['approver'];
-        for (int i = 0; i < signImages.length; i++) {
-          File? file = signImages[i];
-          if (file != null) {
-            request.files.add(await http.MultipartFile.fromPath('sign[]', file.path));
-          }
-        }
-      }
+      await addFiles('people[]', data['people']);
+      await addFiles('item_in[]', data['item_in']);
+      await addFiles('item_out[]', data['item_out']);
+      await addFiles('sign[]', data['approver']);
 
-      // Send the request
-      var response = await request.send();
-      if(response.statusCode >= 200 && response.statusCode <= 299) {
-        print("Image uploaded successfully!");
-        status = true;
-      }else{
-        print("Failed to upload image. Status code: ${response.statusCode}");
-        var responseBody = await response.stream.bytesToString();
-        print("Error message: $responseBody");
-      }
-    } catch (err, stackTrace) {
-      String location = stackTrace.toString().split("\n").first;
-      throw Exception("[ERROR] $err\n At line $location");
+      await ApiClient.dio.post(
+        '/upload/image-files',
+        data: formData,
+      );
+
+      return true;
+    } on DioException catch (e) {
+      print('[uploadImageFiles] ${e.message}');
+      rethrow;
+    } catch (e) {
+      rethrow;
     }
-    return status;
   }
 
-
-  // Function Load image by url return Uint8List
+  /// -----------------------------
+  /// Load image as bytes
   Future<Uint8List?> loadImageAsBytes(String imageUrl) async {
     try {
-      final response = await http.get(Uri.parse(imageUrl));
-      if (response.statusCode >= 200 && response.statusCode <= 299) {
-        return response.bodyBytes;
-      }else{
-        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
-      }
-    } catch (err) {
-      throw err;
+      final res = await ApiClient.dio.get<List<int>>(
+        imageUrl,
+        options: Options(responseType: ResponseType.bytes),
+      );
+      return Uint8List.fromList(res.data ?? []);
+    } on DioException catch (e) {
+      print('[loadImageAsBytes] ${e.message}');
+      rethrow;
+    } catch (e) {
+      rethrow;
     }
   }
 
-
-
-  // Function Load image by url return File
+  /// -----------------------------
+  /// Load image to temp file
   Future<File?> loadImageToFile(String imageUrl) async {
-  try {
-    final response = await http.get(Uri.parse(imageUrl));
-    if (response.statusCode >= 200 && response.statusCode <= 299) {
-      final directory = await getTemporaryDirectory();
+    try {
+      final res = await ApiClient.dio.get<List<int>>(
+        imageUrl,
+        options: Options(responseType: ResponseType.bytes),
+      );
 
-      // Extract filename from URL
-      String fileName = path.basename(Uri.parse(imageUrl).path);
+      final directory = await getTemporaryDirectory();
+      final fileName = path.basename(Uri.parse(imageUrl).path);
       final filePath = '${directory.path}/$fileName';
 
       final file = File(filePath);
-      await file.writeAsBytes(response.bodyBytes);
+      await file.writeAsBytes(res.data ?? []);
       return file;
-    } else {
-      throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
+    } on DioException catch (e) {
+      print('[loadImageToFile] ${e.message}');
+      rethrow;
+    } catch (e) {
+      rethrow;
     }
-  } catch (err) {
-    throw err;
   }
-}
 
+  /// -----------------------------
+  /// Departments
   Future<List<String>> getDepartments() async {
-    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/getDepartments');
-    String token = await userEntity.getUserPerfer(userEntity.token);
-    List<String> data = [];
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${token}',
-        },
-      ).timeout(
-        Duration(seconds: 10),
-        onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
-      );
-      if(response.statusCode >= 200 && response.statusCode <= 299) {
-        var responseDecode = jsonDecode(response.body);
-        if(responseDecode['data'] != null && responseDecode['data'].isNotEmpty){
-          data = List<String>.from(responseDecode['data'].map((e) => e.toString()));
-        }
-      }else{
-        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
-      }
-    } catch (err) {
-      throw (err);
+      final res = await ApiClient.dio.get('/hris/departments');
+      return List<String>.from(res.data['data'] ?? []);
+    } on DioException catch (e) {
+      print('[getDepartments] ${e.message}');
+      rethrow;
+    } catch (e) {
+      rethrow;
     }
-    return data;
   }
 
-
+  /// -----------------------------
+  /// Contact by department
   Future<List<String>> getContactByDept(String dept) async {
-    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/getEmployeeNameByDept' + '?dept=${Uri.encodeComponent(dept)}');
-    String token = await userEntity.getUserPerfer(userEntity.token);
-    List<String> data = [];
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${token}'
-        },
-      ).timeout(
-        Duration(seconds: 10),
-        onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
+      final res = await ApiClient.dio.get(
+        '/hris/emp-name',
+        queryParameters: {'dept': dept},
       );
-      if(response.statusCode >= 200 && response.statusCode <= 299) {
-        var responseDecode = jsonDecode(response.body);
-        if(responseDecode['data'] != null && responseDecode['data'].isNotEmpty){;
-          data = List<String>.from(responseDecode['data'].map((e) => e.toString()));
-        }
-      }else{
-        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
-      }
-    } catch (err) {
-      throw err;
+      return List<String>.from(res.data['data'] ?? []);
+    } on DioException catch (e) {
+      print('[getContactByDept] ${e.message}');
+      rethrow;
+    } catch (e) {
+      rethrow;
     }
-    return data;
   }
+
+  /// -----------------------------
+  /// Active cards by type
+  Future<List<Map<String, dynamic>>> getActiveCardByType(
+    List<String> cardTypes,
+  ) async {
+    try {
+      final res = await ApiClient.dio.get(
+        '/card/active-by-type',
+        queryParameters: {
+          'cardType': cardTypes.join(','),
+        },
+      );
+      return List<Map<String, dynamic>>.from(res.data['data'] ?? []);
+    } on DioException catch (e) {
+      print('[getActiveCardByType] ${e.message}');
+      rethrow;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// -----------------------------
+  /// Card info from document
+  Future<List<Map<String, dynamic>>> getInfoCardFromDoc(
+    List<String> cardTypes,
+  ) async {
+    try {
+      final res = await ApiClient.dio.get(
+        '/card/cards-from-doc',
+        queryParameters: {
+          'cardIds': cardTypes.join(','),
+        },
+      );
+      return List<Map<String, dynamic>>.from(res.data['data'] ?? []);
+    } on DioException catch (e) {
+      print('[getInfoCardFromDoc] ${e.message}');
+      rethrow;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+
 }

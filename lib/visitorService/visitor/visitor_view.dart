@@ -2,20 +2,20 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 
-import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_signaturepad/signaturepad.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import 'package:toppan_app/clear_temporary.dart';
+import 'package:toppan_app/component/AppDateTime.dart';
 import 'package:toppan_app/config/api_config.dart';
-
+import '../../component/CustomDIalog.dart';
 import 'visitor_controller.dart';
 
 class VisitorForm {
@@ -33,9 +33,10 @@ class VisitorFormPage extends StatefulWidget {
 
 class _VisitorFormPageState extends State<VisitorFormPage> {
   VisitorFormController _controller = VisitorFormController();
-  Color? _cancelBtnColor = Colors.red[400];
-  Color? _acceptBtnColor = Colors.blue[400];
+  Color? _cancelBtnColor = Colors.red;
+  Color? _acceptBtnColor = Colors.blue;
   double _fontSize = ApiConfig.fontSize;
+  bool _isPhoneScale = false;
   String _fontFamily = ApiConfig.fontFamily;
   final FocusNode _focusNode = FocusNode();
 
@@ -44,14 +45,11 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
     super.initState();
     prepareForm();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final screenWidth = MediaQuery.of(context).size.width;
-      setState(() {
-        if (screenWidth > 799) {
-          _fontSize += 8.0;
-        }
-      });
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   setState(() {
+    //     _fontSize = ApiConfig.getFontSize(context);
+    //   });
+    // });
   }
 
   @override
@@ -67,7 +65,9 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
     } else {
       await _controller.prepareNewForm(context);
     }
-    await _showAgreementWarning(context, false);
+    if(!_controller.logBook) {
+      await _showAgreementWarning(context, false);
+    }
     setState(() {});
   }
 
@@ -210,7 +210,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                               color: _cancelBtnColor, fontSize: _fontSize),
                         ),
                       )
-                    : SizedBox.shrink(), // returns an empty widget if false
+                    : SizedBox.shrink(),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
@@ -237,6 +237,8 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
   //Build Page
   @override
   Widget build(BuildContext context) {
+    _fontSize = ApiConfig.getFontSize(context);
+    _isPhoneScale = ApiConfig.getPhoneScale(context);
     //Back ground
     return Container(
       width: double.infinity,
@@ -246,11 +248,8 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
         begin: Alignment.topRight,
         end: Alignment.bottomLeft,
         colors: [
-          Color.fromARGB(255, 114, 230, 114),
-          Color.fromARGB(255, 89, 226, 101),
-          Color.fromARGB(255, 62, 212, 69),
-          Color.fromARGB(255, 50, 199, 57),
-          Color.fromARGB(255, 28, 172, 28),
+          Colors.green,
+          Colors.green,
         ],
       )),
       child: _getPageContent(context),
@@ -301,39 +300,24 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Center(
-                          key: _controller.inputSectionKey,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.assignment_outlined,
-                                size: 36,
-                                color: Colors.green,
-                              ),
-                              SizedBox(
-                                width: 10,
-                              ),
-                              Text('No. ${_controller.formatSequenceRunning}',
-                                  style: TextStyle(
-                                      fontSize: _fontSize + 4,
-                                      fontWeight: FontWeight.bold)),
-                            ],
+                        // Tno Display
+                        if (_controller.flagUpdateForm && (_controller.formatSequenceRunning?.isNotEmpty ?? false) ) ...[
+                          Container(
+                            key: _controller.inputSectionKey,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Text('No.${_controller.formatSequenceRunning}',
+                                    style: TextStyle(
+                                        fontSize: _fontSize + 4,
+                                        fontWeight: FontWeight.bold)),
+                              ],
+                            ),
                           ),
-                        ),
-                        
+                        ],
+
                         SizedBox(
-                          height: 15,
-                        ),
-                        
-                        Divider(
-                          color: Colors.black,
-                          thickness: 0.5,
-                          height: 0,
-                        ),
-                        
-                        SizedBox(
-                          height: 15,
+                          height: 10,
                         ),
 
                         InputField(
@@ -342,7 +326,8 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                           controller: _controller.companyController,
                           maxLength: 255,
                         ),
-                        SizedBox(height: 15),
+
+                        SizedBox(height:30),
                         
                         FractionallySizedBox(
                           widthFactor: 0.4,
@@ -355,7 +340,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                           ),
                         ),
                         
-                        SizedBox(height: 15),
+                        SizedBox(height: 30),
                         //Time In
                         Row(
                           children: [
@@ -371,7 +356,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                   },
                                   icon: Icon(
                                     Icons.access_time_rounded,
-                                    color: Colors.grey,
+                                    color: Colors.blue,
                                   ),
                                 ),
                               ),
@@ -386,8 +371,8 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                 controller: _controller.dateInController,
                                 widget: IconButton(
                                   icon: Icon(
-                                    Icons.calendar_today_outlined,
-                                    color: Colors.grey,
+                                    Icons.calendar_month,
+                                    color: Colors.blue,
                                   ),
                                   onPressed: () async {
                                     await _datePicker(
@@ -399,7 +384,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                           ],
                         ),
                         
-                        SizedBox(height: 15),
+                        SizedBox(height: 35),
                         //Time Out
                         Row(
                           children: [
@@ -415,7 +400,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                   },
                                   icon: Icon(
                                     Icons.access_time_rounded,
-                                    color: Colors.grey,
+                                    color: Colors.blue,
                                   ),
                                 ),
                               ),
@@ -430,8 +415,8 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                 controller: _controller.dateOutController,
                                 widget: IconButton(
                                   icon: Icon(
-                                    Icons.calendar_today_outlined,
-                                    color: Colors.grey,
+                                    Icons.calendar_month,
+                                    color: Colors.blue,
                                   ),
                                   onPressed: () async {
                                     await _datePicker(
@@ -443,10 +428,11 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                           ],
                         ),
                         
-                        SizedBox(height: 20),
+                        SizedBox(height: 30),
                         
                         dropDownDept(_controller.deptList),
-                        SizedBox(height: 20),
+
+                        SizedBox(height: 30),
                         
                         // Object/Visitor
                         InputField(
@@ -456,18 +442,12 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                           descriptText: true,
                           maxLength: 400,
                         ),
+
                         SizedBox(height: 30),
                         
                         // Visitor and follower's
                         Container(
                           key: _controller.visitorSectionKey,
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Colors.black,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
                           child: Padding(
                             padding: EdgeInsets.all(8.0),
                             child: Column(
@@ -479,7 +459,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                       child: Row(
                                         children: [
                                           Icon(
-                                            Icons.person,
+                                            Icons.groups,
                                             color: Colors.black,
                                             size: 50,
                                           ),
@@ -497,15 +477,6 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                         ],
                                       ),
                                     ),
-                                    IconButton(
-                                      onPressed: _togglePersonList,
-                                      icon: Icon(
-                                        _controller.isExpanded_listPerson
-                                            ? Icons.keyboard_double_arrow_down
-                                            : Icons.keyboard_double_arrow_up,
-                                        size: 24,
-                                      ),
-                                    )
                                   ],
                                 ),
                                 Divider(
@@ -580,13 +551,6 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                         
                         //Item In/Out
                         Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Colors.black,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
                           child: Padding(
                             padding: EdgeInsets.all(8.0),
                             child: Column(
@@ -599,7 +563,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                         crossAxisAlignment: CrossAxisAlignment.center,
                                         children: [
                                           Icon(
-                                            Icons.shopping_bag,
+                                            Icons.auto_awesome_motion_rounded,
                                             color: Colors.black,
                                             size: 50,
                                           ),
@@ -617,28 +581,9 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                         ],
                                       ),
                                     ),
-                                    SizedBox(
-                                      width: 20.0,
-                                    ),
-                                    IconButton(
-                                      onPressed: _toggleItemList,
-                                      icon: Icon(
-                                        _controller.isExpanded_listItem
-                                            ? Icons.keyboard_double_arrow_down
-                                            : Icons.keyboard_double_arrow_up,
-                                        size: 24,
-                                      ),
-                                    ),
                                   ],
                                 ),
-                                Divider(
-                                  color: Colors.black,
-                                  thickness: 1,
-                                  height: 10,
-                                ),
-                                SizedBox(
-                                  height: 5,
-                                ),
+
                                 
                                 _contentItemList(),
                               ],
@@ -700,8 +645,9 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                               padding: EdgeInsets.all(10.0),
                               decoration: BoxDecoration(
                                 border: Border.all(
-                                  color: const Color.fromARGB(255, 0, 0, 0),
+                                  color: Colors.black,
                                 ),
+                                borderRadius: BorderRadius.circular(15),
                               ),
                               child: Column(
                                 children: [
@@ -747,7 +693,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                 );
                               } else {
                                 bool uploadSuccess =
-                                    await _controller.uploadVisitorForm();
+                                    await _controller.insertRequestForm();
                                 if (uploadSuccess) {
                                   showTopSnackBar(
                                     Overlay.of(context),
@@ -785,7 +731,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                   Colors.green,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(
-                                    12), // Rounded corners
+                                    12),
                               ),
                             ),
                             child: Text(
@@ -806,13 +752,9 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
         ),
       ),
     );
-    // return
   }
 
   Widget dropDownDept(List<String> _listDept) {
-    if (_listDept.isEmpty) {
-      return Center(child: CircularProgressIndicator());
-    }
     return Container(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -820,7 +762,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
           Text(
             'แผนก:',
             style:
-                TextStyle(fontSize: _fontSize + 2, fontWeight: FontWeight.bold),
+                TextStyle(fontSize: _fontSize, fontWeight: FontWeight.bold),
           ),
 
           Container(
@@ -832,16 +774,21 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
             child: DropdownMenu(
               requestFocusOnTap: false,
               initialSelection: _controller.selectDept,
-              width: MediaQuery.of(context).size.width*0.85,
+              width: MediaQuery.of(context).size.width*0.5,
               textStyle: TextStyle(
-                fontSize: _fontSize,
+                fontSize: _fontSize - 2,
               ),
               inputDecorationTheme: InputDecorationTheme(
                 border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 0,
+                  vertical: 8,
+                ),
               ),
               menuStyle: MenuStyle(
                 maximumSize: MaterialStateProperty.all<Size>(
-                  Size(double.infinity, 500),
+                  Size(double.infinity, 300),
                 ),
               ),
               dropdownMenuEntries:
@@ -853,12 +800,12 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                     textStyle: WidgetStatePropertyAll<TextStyle>(
                       TextStyle(
                         color: Colors.black,
-                        fontSize: _fontSize,
+                        fontSize: _fontSize - 2,
                         fontFamily: _fontFamily,
                       ),
                     ),
                     backgroundColor: WidgetStatePropertyAll<Color>(
-                      Colors.green.shade50,
+                      Colors.white,
                     ),
                   ),
                 );
@@ -873,12 +820,12 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
             ),
           ),
 
-          SizedBox(height: 20,),
+          SizedBox(height: 30,),
 
           Text(
             'ผู้ประสานงาน:',
             style:
-                TextStyle(fontSize: _fontSize + 2, fontWeight: FontWeight.bold),
+                TextStyle(fontSize: _fontSize, fontWeight: FontWeight.bold),
           ),
 
           // auto complete
@@ -929,11 +876,11 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                   alignment: Alignment.topLeft,
                   child: Container(
                     child: Material(
-                      color: Colors.green.shade50,
+                      color: Colors.white,
                       elevation: 4.0,
                       child: SizedBox(
                         height: 200.0,
-                        width: MediaQuery.of(context).size.width*0.8,
+                        width: MediaQuery.of(context).size.width*0.6,
                         child: ListView.builder(
                           itemCount: options.length,
                           itemBuilder: (BuildContext context, int index) {
@@ -942,7 +889,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                               title: Text(
                                 option,
                                 style: TextStyle(
-                                  fontSize: _fontSize,
+                                  fontSize: _fontSize - 2,
                                   fontFamily: _fontFamily,
                                 ),
                               ),
@@ -967,9 +914,6 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
   }
 
   Widget dropDownBuilding(List<dynamic> _listBuilding) {
-    if (_listBuilding.isEmpty) {
-      return Center(child: CircularProgressIndicator());
-    }
     return DropdownMenu(
       requestFocusOnTap: false,
       initialSelection: _controller.selectedBuilding,
@@ -995,10 +939,20 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                 fontSize: _fontSize,
                 fontFamily: _fontFamily)),
             backgroundColor:
-                WidgetStatePropertyAll<Color>(Colors.green.shade50),
+                WidgetStatePropertyAll<Color>(Colors.white),
           ),
         );
       }).toList(),
+
+      menuStyle: MenuStyle(
+        backgroundColor: MaterialStateProperty.all(Colors.white),
+        shape: MaterialStateProperty.all(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+        ),
+      ),
+
       onSelected: (value) {
         setState(() {
           _controller.selectedBuilding = value;
@@ -1093,10 +1047,20 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
     Widget _headerMenu(double screenWidth, StateSetter setStateDialog) {
       return Container(
         decoration: BoxDecoration(
+            color: Colors.white,
             border: Border.all(
               color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.5),
             ),
-            borderRadius: BorderRadius.circular(20.0)),
+            borderRadius: BorderRadius.circular(20.0),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.15),
+                spreadRadius: 2,
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ],
+        ),
         child: screenWidth < 799
             ? Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -1136,7 +1100,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                 child: Text(
                                   sectionKeys[index],
                                   style: TextStyle(
-                                      color: Colors.black, fontSize: 24),
+                                      color: Colors.black, fontSize: _fontSize ),
                                 ),
                               ),
                             );
@@ -1167,8 +1131,6 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                         .toList()
                         .indexOf(entry.key);
                     String sectionLabel = entry.key;
-                    // List<dynamic> signatureData = entry.value;
-
                     BorderRadius borderRadius = BorderRadius.zero;
                     bool _isPressed = currentIndex == index;
 
@@ -1238,7 +1200,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                       child: Text(
                                         sectionLabel,
                                         style: TextStyle(
-                                          fontSize: _fontSize + 4,
+                                          fontSize: _fontSize,
                                           color: _isPressed
                                               ? Colors.green
                                               : Colors.black,
@@ -1291,18 +1253,12 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                             _controller.signatureSectionMap[
                                 sectionKeys[currentIndex]]?[2],
                             style: TextStyle(
-                              fontSize: _fontSize + 8,
+                              fontSize: _fontSize + 4,
                               fontWeight: FontWeight.bold,
                               color: Colors.blueGrey[800],
                             ),
                           ),
                         ],
-                      ),
-                      SizedBox(height: 10),
-                      Divider(
-                        color: Colors.black.withOpacity(0.5),
-                        thickness: 1.0,
-                        height: 10,
                       ),
                       SizedBox(height: 10),
             
@@ -1363,7 +1319,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                   hintText: 'ลงชื่อ*',
                                   border: InputBorder.none,
                                 ),
-                                style: TextStyle(fontSize: _fontSize + 2),
+                                style: TextStyle(fontSize: _fontSize-2),
                               ),
                             ),
                           ],
@@ -1458,7 +1414,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                                 .isNotEmpty &&
                                             signaturesByDisplay.text.isNotEmpty) {
                                           await stampSignatureApprove(
-                                              DateTime.now(),
+                                              AppDateTime.now(),
                                               _controller.signatureGlobalKey);
                                           setStateDialog(() {});
                                         } else {
@@ -1489,11 +1445,11 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.save_alt_outlined,
+                                    Icon(Icons.save_as_rounded,
                                         color: Colors.white, size: _fontSize),
                                     SizedBox(width: 8),
                                     Text(
-                                      'ลงนาม',
+                                      'บันทึก',
                                       style: TextStyle(
                                           fontSize: _fontSize,
                                           color: Colors.white),
@@ -1565,8 +1521,8 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
 
           // Exit Button (Close)
           Positioned(
-            top: 10,
-            right: 10,
+            top: 0,
+            right: 0,
             child: IconButton(
               onPressed: () {
                 Navigator.of(context).pop();
@@ -1574,7 +1530,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
               icon: Icon(
                 Icons.cancel_rounded,
                 color: _cancelBtnColor,
-                size: 50,
+                size: _isPhoneScale?47:50,
               ),
               tooltip: "Close",
             ),
@@ -1609,11 +1565,8 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                 data: MediaQuery.of(context)
                     .copyWith(viewInsets: EdgeInsets.zero), // Prevent movement
                 child: AlertDialog(
+                  backgroundColor: Colors.transparent,
                   insetPadding: EdgeInsets.all(16.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16.0),
-                    side: BorderSide(color: Colors.white, width: 2.0),
-                  ),
                   contentPadding: EdgeInsets.all(0),
                   content: StatefulBuilder(
                     builder:
@@ -1641,7 +1594,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                               child: Column(
                                 children: [
                                   _headerMenu(screenWidth, setStateDialog),
-                                  SizedBox(height: 10),
+                                  SizedBox(height: 20),
                                   _signPad(setStateDialog),
                                 ],
                               ),
@@ -1670,44 +1623,22 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
               flex: 1,
               child: Column(
                 children: [
-                  Container(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        SizedBox(width: 10),
-                        Expanded(
+                   Row(children: [Expanded(
                           child: Divider(
                             color: Colors.black,
                             thickness: 1,
                           ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 10),
-                          child: Text(
-                            'นำเข้า', // "Items Out" text
-                            style: TextStyle(
-                              fontSize: _fontSize,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Divider(
-                            color: Colors.black,
-                            thickness: 1,
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                      ],
-                    ),
-                  ),
+                        ),],),
+
                   // Button add Item IN
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      ElevatedButton(
+                      Row(
+                        
+                        children: [
+                          ElevatedButton(
                         onPressed: () => popUpAddItem('in'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green.shade600,
@@ -1720,6 +1651,18 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                         child: Icon(Icons.add_box_outlined,
                             color: Colors.white, size: 24),
                       ),
+                      SizedBox(
+                              width: 10,
+                            ),
+                            Text(
+                              '-  นำเข้า',
+                              style: TextStyle(
+                                  fontSize: _fontSize,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                        ],
+                      ),
+                      
                       Text(
                         "${_controller.listItem_In.length} : ${_controller.imageList_In.length}",
                         style: TextStyle(
@@ -1743,43 +1686,23 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                     height: 30,
                   ),
 
+                  Row(children: [Expanded(
+                          child: Divider(
+                            color: Colors.black,
+                            thickness: 1,
+                          ),
+                        ),],),
+
+
                   // "Items Out" Section with Line and Centered Text
-                  Container(
-                    child: Row(
-                      children: [
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: Divider(
-                            color: Colors.black,
-                            thickness: 1,
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 10),
-                          child: Text(
-                            'นำออก', // "Items Out" text
-                            style: TextStyle(
-                              fontSize: _fontSize,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Divider(
-                            color: Colors.black,
-                            thickness: 1,
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                      ],
-                    ),
-                  ),
-                  // Button add Item OUT
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      ElevatedButton(
+
+                      Row(
+                        children: [
+                          ElevatedButton(
                         onPressed: () => popUpAddItem('out'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green.shade600,
@@ -1792,6 +1715,18 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                         child: Icon(Icons.add_box_outlined,
                             color: Colors.white, size: 24),
                       ),
+                      SizedBox(
+                              width: 10,
+                            ),
+                            Text(
+                              '-  นำออก',
+                              style: TextStyle(
+                                  fontSize: _fontSize,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                        ],
+                      ),
+                      
                       Text(
                         "${_controller.listItem_Out.length} : ${_controller.imageList_Out.length}",
                         style: TextStyle(
@@ -1893,13 +1828,18 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                 width: 300,
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(15),
                 ),
+                clipBehavior: Clip.hardEdge,
                 child: _image != null
-                    ? Image.file(
-                        _image.absolute,
-                        key: ValueKey(_image.absolute.path + DateTime.now().millisecondsSinceEpoch.toString()),
-                        fit: BoxFit.fill,
-                      )
+                    ? ClipRRect(
+                    borderRadius: BorderRadius.circular(15),
+                    child: Image.file(
+                      _image.absolute,
+                      key: ValueKey(_image.absolute.path + AppDateTime.now().millisecondsSinceEpoch.toString()),
+                      fit: BoxFit.cover,
+                    ),
+                  )
                     : Center(
                         child: Icon(
                           Icons.add_photo_alternate_outlined,
@@ -1921,14 +1861,15 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                 width: 30,
               ),
               IconButton(
-                  // onPressed: () => _deleteImage(index, _imageList),
                   onPressed: () {
-                    warningDialog('คุณต้องการจะลบรูปภาพใช่หรือไม่?', () {
+                    if(_imageList.isNotEmpty && _imageList[index] != null) {
+                      warningDialog('คุณต้องการจะลบรูปภาพใช่หรือไม่?', () {
                       setState(() {
                         _deleteImage(index, _imageList);
                         Navigator.of(context).pop();
                       });
                     });
+                    }
                   },
                   icon: Icon(Icons.delete, color: _cancelBtnColor, size: 40)),
             ],
@@ -1953,6 +1894,16 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
   }
 
   void popUpAddPerson() {
+    final Set<String> cardIds = _controller.personList
+      .map((person) => person['Card_Id'].toString())
+      .toSet();
+
+    _controller.cardListFilter = _controller.cardList
+      .where(
+        (item) => !cardIds.contains(item['card_id'].toString()),
+      )
+      .toList();
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -1964,33 +1915,31 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
           },
           child: MediaQuery(
             data: MediaQuery.of(context)
-                .copyWith(viewInsets: EdgeInsets.zero), // Prevent UI movement
+                .copyWith(viewInsets: EdgeInsets.zero),
             child: Dialog(
               shape: RoundedRectangleBorder(
                 borderRadius:
-                    BorderRadius.circular(24), // Rounded corners for the dialog
+                    BorderRadius.circular(24),
               ),
               child: Container(
                 constraints: BoxConstraints(
                   maxWidth: MediaQuery.of(context).size.width * 0.8,
-                  maxHeight: MediaQuery.of(context).size.height * 0.8,
+                  maxHeight: MediaQuery.of(context).size.height * 0.6,
                 ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min, // Ensures dialog fits content
+                  mainAxisSize: MainAxisSize.min, 
                   children: [
-                    // Header Section with Close Button
                     Stack(
                       children: [
-                        // Header Background
                         Container(
                           width: double.infinity,
                           padding: EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: Colors.green
-                                .shade600, // Change this to any color you like
+                                .shade600,
                             borderRadius: BorderRadius.vertical(
                                 top:
-                                    Radius.circular(24)), // Rounded top corners
+                                    Radius.circular(24)),
                           ),
                           child: Center(
                             child: Text(
@@ -1998,7 +1947,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                               style: TextStyle(
                                 fontSize: _fontSize + 4,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white, // White text for contrast
+                                color: Colors.white,
                               ),
                             ),
                           ),
@@ -2011,7 +1960,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                       child: SingleChildScrollView(
                         keyboardDismissBehavior:
                             ScrollViewKeyboardDismissBehavior
-                                .onDrag, // Dismiss keyboard on scroll
+                                .onDrag,
                         child: Padding(
                           padding: EdgeInsets.all(20),
                           child: Column(
@@ -2036,12 +1985,20 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                               SizedBox(height: 20),
 
                               // Card ID
-                              InputField(
-                                title: 'หมายเลขบัตร Visitor:',
-                                hint: '',
-                                controller: _controller.cardIdController,
-                                // isRequired: true,
-                              ),
+                              // InputField(
+                              //   title: 'หมายเลขบัตร Visitor:',
+                              //   hint: '',
+                              //   controller: _controller.cardIdController,
+                              //   // isRequired: true,
+                              // ),
+
+                              // Card ID
+                              Text('หมายเลขบัตร :',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: _fontSize)),
+                              SizedBox(height: 2.5),
+                              dropDownPassCard(),
                               SizedBox(height: 20),
 
                               // Signature Pad Section
@@ -2059,15 +2016,14 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                     decoration: BoxDecoration(
                                       border: Border.all(color: Colors.grey),
                                       borderRadius: BorderRadius.circular(
-                                          12), // Rounded corners
+                                          12),
                                     ),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(
-                                          12), // Ensures child (Signature Pad) is clipped
+                                          12),
                                       child: SfSignaturePad(
                                         key: _controller.signatureGlobalKey,
-                                        backgroundColor: Colors
-                                            .white, // Set background for better visibility
+                                        backgroundColor: Colors.transparent,
                                         strokeColor: Colors.black,
                                         minimumStrokeWidth: 3.0,
                                         maximumStrokeWidth: 6.0,
@@ -2225,44 +2181,44 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
     _controller.titleNameController.text = entry['TitleName'] ?? '';
     _controller.fullNameController.text = entry['FullName'] ?? '';
     _controller.cardIdController.text = entry['Card_Id'] ?? '';
+
+    var currentCardData = _controller.cardListFromDoc.where((item) {
+      return item['card_id'] == entry['Card_Id'];
+    }).toList();
+    _controller.cardListFilter = [
+      ..._controller.cardList, 
+      ...currentCardData
+    ];
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: () {
-            FocusManager.instance.primaryFocus?.unfocus();
-          },
+          onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
           child: MediaQuery(
-            data: MediaQuery.of(context)
-                .copyWith(viewInsets: EdgeInsets.zero), // Prevent UI movement
+            data: MediaQuery.of(context).copyWith(viewInsets: EdgeInsets.zero),
             child: Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(24), // Rounded corners for the dialog
-              ),
+              shape: RoundedRectangleBorder(borderRadius:BorderRadius.circular(24),),
               child: Container(
                 constraints: BoxConstraints(
                   maxWidth: MediaQuery.of(context).size.width * 0.8,
-                  maxHeight: MediaQuery.of(context).size.height * 0.8,
+                  maxHeight: MediaQuery.of(context).size.height * 0.6,
                 ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min, // Ensures dialog fits content
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Header Section with Close Button
                     Stack(
                       children: [
-                        // Header Background
                         Container(
                           width: double.infinity,
                           padding: EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.green
-                                .shade600, // Change this to any color you like
+                            color: Colors.green.shade600,
                             borderRadius: BorderRadius.vertical(
                                 top:
-                                    Radius.circular(24)), // Rounded top corners
+                                    Radius.circular(24)),
                           ),
                           child: Center(
                             child: Text(
@@ -2270,7 +2226,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                               style: TextStyle(
                                 fontSize: _fontSize + 4,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white, // White text for contrast
+                                color: Colors.white,
                               ),
                             ),
                           ),
@@ -2278,12 +2234,11 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                       ],
                     ),
 
-                    // Body Content with Scrollable View
+
                     Expanded(
                       child: SingleChildScrollView(
                         keyboardDismissBehavior:
-                            ScrollViewKeyboardDismissBehavior
-                                .onDrag, // Dismiss keyboard on scroll
+                            ScrollViewKeyboardDismissBehavior.onDrag,
                         child: Padding(
                           padding: EdgeInsets.all(20),
                           child: Column(
@@ -2304,12 +2259,14 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                   hint: '',
                                   controller: _controller.fullNameController),
                               SizedBox(height: 20),
-
+                              
                               // Card ID
-                              InputField(
-                                  title: 'หมายเลขบัตร Visitor:',
-                                  hint: '',
-                                  controller: _controller.cardIdController),
+                              Text('หมายเลขบัตร :',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: _fontSize)),
+                              SizedBox(height: 2.5),
+                              dropDownPassCard(),
                               SizedBox(height: 20),
 
                               // Signature Pad Section
@@ -2334,7 +2291,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                       child: SfSignaturePad(
                                         key: _controller.signatureGlobalKey,
                                         backgroundColor: Colors
-                                            .white,
+                                            .transparent,
                                         strokeColor: Colors.black,
                                         minimumStrokeWidth: 3.0,
                                         maximumStrokeWidth: 6.0,
@@ -2348,9 +2305,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                     bottom: 10,
                                     child: GestureDetector(
                                       onTap: () {
-                                        _controller
-                                            .signatureGlobalKey.currentState!
-                                            .clear(); // Clears signature pad
+                                        _controller.signatureGlobalKey.currentState!.clear();
                                       },
                                       child: CircleAvatar(
                                         radius: 20,
@@ -2399,7 +2354,6 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                       ),
                     ),
 
-                    // Full-Width "เพิ่ม" Button
                     Padding(
                       padding: EdgeInsets.all(16),
                       child: Row(
@@ -2413,8 +2367,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: _cancelBtnColor,
-                                padding: EdgeInsets.symmetric(
-                                    vertical: 14), // Button height
+                                padding: EdgeInsets.symmetric(vertical: 14),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -2429,7 +2382,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                             ),
                           ),
 
-                          SizedBox(width: 10), // Space between buttons
+                          SizedBox(width: 10),
 
                           // Add Button
                           Expanded(
@@ -2442,8 +2395,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: _acceptBtnColor,
-                                padding: EdgeInsets.symmetric(
-                                    vertical: 14), // Button height
+                                padding: EdgeInsets.symmetric(vertical: 14),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -2471,7 +2423,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
   }
 
   Widget dropDownTitleName() {
-    List<String> titleNameList = ['นาย', 'น.ส.', 'นาง', 'Mr.', 'Ms.', 'Mrs.'];
+    List<String> titleNameList = ['คุณ', 'นาย', 'น.ส.', 'นาง', 'Mr.', 'Ms.', 'Mrs.'];
     if (_controller.titleNameController.text.isEmpty) {
       _controller.titleNameController.text = titleNameList[0];
     }
@@ -2510,6 +2462,50 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
     );
   }
 
+  Widget dropDownPassCard([String? initialId]) {
+    List<String> titleNameList = _controller.cardListFilter
+      .map<String>((item) => item['card_id'].toString())
+      .toSet()
+      .toList();
+    if (_controller.cardIdController.text.isEmpty) {
+      _controller.cardIdController.text = titleNameList[0];
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.grey),
+      ),
+      padding: EdgeInsets.symmetric(horizontal: 10),
+      child: DropdownButtonFormField<String>(
+        value: _controller.cardIdController.text,
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        ),
+        icon: Icon(Icons.arrow_drop_down, color: Colors.black),
+        style: TextStyle(
+          color: Colors.black,
+          fontSize: _fontSize,
+          height: 1.0,
+        ),
+        dropdownColor: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        items: titleNameList.map((String item) {
+          return DropdownMenuItem<String>(
+            value: item,
+            child: Text(item),
+          );
+        }).toList(),
+        onChanged: (String? newValue) {
+          setState(() {
+            _controller.cardIdController.text = newValue!;
+          });
+        },
+      ),
+    );
+  }
+
   //visitor list generate by widget
   Widget personListGenerate() {
     return _controller.personList.isNotEmpty
@@ -2519,18 +2515,93 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                 child: Card(
                     margin: EdgeInsets.symmetric(vertical: 5),
                     color: Colors.green.shade50,
-                    elevation: 4.0,
+                    elevation: 2.0,
                     semanticContainer: true,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(
-                        color: Colors.black,
-                        width: 1,
-                      ),
                     ),
-                    child: Stack(
-                      children: [
-                        Padding(
+                    child: ClipRRect(
+                      borderRadius:  BorderRadius.circular(15),
+                      child: Slidable(
+                        key: ValueKey(entry['Card_Id']),
+                        startActionPane: ActionPane(
+                          motion: ScrollMotion(),
+                          extentRatio:  0.20,
+                          children: [
+                            CustomSlidableAction(
+                              onPressed: (context) => popUpEditPerson(entry),
+                              backgroundColor: Colors.blue,
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(15),
+                                bottomLeft: Radius.circular(15),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.edit_document,
+                                    size: 40,
+                                    color: Colors.white,
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    'แก้ไข',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: _fontSize,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        endActionPane: ActionPane(
+                          motion: ScrollMotion(),
+                          extentRatio: 0.20,
+                          children: [
+                            CustomSlidableAction(
+                              onPressed: (context) {
+                                warningDialog(
+                                  'ต้องการลบข้อมูลรายการของ ${entry['TitleName']} ${entry['FullName']} ใช่หรือไม่?',
+                                  () {
+                                    setState(() {
+                                      _controller.personList.remove(entry);
+                                    });
+                                    Navigator.pop(this.context);
+                                  },
+                                );
+                              },
+                              backgroundColor: Colors.red,
+                              borderRadius: BorderRadius.only(
+                                topRight: Radius.circular(15),
+                                bottomRight: Radius.circular(15),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.person_remove_rounded,
+                                    size: 40,
+                                    color: Colors.white,
+                                  ),
+                                  Text(
+                                    'ลบ',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: _fontSize,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Column(
                             children: [
@@ -2546,7 +2617,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                   children: [
                                     Icon(
                                       Icons.person,
-                                      color: Colors.black,
+                                      color: Colors.green,
                                       size: 70,
                                     ),
                                     SizedBox(width: 5),
@@ -2583,7 +2654,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                 ),
                               ),
                               Divider(
-                                color: Colors.black,
+                                color: Colors.green,
                                 height: 10.0,
                                 thickness: 1.0,
                               ),
@@ -2593,137 +2664,142 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    'ลายเซ็น:',
-                                    style: TextStyle(
-                                        fontSize: _fontSize,
-                                        fontWeight: FontWeight.bold),
-                                  ),
                                   SizedBox(
-                                    height: 5,
+                                    height: 10,
                                   ),
                                   Center(
                                     child: entry['Signature'] != null
-                                        ? Image.memory(
+                                        ? ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: Image.memory(
                                             entry['Signature'],
                                             fit: BoxFit.contain,
-                                          )
+                                          ),
+                                        )
                                         : Text(
                                             'No Signature Available',
                                             style:
                                                 TextStyle(color: Colors.grey),
                                           ),
                                   ),
+                                   SizedBox(
+                                    height: 10,
+                                  ),
                                 ],
                               ),
                             ],
                           ),
                         ),
-                        Positioned(
-                          right: 50,
-                          bottom: 0,
-                          child: IconButton(
-                            icon: Icon(Icons.edit_document,
-                                color: const Color.fromARGB(255, 0, 0, 0),
-                                size: 40),
-                            onPressed: () => popUpEditPerson(entry),
-                          ),
-                        ),
-                        Positioned(
-                          right: 0,
-                          bottom: 0,
-                          child: IconButton(
-                            icon: Icon(Icons.group_remove,
-                                color: _cancelBtnColor, size: 40),
-                            onPressed: () => warningDialog(
-                                'ต้องการลบข้อมูลรายชื่อของ ${entry['TitleName']} ${entry['FullName']} ใช่หรือไม่?',
-                                () {
-                              setState(() {
-                                _controller.personList.remove(entry);
-                                Navigator.of(context).pop();
-                              });
-                            }),
-                          ),
-                        ),
-                      ],
-                    )),
+                        )
+                      ),
+                      )
+                    ),
               );
             }).toList(),
           )
         : Container();
   }
 
-  //Item list generate by Widget
+    //Item list generate by Widget
   Widget _itemListGenerate(List<Map<String, String>> itemList, String type) {
-    return itemList.isNotEmpty
-        ? Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: itemList.map((entry) {
-              return Card(
-                color: Colors.green.shade50,
-                margin: EdgeInsets.symmetric(vertical: 5),
-                elevation: 2.0,
-                semanticContainer: true,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(
-                    color: const Color.fromARGB(255, 0, 0, 0),
-                    width: 0.5,
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Row(
+  return itemList.isNotEmpty
+      ? Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: itemList.map((entry) {
+            return Card(
+              color: Colors.green.shade50,
+              margin: EdgeInsets.symmetric(vertical: 5),
+              elevation: 2.0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: Slidable(
+                  key: ValueKey(entry['item']),
+                  startActionPane: ActionPane(
+                    motion: ScrollMotion(),
+                    extentRatio: 0.20,
                     children: [
-                      // Left side: Item icon
-                      Icon(Icons.shopping_bag, // Icon item
-                          color: Colors.black,
-                          size: 40),
-                      SizedBox(width: 15),
-                      Expanded(
-                        // Name item
-                        child: Text(
-                          '${entry['item']}',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: _fontSize),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
+                      CustomSlidableAction(
+                        onPressed: (context) => popUpEditItem(entry),
+                        backgroundColor: Colors.blue,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(15),
+                          bottomLeft: Radius.circular(15),
                         ),
-                      ),
-                      // Right side: Item name
-                      IconButton(
-                        // Edit button
-                        icon: Icon(Icons.edit_document),
-                        onPressed: () => popUpEditItem(entry),
-                      ),
-                      IconButton(
-                        //  Delete button
-                        icon: Icon(
-                          Icons.delete,
-                          color: _cancelBtnColor,
-                        ),
-                        onPressed: () => warningDialog(
-                            'ต้องการลบรายการ ${entry['item']} ใช่หรือไม่?', () {
-                          setState(() {
-                            if (type == 'in') {
-                              _controller.listItem_In
-                                  .remove(entry); // Remove item from 'In' list
-                            } else {
-                              _controller.listItem_Out
-                                  .remove(entry); // Remove item from 'Out' list
-                            }
-                          });
-                          Navigator.of(context).pop();
-                        }),
+                        child: Icon(
+                              Icons.edit_document,
+                              size: 30,
+                              color: Colors.white,
+                            ),
                       ),
                     ],
                   ),
+                  endActionPane: ActionPane(
+                    motion: ScrollMotion(),
+                    extentRatio: 0.20,
+                    children: [
+                      CustomSlidableAction(
+                        onPressed: (context) {
+                          warningDialog(
+                            'ต้องการลบรายการ ${entry['item']} ใช่หรือไม่?',
+                            () {
+                              setState(() {
+                                if (type == 'in') {
+                                  _controller.listItem_In.remove(entry);
+                                } else {
+                                  _controller.listItem_Out.remove(entry);
+                                }
+                              });
+                              Navigator.pop(this.context);
+                            },
+                          );
+                        },
+                        backgroundColor: Colors.red,
+                        borderRadius: BorderRadius.only(
+                          topRight: Radius.circular(15),
+                          bottomRight: Radius.circular(15),
+                        ),
+                        child: Icon(
+                              Icons.delete,
+                              size: 30,
+                              color: Colors.white,
+                            ),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.auto_awesome_mosaic_rounded,
+                          color: Colors.green,
+                          size: 40,
+                        ),
+                        SizedBox(width: 15),
+                        Expanded(
+                          child: Text(
+                            '${entry['item']}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: _fontSize,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              );
-            }).toList(),
-          )
-        : Container();
-  }
+              ),
+            );
+          }).toList(),
+        )
+      : Container();
+}
 
   void popUpEditItem(Map<String, String> entry) {
     _controller.itemNameController.text = entry['item']!;
@@ -3094,12 +3170,12 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
 
   //Function Date Picker
   Future<void> _datePicker(BuildContext context, DateTime? _date, String type) async {
-    DateTime initialDate = _date ?? DateTime.now();
+    DateTime initialDate = _date ?? AppDateTime.now();
     DateTime? _pickerDate = await showDatePicker(
         context: context,
         initialDate: initialDate,
-        firstDate: DateTime(DateTime.now().year - 7),
-        lastDate: DateTime(DateTime.now().year + 7),
+        firstDate: DateTime(AppDateTime.now().year - 7),
+        lastDate: DateTime(AppDateTime.now().year + 7),
         builder: (BuildContext context, Widget? child) {
           return MediaQuery(
             data: MediaQuery.of(context).copyWith(
@@ -3233,65 +3309,19 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
     setState(() {});
   }
 
-  void warningDialog(String description, VoidCallback _callFunction) {
-    AwesomeDialog(
-      context: context,
-      dialogType: DialogType.warning,
-      buttonsBorderRadius: const BorderRadius.all(
-        Radius.circular(2),
-      ),
-      headerAnimationLoop: false,
-      animType: AnimType.topSlide,
-      showCloseIcon: true,
-      title: 'แจ้งเตือน',
-      titleTextStyle:
-          TextStyle(fontSize: _fontSize + 10, fontWeight: FontWeight.bold),
-      desc: description,
-      descTextStyle:
-          TextStyle(fontSize: _fontSize, fontWeight: FontWeight.bold),
-      btnOk: ElevatedButton(
-        onPressed: () async {
-          _callFunction();
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _acceptBtnColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30), // Circular shape
-          ),
-          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-          elevation: 8,
-          shadowColor: Colors.black.withOpacity(1),
-        ),
-        child: Text(
-          'ยืนยัน',
-          style: TextStyle(
-              color: Colors.white,
-              fontSize: _fontSize,
-              fontWeight: FontWeight.bold),
-        ),
-      ),
-      btnCancel: ElevatedButton(
-        onPressed: () {
-          Navigator.pop(context);
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _cancelBtnColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30), // Circular shape
-          ),
-          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-          elevation: 8, // Add elevation (shadow effect)
-          shadowColor: Colors.black.withOpacity(1), // Shadow color
-        ),
-        child: Text(
-          'ยกเลิก',
-          style: TextStyle(
-              color: Colors.white,
-              fontSize: _fontSize,
-              fontWeight: FontWeight.bold),
-        ),
-      ),
-    ).show();
+  void warningDialog(String description, VoidCallback action) {
+     CustomDialog.show(
+                      context: context,
+                      title: 'คำเตือน',
+                      message: description,
+                      type: DialogType.warning,
+                      onConfirm: () async {
+                        action();
+                      },
+                      onCancel: () {
+                        Navigator.pop(context);
+                      }
+                    );
   }
 }
 
@@ -3322,6 +3352,7 @@ class InputField extends StatefulWidget {
 class _InputFieldState extends State<InputField> {
   bool _isError = false;
   double _fontSize = ApiConfig.fontSize;
+  bool _isPhoneScale = false;
 
   @override
   void initState() {
@@ -3329,11 +3360,8 @@ class _InputFieldState extends State<InputField> {
     _validateInput();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final screenWidth = MediaQuery.of(context).size.width;
       setState(() {
-        if (screenWidth > 799) {
-          _fontSize += 8.0;
-        }
+        _fontSize = ApiConfig.getFontSize(context);
       });
     });
   }
@@ -3348,6 +3376,8 @@ class _InputFieldState extends State<InputField> {
 
   @override
   Widget build(BuildContext context) {
+    _fontSize = ApiConfig.getFontSize(context);
+    _isPhoneScale = ApiConfig.getPhoneScale(context);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
@@ -3359,7 +3389,7 @@ class _InputFieldState extends State<InputField> {
           Text(
             widget.title,
             style:
-                TextStyle(fontSize: _fontSize + 2, fontWeight: FontWeight.bold),
+                TextStyle(fontSize: _fontSize, fontWeight: FontWeight.bold),
           ),
           Container(
             height: widget.descriptText == true ? 52 * 2.5 : 52,

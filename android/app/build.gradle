@@ -19,7 +19,6 @@ dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
     implementation platform('com.google.firebase:firebase-bom:33.10.0')
 
-
     // implementation 'com.huawei.hms:push:6.12.0.300'  // Huawei Push
     // implementation 'com.huawei.hms:base:6.12.0.300'  // HMS Base SDK
     // implementation 'com.huawei.agconnect:agconnect-core:1.9.1.300' // Huawei AppGallery Connect
@@ -29,8 +28,8 @@ android {
     namespace = "com.toppan.mobilehub"
     // compileSdk = flutter.compileSdkVersion
     // ndkVersion = flutter.ndkVersion
-    compileSdk = 35
-    ndkVersion = "25.1.8937393"
+    compileSdk = 36
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         coreLibraryDesugaringEnabled true
@@ -49,10 +48,14 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         // minSdk = flutter.minSdkVersion
         // targetSdk = flutter.targetSdkVersion
-        minSdk = 21
-        targetSdk = 35
+        minSdk = 24
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // ndk {
+        //     abiFilters "armeabi-v7a", "x86"  // กำหนด ABI ที่รองรับเท่านั้น
+        // }
     }
 
     signingConfigs {
@@ -70,6 +73,10 @@ android {
             // Signing with the debug keys for now, so `flutter run --release` works.
             // signingConfig = signingConfigs.debug
             signingConfig = signingConfigs.release
+
+            ndk {
+                debugSymbolLevel 'FULL'
+            }
 
             shrinkResources true
             minifyEnabled true

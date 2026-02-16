@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:toppan_app/service_manager.dart';
 import 'package:toppan_app/userEntity.dart';
-import 'package:toppan_app/visitorService/visitorServiceCenter_controller.dart';
+import 'package:toppan_app/visitorService/center_controller.dart';
 
 
 import 'home_model.dart';
@@ -12,94 +11,60 @@ class HomeController {
 
   UserEntity userEntity = UserEntity();
 
-  VisitorServiceCenterController _controllerVisistorServiceCenter = VisitorServiceCenterController();
-
-  List<ServiceEntity> serviceList = [];
-  Map<String, bool> servicesStatus = {};
+  CenterController _centerController = CenterController();
 
   ServiceManager serviceManager = ServiceManager();
-
   String displayName = '';
+  bool hasNotification = true;
 
+  /// ===== Prepare Home Page =====
   Future<void> preparePage(BuildContext context) async {
     try {
-      //displayName
+      // ===== AUTH CHECK (ศูนย์กลาง) =====
+      final authenticated = await _centerController.ensureAuthenticated();
+      if (!authenticated) {
+        await _centerController.forceLogout(context);
+        return;
+      }
+
+      // ===== USER INFO =====
       final rawName = await userEntity.getUserPerfer(userEntity.displayName);
       displayName = formatDisplayName(rawName);
 
-      await checkConnectionService(context);
-      var fcm_token = await userEntity.getUserPerfer(userEntity.fcm_token);
+      await prepareUser();
 
-      if(fcm_token == null){
-        //generate token FCM
-        await userEntity.generateInfoDeviceToken();
-         // List service want to insert FCM Token
-        List<Future<bool>> serviceInsert = [
-          _controllerVisistorServiceCenter.insertFCMToken(),
-          // Other service have insert FCM
-        ];
-        List<bool> resultsInsert = await Future.wait(serviceInsert);
-        bool servicesHaveFCMToken = resultsInsert.every((r) => r == true);
-        if(!servicesHaveFCMToken) {
-          GoRouter.of(context).go('/login');
-          return;
-        }
-      }
+      // ===== FCM (ไม่เกี่ยวกับ auth) =====
+      await _centerController.updateActiveFCM();
 
-      // List service #FIX
-      List<Future<bool>> serviceCheck = [
-        _controllerVisistorServiceCenter.checkFCMToken(),
-        // Add other service check FCM token
-      ];
-      List<bool> resultsCheck = await Future.wait(serviceCheck);
-      bool notHaveFCM = resultsCheck.every((r) => r == false);
-      if(notHaveFCM){
-        await userEntity.clearUserPerfer();
-        GoRouter.of(context).go('/login');
-        return;
-      }
-    } catch (err) {
-      print(err);
-      // _controllerVisistorServiceCenter.logError(err.toString(), stackTrace.toString());
+      // ===== PERMISSIONS / SERVICES =====
+      await serviceManager.preparePermissionsServices();
+    } catch (err, stackTrace) {
+      await _centerController.logError(
+        err.toString(),
+        stackTrace.toString());
     }
   }
 
-  Future<void> checkConnectionService(BuildContext context) async {
-    Map<String, bool> servicesConnect = await _model.checkConnectionAllService();
-    if(servicesConnect['visitor'] == true) {
-      await prepareUserVisitor();
-      await _controllerVisistorServiceCenter.updateActiveFCM();
-    }
-
-    servicesStatus = servicesConnect;
-
-
-    serviceManager.preparePermissionsServices(servicesStatus);
-    serviceList = await serviceManager.getAllService();
-  }
-
-  // Visitor Service
-  Future<void> prepareUserVisitor() async {
+  Future<void> prepareUser() async {
     try {
       String username = await userEntity.getUserPerfer(userEntity.username);
-      //VisitorService
       List<dynamic> roles = await _model.getRoleByUser(username);
-      List<String> roleList = roles.cast<String>(); // dynamic to string
+      List<String> roleList = roles.cast<String>();
       await userEntity.setUserPerfer(userEntity.roles_visitorService, roleList);
+      // hasNotification = await _model.hasNotification(username, roleList);
     } catch (err, stackTrace) {
-      await _controllerVisistorServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _centerController.logError(err.toString(), stackTrace.toString());
     }
   }
 
   Future<bool> logout(BuildContext context) async {
-    bool isLogout = false;
     try {
-      await userEntity.clearUserPerfer();
-      isLogout = true;
+      await _centerController.forceLogout(context);
+      return true;
     } catch (err, stackTrace) {
-      await _controllerVisistorServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _centerController.logError(err.toString(), stackTrace.toString());
+      return false;
     }
-    return isLogout;
   }
 
   String formatDisplayName(String fullName) {
@@ -121,5 +86,6 @@ class HomeController {
 
     return parts.isNotEmpty ? parts[0] : fullName;
   }
+
 
 }

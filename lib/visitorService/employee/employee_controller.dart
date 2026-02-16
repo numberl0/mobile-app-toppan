@@ -10,9 +10,10 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_signaturepad/signaturepad.dart';
+import 'package:toppan_app/component/AppDateTime.dart';
 import 'package:toppan_app/loading_dialog.dart';
 import 'package:toppan_app/visitorService/employee/employee_model.dart';
-import 'package:toppan_app/visitorService/visitorServiceCenter_controller.dart';
+import 'package:toppan_app/visitorService/center_controller.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:image/image.dart' as img;
@@ -21,14 +22,14 @@ class EmployeeController {
 
   EmployeeModel employeeModel = EmployeeModel();
 
-  VisitorServiceCenterController _controllerServiceCenter = VisitorServiceCenterController();
+  CenterController _centerController = CenterController();
 
   bool flagUpdateForm = false;
   bool logBook = false;
   String tno_pass = '';
 
-  int sequenceRunning = 0;
-  String formatSequenceRunning = '';
+  // int sequenceRunning = 0;
+  String? formatSequenceRunning = null;
 
   TextEditingController vehicleLicenseController = TextEditingController();
   TextEditingController deptController = TextEditingController();
@@ -48,8 +49,9 @@ class EmployeeController {
    // List Storage In / Out Items by List
   List<Map<String, dynamic>> personList = [
     // 'TitleName' :
+    // 'Department : '
     // 'FullName' :
-    // 'Card_id' :
+    // 'EmployeeId' :
     // 'Signature' :
     // 'DateTime' :
   ];
@@ -81,9 +83,10 @@ class EmployeeController {
   };
 
   // Controllers Employee's Information
-  TextEditingController titleNameController = TextEditingController();
-  TextEditingController fullNameController = TextEditingController();
-  TextEditingController cardIdController = TextEditingController();
+  TextEditingController empTitleController = TextEditingController();
+  TextEditingController empNameController = TextEditingController();
+  TextEditingController empIdController = TextEditingController();
+  TextEditingController empDeptController = TextEditingController();
 
   //item
   TextEditingController itemNameController = TextEditingController();
@@ -124,17 +127,11 @@ class EmployeeController {
       flagUpdateForm = false;
 
       //tno
-      DateTime now = DateTime.now();
+      DateTime now = AppDateTime.now();
       tno_pass =
           "${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}"
           "${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}"
           "${now.second.toString().padLeft(2, '0')}${(now.millisecondsSinceEpoch % 1000).toString().padLeft(3, '0')}";
-
-      // Sequence Number
-      Map<String, dynamic> sequenceData = await employeeModel.getSequeceRunning('EMPLOYEE');
-      sequenceRunning = sequenceData['sequence'];
-      sequenceRunning += 1;
-      formatSequenceRunning = sequenceRunning.toString().padLeft(6, '0');
 
       // Building
       List<dynamic> rawListBuilding = await employeeModel.getBuilding();
@@ -146,7 +143,7 @@ class EmployeeController {
       this.selectedBuilding = this.buildingList[0]['id'];
 
       // Date
-      flagDateOut = DateTime.now();
+      flagDateOut = AppDateTime.now();
       dateOutController.text = DateFormat('yyyy-MM-dd').format(flagDateOut!);
       flagDateIn = flagDateOut;
       dateInController.text = DateFormat('yyyy-MM-dd').format(flagDateIn!);
@@ -159,7 +156,7 @@ class EmployeeController {
       timeInController.text = formatTime(flagTimeIn!);
 
     } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _centerController.logError(err.toString(), stackTrace.toString());
     } finally {
       await Future.delayed(Duration(seconds: 1));
       _loadingDialog.hide();
@@ -190,8 +187,7 @@ class EmployeeController {
       tno_pass = data['tno_pass'];
 
       // Sequence Running Number
-      formatSequenceRunning = data['sequence_no'];
-      sequenceRunning = int.tryParse(formatSequenceRunning) ?? 0;
+      formatSequenceRunning = data['sequence_no'] ?? null;
 
       // Building
       List<dynamic> rawListBuilding = await employeeModel.getBuilding();
@@ -266,10 +262,10 @@ class EmployeeController {
       .toList();
       
       var uuid = Uuid();
-      for (var person in copiedPeople) {
+      for (var person in copiedPeople) {    // only info same visitor form Id card and Datetime
         person.putIfAbsent('ID', () =>  uuid.v4() );
-        person.putIfAbsent('Card_Id', () => null);
-        person.putIfAbsent('DateTime', () => DateTime.now().toString());
+        person.putIfAbsent('EmployeeId', () => null);
+        person.putIfAbsent('DateTime', () => AppDateTime.now().toString());
 
         // Signature
         if (person['Signature'] != null && person['Signature'] is String) {
@@ -318,10 +314,10 @@ class EmployeeController {
 
       // Signature
       final Map<String, List<String>> fieldMappings = {
-        'Employee': ['empSign_sign', 'empSign_datetime', 'empSign_by'],
-        'Approved': ['approved_sign', 'approved_datetime', 'approved_by'],
-        'Media': ['media_sign', 'media_datetime', 'media_by'],
-        'Security': ['mainEn_sign', 'mainEn_datetime', 'mainEn_by'],
+        'Employee': ['emp_sign', 'emp_at', 'emp_by'],
+        'Approved': ['appr_sign', 'appr_at', 'appr_by'],
+        'Media': ['media_sign', 'media_at', 'media_by'],
+        'Security': ['guard_sign', 'guard_at', 'guard_by'],
       };
       for (var key in fieldMappings.keys) {
         if (data[fieldMappings[key]![0]] != null &&
@@ -338,22 +334,47 @@ class EmployeeController {
         signatureSectionMap[key]![3] =
             data[fieldMappings[key]![2]]; // Signed by
       }
-
     } catch (err, stackTrace) {
-      _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      _centerController.logError(err.toString(), stackTrace.toString());
     } finally {
       await Future.delayed(Duration(seconds: 1));
       _loadingDialog.hide();
     }
   }
 
+  Future<bool> searchInfoByPid(String empId) async {
+    bool status = false;
+    // 1.name 2.department 3.empId
+    Map<String,String> empInfo = {};
+    try {
+       empInfo = await employeeModel.getInfoByEmpId(empId);
+      if (empInfo == null || empInfo.isEmpty) {
+        empInfo.clear();
+        empNameController.clear();
+        empDeptController.clear();
+        return false;
+      }
+      empNameController.text = empInfo['FullName_Thai'] ?? '';
+      empDeptController.text = empInfo['DepartmentName_Thai'] ?? '';
+      empIdController.text = empId;
 
+      status = true;
+    } catch (err, stackTrace) {
+      print("[Error] " + err.toString());
+      print(stackTrace);
+      empInfo.clear();
+      empNameController.clear();
+      empDeptController.clear();
+      empIdController.clear();
+    }
+    return status;
+  }
 
   Future<String> validateUpload() async {
     final fields = {
-      "กรุณาเลือกวันที่ออก": dateOutController.text,
+      "กรุณาเลือกวันเวลาออก": dateOutController.text,
       "กรุณาเพิ่มเวลาออก": timeOutController.text,
-      "กรุณาระบุวัตถุประสงค์ในการเยี่ยมชม": objectiveController.text,
+      "กรุณาระบุวัตถุประสงค์": objectiveController.text,
     };
     for (var entry in fields.entries) {
       if (entry.value.trim().isEmpty) {
@@ -375,24 +396,13 @@ class EmployeeController {
     return '';
   }
 
-  // Future<bool> checkDateOutFrist() async {
-  //   try {
-  //     final outDate = DateTime(flagDateOut!.year, flagDateOut!.month, flagDateOut!.day);
-  //     final inDate = DateTime(flagDateIn!.year, flagDateIn!.month, flagDateIn!.day);
-  //     return !outDate.isAfter(inDate);
-  //   } catch (err, stackTrace) {
-  //     await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
-  //     return false;
-  //   }
-  // }
-
    Future<bool> checkDateOutFrist() async {
     try {
       final outDate = DateTime(flagDateOut!.year, flagDateOut!.month, flagDateOut!.day);
       final inDate = DateTime(flagDateIn!.year, flagDateIn!.month, flagDateIn!.day);
       return outDate.isBefore(inDate);
     } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _centerController.logError(err.toString(), stackTrace.toString());
       return false;
     }
   }
@@ -410,7 +420,7 @@ class EmployeeController {
         }
     return false;
     } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _centerController.logError(err.toString(), stackTrace.toString());
       return false;
     }
   }
@@ -420,13 +430,13 @@ class EmployeeController {
       if(flagDateIn != null && flagDateOut != null && flagTimeIn != null && flagTimeOut != null){
         bool isDateValid = await checkDateOutFrist();
         bool isTimeValid = await checkTimeOutNotPastInSameDay();
-        if (!isDateValid && !isTimeValid) {
+        if (!isDateValid && !isTimeValid && !outOnly ) {
           return false;
         }
       }
       return true;
     } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _centerController.logError(err.toString(), stackTrace.toString());
       return false;
     }
   }
@@ -451,16 +461,17 @@ class EmployeeController {
       final signatureData = byteData!.buffer.asUint8List();
       personList.add({
           'ID': uuid.v4(),    //generate id
-          'TitleName': titleNameController.text,
-          'FullName': fullNameController.text,
-          'Card_Id': cardIdController.text,
+          'Department' : empDeptController.text, 
+          'TitleName': empTitleController.text,
+          'FullName': empNameController.text,
+          'EmployeeId': empIdController.text,
           'Signature': signatureData,
-          'DateTime': DateTime.now().toString(),
+          'DateTime': AppDateTime.now().toString(),
       }); 
       expandedPerson();
       await clearPersonController();
     } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _centerController.logError(err.toString(), stackTrace.toString());
     }
   }
 
@@ -473,8 +484,10 @@ class EmployeeController {
             await signatureImage.toByteData(format: ImageByteFormat.png);
         signatureData = byteData!.buffer.asUint8List();
       }
-      entry['FullName'] = fullNameController.text;
-      entry['Card_Id'] = cardIdController.text;
+      entry['Department'] = empDeptController.text;
+      entry['TitleName'] = empTitleController.text;
+      entry['FullName'] = empNameController.text;
+      entry['EmployeeId'] = empIdController.text;
 
       if (signatureGlobalKey.currentState!
           .toPathList()
@@ -482,23 +495,21 @@ class EmployeeController {
         entry['Signature'] = signatureData;
       }
     } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _centerController.logError(err.toString(), stackTrace.toString());
     }
   }
 
   Future<void> clearPersonController() async {
-    titleNameController.clear();
-    fullNameController.clear();
-    cardIdController.clear();
+    empTitleController.clear();
+    empNameController.clear();
+    empIdController.clear();
     signatureGlobalKey.currentState!.clear();
+    empDeptController.clear();
   }
 
   void expandedPerson() {
      isExpanded_listPerson = !isExpanded_listPerson ? true : isExpanded_listPerson;
   }
-
-
-
 
   // ------------------------------------------------- Item ----------------------------------------------- //
   Future<void> addItemTypeList(String type) async {
@@ -532,50 +543,18 @@ class EmployeeController {
     isExpanded_listItem = !isExpanded_listItem? true:isExpanded_listItem;
   }
 
-  // ------------------------------------------------- Upload!! ----------------------------------------------- //
-  Future<bool> uploadForm() async {
+  // -------------------------------------------------------------- Insert -------------------------------------------------------------- //
+  Future<bool> insertRequestForm() async
+  {
     bool status = false;
-    try {
-      // Upload image client(mobile) to server
-      Map<String, dynamic>? filenamesData = await uploadImageToServer(tno_pass,'EMPLOYEE', dateOutController.text); //1st
-
-      // Upload to PASS_REQUEST table
-      bool uploadRequest = await uploadToPassRequest(tno_pass, filenamesData); //2nd
-      // if (!uploadRequest) {
-      //   throw Exception('Error uploading to PASS_REQUEST');
-      // }
-
-      // Upload in PASS_Form table
-      bool uploadForm = await uploadToPassForm(tno_pass, filenamesData); //3rd
-      // if (!uploadForm) {
-      //   throw Exception('Error uploading to PASS_FORM');
-      // }
-
-      
-      if(uploadForm && uploadRequest && !flagUpdateForm) {
-        await _controllerServiceCenter.insertActvityLog('Insert EMPLOYEE FORM [ ${tno_pass} ] into PASS_FORM and PASS_REQUEST table');
-        status = true;
-      }else if (uploadForm && uploadRequest && flagUpdateForm) {
-        await _controllerServiceCenter.insertActvityLog('Update EMPLOYEE FORM [ ${tno_pass} ] into PASS_FORM and PASS_REQUEST table');
-        status = true;
-      } else {
-
-      }
-    } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
-    }
-    return status;
-  }
-
-  // -------------------------------------------------------------- Upload  -------------------------------------------------------------- //
-  // Upload to PASS_REQUEST table 1st
-  Future<bool> uploadToPassRequest(
-      String tno_pass, Map<String, dynamic>? filenamesData) async {
-    bool uploadStatus = false;
-    try {
+    try{
       //typForm
       String typeForm = 'EMPLOYEE';
 
+      // ------------------------------ upload Image to server ------------------------------------- //
+      Map<String, dynamic>? filenamesData = await uploadImageToServer(tno_pass,'EMPLOYEE', dateOutController.text);
+
+      // ------------------------------ Request ------------------------------------- //
       // Date in/out
       var formattedDateOut = flagDateOut != null? DateFormat('yyyy-MM-dd').format(flagDateOut!) : null;
       var formattedDateIn = flagDateIn != null? DateFormat('yyyy-MM-dd').format(flagDateIn!) : null;
@@ -605,12 +584,9 @@ class EmployeeController {
       //Signature
       //[0]=status, [1]=signature filenames, [2]=date, [3]=signatures_by
       List<dynamic> empSign = await getDataSignatureMapping(signatureSectionMap, 'Employee', approverFilenames_Signature);
-      List<dynamic> apprSign = await getDataSignatureMapping(
-          signatureSectionMap, 'Approved', approverFilenames_Signature);
-      List<dynamic> mediaSign = await getDataSignatureMapping(
-          signatureSectionMap, 'Media', approverFilenames_Signature);
-      List<dynamic> mainSign = await getDataSignatureMapping(
-          signatureSectionMap, 'Security', approverFilenames_Signature);
+      List<dynamic> apprSign = await getDataSignatureMapping(signatureSectionMap, 'Approved', approverFilenames_Signature);
+      List<dynamic> mediaSign = await getDataSignatureMapping(signatureSectionMap, 'Media', approverFilenames_Signature);
+      List<dynamic> mainSign = await getDataSignatureMapping(signatureSectionMap, 'Security', approverFilenames_Signature);
 
       int objTypeInt = 1;
       switch(objTypeSelection) {
@@ -625,66 +601,39 @@ class EmployeeController {
           break;
       }
 
-      Map<String, dynamic> data = {
+      Map<String, dynamic> dataRequest = {
         'tno_pass': tno_pass,
         'request_type': typeForm,
         'sequence_no': formatSequenceRunning,
-        'company': 'TOPPAN EDGE (THAILAND) LIMITED.',
         'vehicle_no': vehicleLicenseController.text,
-        'date_in': formattedDateIn,
-        'time_in': formattedTimeIn,
         'date_out': formattedDateOut,
         'time_out': formattedTimeOut,
-        'contact': null,
-        'dept': null,
+        'date_in': formattedDateIn,
+        'time_in': formattedTimeIn,
         'objective_type': objTypeInt,
         'objective': objectiveController.text,
         'building_card': buildingData['building_card'],
         'area': area,
-        'empSign_status': empSign[0],
-        'empSign_sign': empSign[1],
-        'empSign_datetime': empSign[2]!=null? empSign[2].toString(): null,
-        'empSign_by': empSign[3],
-        'approved_status': apprSign[0],
-        'approved_sign': apprSign[1],
-        'approved_datetime': apprSign[2]!=null? apprSign[2].toString(): null,
-        'approved_by': apprSign[3],
+        'emp_status': empSign[0],
+        'emp_sign': empSign[1],
+        'emp_at': empSign[2]!=null? empSign[2].toString(): null,
+        'emp_by': empSign[3],
+        'appr_status': apprSign[0],
+        'appr_sign': apprSign[1],
+        'appr_at': apprSign[2]!=null? apprSign[2].toString(): null,
+        'appr_by': apprSign[3],
         'media_status': mediaSign[0],
         'media_sign': mediaSign[1],
-        'media_datetime': mediaSign[2]!=null? mediaSign[2].toString(): null,
+        'media_at': mediaSign[2]!=null? mediaSign[2].toString(): null,
         'media_by': mediaSign[3],
-        'mainEn_status': mainSign[0],
-        'mainEn_sign': mainSign[1],
-        'mainEn_datetime': mainSign[2]!=null? mainSign[2].toString(): null,
-        'mainEn_by': mainSign[3],
-        'proArea_status': 0,  // because this is employee form
-        'proArea_sign': null,
-        'proArea_datetime': null,
-        'proArea_by': null,
-        'tno_ref': null,
+        'guard_status': mainSign[0],
+        'guard_sign': mainSign[1],
+        'guard_at': mainSign[2]!=null? mainSign[2].toString(): null,
+        'guard_by': mainSign[3],
       };
 
-      if(!flagUpdateForm) {
-        uploadStatus = await employeeModel.uploadPassRequest(data); //<-------------------------- upload Request Form
-        if (uploadStatus) {
-        await employeeModel.updateSequeceRunning(typeForm, sequenceRunning); //<-------------------------- update Sequece Running
-      }
-      } else {
-        uploadStatus = await employeeModel.updatePassRequest(data); //<-------------------------- update Request Form
-      }
+      // ------------------------------ Form ------------------------------------- //
 
-    } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
-    }
-    return uploadStatus;
-  }
-
-
-  // Upload to PASS_FORM table 2nd
-  Future<bool> uploadToPassForm(
-      String tno_pass, Map<String, dynamic>? filenamesData) async {
-    bool uploadStatus = false;
-    try {
       //initial
       List<Map<String, dynamic>> peopleList = [];
 
@@ -696,33 +645,37 @@ class EmployeeController {
       personList.asMap().forEach((index, person) {
         peopleList.add({
           "ID": person["ID"],
+          "Department": person["Department"],
           "FullName": person["FullName"],
           "TitleName": person["TitleName"],
-          "Card_Id": person["Card_Id"],
-          "Signature": visitorFilenames![index],
+          "EmployeeId": person["EmployeeId"],
+          "Signature": (visitorFilenames != null && index < visitorFilenames.length)? visitorFilenames[index] : null,
           "DateTime": person["DateTime"].toString()
         });
       });
 
-      // Prepare all data
-      Map<String, dynamic> data = {
+      Map<String, dynamic> dataForm = {
         'tno_pass': tno_pass,
-        'visitorType': 1,
+        'visitorType': 'E',
         'people': peopleList,
         'item_in': itemInFilenames,
         'item_out': itemOutFilenames,
       };
-      // call api
-      if(!flagUpdateForm) {
-        uploadStatus = await employeeModel.uploadPassForm(data); //<------------- Upload Pass Form
-      }else{
-        uploadStatus = await employeeModel.updatePassForm(data); //<------------- Update Pass Form
-      }
+      
+      // ------------------------------------------------------------------- //
 
-    } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      if(!flagUpdateForm) {
+        status = await employeeModel.insertRequestFormE( dataRequest, dataForm); // Insert
+        await _centerController.insertActvityLog('Insert EMPLOYEE FORM [ ${tno_pass} ]');
+      } else {
+        status = await employeeModel.updateRequestFormE(tno_pass ,dataRequest, dataForm); // Update
+        await _centerController.insertActvityLog('Update EMPLOYEE FORM [ ${tno_pass} ]');
+      }
+    }catch (err, stackTrace){
+      print('Error: $err');
+      await _centerController.logError(err.toString(), stackTrace.toString());
     }
-    return uploadStatus;
+    return status;
   }
 
 
@@ -747,15 +700,14 @@ class EmployeeController {
         ];
       }
     } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _centerController.logError(err.toString(), stackTrace.toString());
     }
     return data;
   }
 
 
   // Upload Image to Server
-  Future<Map<String, dynamic>?> uploadImageToServer(
-      String tno_pass, String folderName, String date) async {
+  Future<Map<String, dynamic>?> uploadImageToServer(String tno_pass, String folderName, String date) async {
     Map<String, dynamic> data = {};
     try {
       List<File?> visitorSignatureFiles = [];
@@ -837,8 +789,7 @@ class EmployeeController {
       };
 
       // Upload image to server
-      await employeeModel.uploadImageFiles(tno_pass, folderName,
-          dataFileImage, date); //<---------------------------- upload image to server
+      await employeeModel.uploadImageFiles(tno_pass, folderName, dataFileImage, date); //<---------------------------- upload image to server
 
       // Prepare only filename
       List<String?> visitorFilenames = visitorSignatureFiles
@@ -883,7 +834,8 @@ class EmployeeController {
         'approver[]': [approverMap],
       };
     } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _centerController.logError(err.toString(), stackTrace.toString());
+      throw err;
     }
     return data;
   }

@@ -9,18 +9,19 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_signaturepad/signaturepad.dart';
 import 'package:toppan_app/clear_temporary.dart';
+import 'package:toppan_app/component/AppDateTime.dart';
 import 'package:toppan_app/loading_dialog.dart';
 import 'package:toppan_app/userEntity.dart';
 import 'package:toppan_app/visitorService/visitor/visitor_model.dart';
-import 'package:toppan_app/visitorService/visitorServiceCenter_controller.dart';
+import 'package:toppan_app/visitorService/center_controller.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:image/image.dart' as img;
 
 class VisitorFormController {
-  VisitorformModule visitorformModule = VisitorformModule();
+  VisitorModule _module = VisitorModule();
 
-  VisitorServiceCenterController _controllerServiceCenter = VisitorServiceCenterController();
+  CenterController _centerController = CenterController();
 
   UserEntity userEntity = UserEntity();
   Cleartemporary cleartemporary = Cleartemporary();
@@ -34,8 +35,7 @@ class VisitorFormController {
   String agreementEng = '';
   String agreementThai = '';
 
-  int sequenceRunning = 0;
-  String formatSequenceRunning = '';
+  String? formatSequenceRunning = null;
 
   TextEditingController companyController = TextEditingController();
   TextEditingController vehicleLicenseController = TextEditingController();
@@ -81,6 +81,10 @@ class VisitorFormController {
   TextEditingController fullNameController = TextEditingController();
   TextEditingController cardIdController = TextEditingController();
 
+  List<Map<String, dynamic>> cardList = [];
+  List<Map<String, dynamic>> cardListFromDoc = [];
+  List<Map<String, dynamic>> cardListFilter = [];
+
   // Controller Input Item Information
   TextEditingController itemNameController = TextEditingController();
 
@@ -118,21 +122,19 @@ class VisitorFormController {
   List<String> deptList = [];
 
   // Contacts
-   TextEditingController contactControl = TextEditingController();
-   List<String> contactList = [];
-
+  TextEditingController contactControl = TextEditingController();
+  List<String> contactList = [];
 
   final LoadingDialog _loadingDialog = LoadingDialog();
 
   Future<String> validateUpload() async {
     final fields = {
-      "กรุณาใส่ชื่อบริษัท": companyController.text,
-      "กรุณาเลือกวันที่เข้า": dateInController.text,
-      "กรุณาเลือกวันที่ออก": dateOutController.text,
-      "กรุณาเพิ่มเวลาเข้า": timeInController.text,
-      "กรุณาเพิ่มเวลาออก": timeOutController.text,
-      "กรุณาใส่ข้อมูลผู้ติดต่อ": contactControl.text,
-      "กรุณาระบุวัตถุประสงค์ในการเยี่ยมชม": objectiveController.text,
+      "กรุณาเลือกวันเวลาเข้า": dateInController.text,
+      "กรุณาเลือกวันเวลาออก": dateOutController.text,
+      "กรุณาเลือกเวลาเข้า": timeInController.text,
+      "กรุณาเลือกเวลาออก": timeOutController.text,
+      "กรุณาใส่ข้อมูลประสานงาน": contactControl.text,
+      "กรุณาระบุวัตถุประสงค์": objectiveController.text,
     };
     for (var entry in fields.entries) {
       if (entry.value.trim().isEmpty) {
@@ -141,7 +143,7 @@ class VisitorFormController {
       }
     }
     if (!contactList.contains(contactControl.text)) {
-      return 'รายชื่อผู้ติดต่อไม่ตรงกับระบบ';
+      return 'รายชื่อผู้ประสานงานไม่ตรงกับระบบ';
     }
     if (personList.isEmpty) {
       scrollToSection(visitorSectionKey);
@@ -163,37 +165,34 @@ class VisitorFormController {
       flagUpdateForm = false;
 
       // Agreement Warning
-      Map<String, dynamic> aggrementText = await visitorformModule.getAgreementText();
-
+      Map<String, dynamic> aggrementText = await _module.getAgreementText();
       agreementEng = aggrementText['content_eng'] != null? aggrementText['content_eng'] : '';
       agreementThai = aggrementText['content_thai'] != null? aggrementText['content_thai'] : '';
 
+      // List Pass Card
+      cardList = await _module.getActiveCardByType(['visitor']);
+      cardListFilter = [...cardList];
+
       //tno
-      DateTime now = DateTime.now();
+      DateTime now = AppDateTime.now();
       tno_pass =
           "${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}"
           "${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}"
           "${now.second.toString().padLeft(2, '0')}${(now.millisecondsSinceEpoch % 1000).toString().padLeft(3, '0')}";
 
-      // Sequence Number
-      Map<String, dynamic> sequenceData = await visitorformModule.getSequeceRunning('VISITOR');
-      sequenceRunning = sequenceData['sequence'];
-      sequenceRunning += 1;
-      formatSequenceRunning = sequenceRunning.toString().padLeft(6, '0');
-
       // Departments
-      deptList = await visitorformModule.getDepartments();
+      deptList = await _module.getDepartments();
       selectDept = deptList[0];
 
       // Contact
-      contactList = await visitorformModule.getContactByDept(selectDept);
+      contactList = await _module.getContactByDept(selectDept);
 
       // Building
-      buildingList = await visitorformModule.getBuilding();
+      buildingList = await _module.getBuilding();
       this.selectedBuilding = this.buildingList[0]['id'];
 
       // Date In
-      flagDateIn = DateTime.now();    //new form set only date_in
+      flagDateIn = AppDateTime.now();    //new form set only date_in
       dateInController.text = DateFormat('yyyy-MM-dd').format(flagDateIn!);
 
       // Time
@@ -207,7 +206,7 @@ class VisitorFormController {
       timeInController.text = formatTime(flagTimeIn!);
 
     } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _centerController.logError(err.toString(), stackTrace.toString());
     } finally {
       await Future.delayed(Duration(seconds: 1));
       _loadingDialog.hide();
@@ -227,12 +226,20 @@ class VisitorFormController {
       logBook = data['logBook'] == true;
 
       // Agreement Warning
-      Map<String, dynamic> aggrementText = await visitorformModule.getAgreementText();
+      Map<String, dynamic> aggrementText = await _module.getAgreementText();
       agreementEng = aggrementText['content_eng'] != null? aggrementText['content_eng'] : '';
       agreementThai = aggrementText['content_thai'] != null? aggrementText['content_thai'] : '';
 
+      // List Pass Card
+      cardList = await _module.getActiveCardByType(['visitor']);
+      List<String> cardIdsInDoc = (data['people'] as List)
+        .map((person) => person['Card_Id'].toString())
+        .toList();
+      cardListFromDoc = await _module.getInfoCardFromDoc(cardIdsInDoc);
+
+
       String generateTnoPass() {
-        DateTime now = DateTime.now();
+        DateTime now = AppDateTime.now();
         return "${now.year}"
               "${now.month.toString().padLeft(2, '0')}"
               "${now.day.toString().padLeft(2, '0')}"
@@ -249,17 +256,10 @@ class VisitorFormController {
       tno_ref = data['tno_ref'] ?? null;
 
       // Sequence Running Number
-      if (data['sequence_no'] != null && data['sequence_no'].toString().isNotEmpty) {
-        formatSequenceRunning = data['sequence_no'];
-        sequenceRunning = int.tryParse(formatSequenceRunning) ?? 0;
-      } else {
-        Map<String, dynamic> sequenceData = await visitorformModule.getSequeceRunning('VISITOR');
-        sequenceRunning = (sequenceData['sequence'] ?? 0) + 1;
-        formatSequenceRunning = sequenceRunning.toString().padLeft(6, '0');
-      }
+      formatSequenceRunning = data['sequence_no'] ?? null;
 
       // Building
-      buildingList = await visitorformModule.getBuilding();
+      buildingList = await _module.getBuilding();
       var area = data['area'];
       var card = data['building_card'];
       if (area != null) {
@@ -276,8 +276,7 @@ class VisitorFormController {
 
       //Map Data
       companyController.text = data['company'] != null ? data['company'] : '';
-      vehicleLicenseController.text =
-          data['vehicle_no'] != null ? data['vehicle_no'] : '';
+      vehicleLicenseController.text = data['vehicle_no'] != null ? data['vehicle_no'] : '';
 
       // Date
       if (data['date_in'] != null) {
@@ -312,11 +311,11 @@ class VisitorFormController {
       }
 
       // Departments
-      deptList = await visitorformModule.getDepartments();
-      selectDept = data['dept'] != null ? data['dept'] : deptList[0];
+      deptList = await _module.getDepartments();
+      selectDept = data['contact_dept'] != null ? data['contact_dept'] : deptList[0];
 
       // Contact
-      contactList = await visitorformModule.getContactByDept(selectDept);
+      contactList = await _module.getContactByDept(selectDept);
       contactControl.text = data['contact'] != null ? data['contact'] : '';
 
       // Objective
@@ -331,11 +330,11 @@ class VisitorFormController {
       for (var person in copiedPeople) {
         person.putIfAbsent('ID', () =>  uuid.v4() );
         person.putIfAbsent('Card_Id', () => null);
-        person.putIfAbsent('DateTime', () => DateTime.now().toString());
+        person.putIfAbsent('DateTime', () => AppDateTime.now().toString());
 
         // Signature
         if (person['Signature'] != null && person['Signature'] is String) {
-          Uint8List? signatureBytes = await visitorformModule.loadImageAsBytes(person['Signature']);
+          Uint8List? signatureBytes = await _module.loadImageAsBytes(person['Signature']);
           person['Signature'] = signatureBytes;
         }else{
           person['Signature'] = null;
@@ -347,7 +346,7 @@ class VisitorFormController {
       if(data['item_in'] != null) {
         if (data['item_in']['images'] != null && data['item_in']['images'] is List) {
           for (String imageUrl in List<String>.from(data['item_in']['images'])) {
-            File? file = await visitorformModule.loadImageToFile(imageUrl);
+            File? file = await _module.loadImageToFile(imageUrl);
             if (file != null) {
               imageList_In.add(file);
             }
@@ -365,7 +364,7 @@ class VisitorFormController {
       if(data['item_out'] != null) {
         if (data['item_out']['images'] != null && data['item_out']['images'] is List) {
           for (String imageUrl in List<String>.from(data['item_out']['images'])) {
-            File? file = await visitorformModule.loadImageToFile(imageUrl);
+            File? file = await _module.loadImageToFile(imageUrl);
             if (file != null) {
               imageList_Out.add(file);
             }
@@ -380,16 +379,15 @@ class VisitorFormController {
 
       // Signature
       final Map<String, List<String>> fieldMappings = {
-        'Approved': ['approved_sign', 'approved_datetime', 'approved_by'],
-        'Media': ['media_sign', 'media_datetime', 'media_by'],
-        'Security': ['mainEn_sign', 'mainEn_datetime', 'mainEn_by'],
-        'Production': ['proArea_sign', 'proArea_datetime', 'proArea_by'],
+        'Approved': ['appr_sign', 'appr_at', 'appr_by'],
+        'Media': ['media_sign', 'media_at', 'media_by'],
+        'Security': ['guard_sign', 'guard_at', 'guard_by'],
+        'Production': ['prod_sign', 'prod_at', 'prod_by'],
       };
       for (var key in fieldMappings.keys) {
         if (data[fieldMappings[key]![0]] != null &&
             data[fieldMappings[key]![0]] is String) {
-          Uint8List? signatureBytes = await visitorformModule
-              .loadImageAsBytes(data[fieldMappings[key]![0]]);
+          Uint8List? signatureBytes = await _module.loadImageAsBytes(data[fieldMappings[key]![0]]);
           signatureSectionMap[key]![0] = signatureBytes; // Signature Uint8ListR
         } else {
           signatureSectionMap[key]![0] = data[fieldMappings[key]![0]]; //null
@@ -402,34 +400,56 @@ class VisitorFormController {
       }
 
     } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _centerController.logError(err.toString(), stackTrace.toString());
     } finally {
       await Future.delayed(Duration(seconds: 1));
       _loadingDialog.hide();
     }
   }
 
+  List<Map<String, dynamic>> getFilterCardList() {
+    final selectedCardIds = personList
+        .map((p) => p['Card_Id'])
+        .where((id) => id != null)
+        .cast<String>()
+        .toList();
+
+    return cardList
+        .where((card) => !selectedCardIds.contains(card['card_id']))
+        .toList();
+  }
+
   Future<void> addPersonInList() async {
-    var uuid = Uuid();
-    final signatureImage = await signatureGlobalKey.currentState!.toImage();
-    final byteData =
-        await signatureImage.toByteData(format: ImageByteFormat.png);
-    final signatureData = byteData!.buffer.asUint8List();
-    personList.add({
-      'ID': uuid.v4(), //generate id
-      'TitleName': titleNameController.text,
-      'FullName': fullNameController.text,
-      'Card_Id': cardIdController.text,
-      'Signature': signatureData,
-      'DateTime': DateTime.now().toString(),
-    });
-    await expandedPerson();
-    await clearPersonController();
+    try{
+      var uuid = Uuid();
+      final signatureImage = await signatureGlobalKey.currentState!.toImage();
+      final byteData =
+          await signatureImage.toByteData(format: ImageByteFormat.png);
+      final signatureData = byteData!.buffer.asUint8List();
+      personList.add({
+        'ID': uuid.v4(), //generate id
+        'TitleName': titleNameController.text,
+        'FullName': fullNameController.text,
+        'Card_Id': cardIdController.text,
+        'Signature': signatureData,
+        'DateTime': AppDateTime.now().toString(),
+      });
+
+      bool exists = cardListFilter.any( (item) => item['card_id'] == cardIdController.text);
+      if (exists) {
+        cardListFilter.removeWhere( (item) => item['card_id'] == cardIdController.text);
+      }
+      
+      await expandedPerson();
+      await clearPersonController();
+    } catch (err, stackTrace) {
+      await _centerController.logError(err.toString(), stackTrace.toString());
+    }
+    
   }
 
   Future<void> expandedPerson() async {
-    isExpanded_listPerson =
-        !isExpanded_listPerson ? true : isExpanded_listPerson;
+    isExpanded_listPerson = !isExpanded_listPerson ? true : isExpanded_listPerson;
   }
 
   Future<void> clearPersonController() async {
@@ -444,34 +464,50 @@ class VisitorFormController {
       var signatureData;
       if (signatureGlobalKey.currentState!.toPathList().isNotEmpty) {
         final signatureImage = await signatureGlobalKey.currentState!.toImage();
-        final byteData =
-            await signatureImage.toByteData(format: ImageByteFormat.png);
+        final byteData = await signatureImage.toByteData(format: ImageByteFormat.png);
         signatureData = byteData!.buffer.asUint8List();
       }
       entry['TitleName'] = titleNameController.text;
       entry['FullName'] = fullNameController.text;
+      // card 
+      if (cardIdController.text != entry['Card_Id']) {
+        bool isAlreadyInList = cardList.any((item) => item['card_id'] == entry['Card_Id']);
+        if(!isAlreadyInList) {
+          var oldCardData = cardListFromDoc.firstWhere(
+            (item) => item['card_id'] == entry['Card_Id'],
+            orElse: () => {},
+          );
+          if (oldCardData.isNotEmpty) {
+            cardList.add(oldCardData);
+            cardList.sort((a, b) => a['card_id'].compareTo(b['card_id']));
+          }
+        }
+      }
       entry['Card_Id'] = cardIdController.text;
-
       if (signatureGlobalKey.currentState!.toPathList().isNotEmpty) {
         entry['Signature'] = signatureData;
       }
     } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _centerController.logError(err.toString(), stackTrace.toString());
     }
   }
 
   Future<void> addItemTypeList(String type) async {
-    if (itemNameController.text.isNotEmpty) {
-      Map<String, String> item = {
-        'item': itemNameController.text,
-      };
-      if (type == 'in') {
-        listItem_In.add(item); //add item in
-      } else {
-        listItem_Out.add(item); //add item out
+    try{
+      if (itemNameController.text.isNotEmpty) {
+        Map<String, String> item = {
+          'item': itemNameController.text,
+        };
+        if (type == 'in') {
+          listItem_In.add(item); //add item in
+        } else {
+          listItem_Out.add(item); //add item out
+        }
+        itemNameController.clear();
+        await expandedItemList();
       }
-      itemNameController.clear();
-      await expandedItemList();
+    } catch (err, stackTrace) {
+      await _centerController.logError(err.toString(), stackTrace.toString());
     }
   }
 
@@ -486,7 +522,6 @@ class VisitorFormController {
   }
 
   Future<void> itemListClear() async {
-    // Clear the lists
     listItem_In.clear();
     listItem_Out.clear();
     imageList_In.clear();
@@ -509,7 +544,7 @@ class VisitorFormController {
       final inDate = DateTime(flagDateIn!.year, flagDateIn!.month, flagDateIn!.day);
       return inDate.isBefore(outDate);
     } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _centerController.logError(err.toString(), stackTrace.toString());
       return false;
     }
   }
@@ -527,7 +562,7 @@ class VisitorFormController {
         }
     return false;
     } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _centerController.logError(err.toString(), stackTrace.toString());
       return false;
     }
   }
@@ -543,100 +578,23 @@ class VisitorFormController {
       }
       return true;
     } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _centerController.logError(err.toString(), stackTrace.toString());
       return false;
     }
   }
 
-  //------------------------------ Upload Form --------------------------------------------//
-
-  Future<bool> uploadVisitorForm() async {
+  // -------------------------------------------------------------- Insert  -------------------------------------------------------------- //
+  Future<bool> insertRequestForm() async
+  {
     bool status = false;
-    try {
-      // Upload image client(mobile) to server
-      Map<String, dynamic>? filenamesData = await uploadImageToServer(tno_pass,'VISITOR', dateInController.text); //1st
-        // Upload to Request_FORM table
-      bool uploadRequest = await uploadToPassRequest(tno_pass, filenamesData); //2nd
-      // if (!uploadRequest) {
-      //   throw Exception('Error uploading to PASS_REQUEST');
-      // }
-
-       //Upload in PASS_Form table
-      bool uploadForm = await uploadToPassForm(tno_pass, filenamesData); //3rd
-      // if (!uploadForm) {
-      //   throw Exception('Error uploading to PASS_FORM');
-      // }
-
-      
-      if(uploadForm && uploadRequest && !flagUpdateForm) {
-        await _controllerServiceCenter.insertActvityLog('Insert VISITOR FORM [ ${tno_pass} ] into PASS_FORM and PASS_REQUEST table');
-        status = true;
-      }else if (uploadForm && uploadRequest && flagUpdateForm) {
-        await _controllerServiceCenter.insertActvityLog('Update VISITOR FORM [ ${tno_pass} ] into PASS_FORM and PASS_REQUEST table');
-        status = true;
-      } else {
-
-      }
-    } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
-    }
-    return status;
-  }
-
-  // -------------------------------------------------------------- Upload  -------------------------------------------------------------- //
-
-  // Upload to PASS_FORM table
-  Future<bool> uploadToPassForm(String tno_pass, Map<String, dynamic>? filenamesData) async {
-    bool uploadStatus = false;
-    try {
-      //initial
-      List<Map<String, dynamic>> peopleList = [];
-
-      // Get List name
-      var visitorFilenames = filenamesData?['visitor'];
-      var itemInFilenames = filenamesData?['item_in'];
-      var itemOutFilenames = filenamesData?['item_out'];
-      personList.asMap().forEach((index, person) {
-        peopleList.add({
-          "ID": person["ID"],
-          "FullName": person["FullName"],
-          "TitleName": person["TitleName"],
-          "Card_Id": person["Card_Id"],
-          "Signature": visitorFilenames![index],
-          "DateTime": person["DateTime"].toString()
-        });
-      });
-
-      // Prepare all data
-      Map<String, dynamic> data = {
-        'tno_pass': tno_pass,
-        'visitorType': 0,
-        'people': peopleList,
-        'item_in': itemInFilenames,
-        'item_out': itemOutFilenames,
-      };
-
-      // call api
-      if(!flagUpdateForm) {
-        uploadStatus = await visitorformModule.uploadPassForm(data); //<------------- Upload Pass Form
-      }else{
-        uploadStatus = await visitorformModule.updatePassForm(data); //<------------- Update Pass Form
-      }
-
-    } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
-    }
-    return uploadStatus;
-  }
-
-  // Upload to PASS_REQUEST table
-  Future<bool> uploadToPassRequest(
-    String tno_pass, Map<String, dynamic>? filenamesData) async {
-    bool uploadStatus = false;
-    try {
+    try{
       //typForm
       String typeForm = 'VISITOR';
 
+      // ------------------------------ upload Image to server ------------------------------------- //
+      Map<String, dynamic>? filenamesData = await uploadImageToServer(tno_pass,'VISITOR', dateInController.text);
+
+      // ------------------------------ Request ------------------------------------- //
       // Date
       String formattedDateIn = DateFormat('yyyy-MM-dd').format(flagDateIn!);
       String formattedDateOut = DateFormat('yyyy-MM-dd').format(flagDateOut!);
@@ -675,7 +633,7 @@ class VisitorFormController {
       List<dynamic> prodSign = getDataSignatureMapping(
           signatureSectionMap, 'Production', approverFilenames_Signature);
 
-      Map<String, dynamic> data = {
+      Map<String, dynamic> dataRequest = {
         'tno_pass': tno_pass,
         'request_type': typeForm,
         'sequence_no': formatSequenceRunning,
@@ -686,48 +644,72 @@ class VisitorFormController {
         'date_out': formattedDateOut,
         'time_out': formattedTimeOut,
         'contact': contactControl.text,
-        'dept': selectDept,
-        'objective_type': 0, //visitor type = 0
+        'contact_dept': selectDept,
         'objective': objectiveController.text,
         'building_card': buildingData['building_card'],
         'area': area,
-        'empSign_status': 0, // because this is visitor form
-        'empSign_sign': null,
-        'empSign_datetime': null,
-        'empSign_by': null,
-        'approved_status': apprSign[0],
-        'approved_sign': apprSign[1],
-        'approved_datetime': apprSign[2] != null ? apprSign[2].toString() : null,
-        'approved_by': apprSign[3],
+        'appr_status': apprSign[0],
+        'appr_sign': apprSign[1],
+        'appr_at': apprSign[2] != null ? apprSign[2].toString() : null,
+        'appr_by': apprSign[3],
         'media_status': mediaSign[0],
         'media_sign': mediaSign[1],
-        'media_datetime': mediaSign[2] != null ? mediaSign[2].toString() : null,
+        'media_at': mediaSign[2] != null ? mediaSign[2].toString() : null,
         'media_by': mediaSign[3],
-        'mainEn_status': mainSign[0],
-        'mainEn_sign': mainSign[1],
-        'mainEn_datetime': mainSign[2] != null ? mainSign[2].toString() : null,
-        'mainEn_by': mainSign[3],
-        'proArea_status': prodSign[0],
-        'proArea_sign': prodSign[1],
-        'proArea_datetime': prodSign[2] != null ? prodSign[2].toString() : null,
-        'proArea_by': prodSign[3],
+        'guard_status': mainSign[0],
+        'guard_sign': mainSign[1],
+        'guard_at': mainSign[2] != null ? mainSign[2].toString() : null,
+        'guard_by': mainSign[3],
+        'prod_status': prodSign[0],
+        'prod_sign': prodSign[1],
+        'prod_at': prodSign[2] != null ? prodSign[2].toString() : null,
+        'prod_by': prodSign[3],
         'tno_ref': tno_ref,
       };
+ 
+      // ------------------------------ Form ------------------------------------- //
+      //initial
+      List<Map<String, dynamic>> peopleList = [];
 
-      if (!flagUpdateForm || (await visitorformModule.passRequestDoesNotExist(tno_pass))!) {
-          uploadStatus = await visitorformModule.uploadPassRequest(data); // Upload Pass Request
-          if (uploadStatus) {
-              await visitorformModule.updateSequeceRunning('VISITOR', sequenceRunning); // Update Sequence Running
-          }
+      // Get List name
+      var visitorFilenames = filenamesData?['visitor'];
+      var itemInFilenames = filenamesData?['item_in'];
+      var itemOutFilenames = filenamesData?['item_out'];
+      personList.asMap().forEach((index, person) {
+        peopleList.add({
+          "ID": person["ID"],
+          "FullName": person["FullName"],
+          "TitleName": person["TitleName"],
+          "Card_Id": person["Card_Id"],
+          "Signature": (visitorFilenames != null && index < visitorFilenames.length)? visitorFilenames[index] : null,
+          "DateTime": person["DateTime"].toString()
+        });
+      });
+
+      // Prepare all data
+      Map<String, dynamic> dataForm = {
+        'tno_pass': tno_pass,
+        'visitorType': 'V',
+        'people': peopleList,
+        'item_in': itemInFilenames,
+        'item_out': itemOutFilenames,
+      };
+      
+      // ------------------------------------------------------------------- //
+
+      if(!flagUpdateForm) {
+        status = await _module.insertRequestFormV( dataRequest, dataForm); // Insert
+        await _centerController.insertActvityLog('Insert VISITOR FORM [ ${tno_pass} ]');
       } else {
-          uploadStatus = await visitorformModule.updatePassRequest(data); // Update Pass Request
+        status = await _module.updateRequestFormV(tno_pass ,dataRequest, dataForm); // Update
+        await _centerController.insertActvityLog('Update VISITOR FORM [ ${tno_pass} ]');
       }
 
-
-    } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+    }catch (err, stackTrace){
+      print('Error: $err');
+      await _centerController.logError(err.toString(), stackTrace.toString());
     }
-    return uploadStatus;
+    return status;
   }
 
   List<dynamic> getDataSignatureMapping(Map<String, List<dynamic>> signatureMap,
@@ -836,7 +818,7 @@ class VisitorFormController {
       };
 
       // Upload image to server
-      await visitorformModule.uploadImageFiles(tno_pass, folderName, dataFileImage, date); //<---------------------------- upload image to server
+      await _module.uploadImageFiles(tno_pass, folderName, dataFileImage, date); //<---------------------------- upload image to server
 
       // Prepare only filename
       List<String?> visitorFilenames = visitorSignatureFiles.map((file) => file != null ? basename(file.path) : null).toList();
@@ -879,13 +861,13 @@ class VisitorFormController {
         'approver[]': [approverMap],
       };
     } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _centerController.logError(err.toString(), stackTrace.toString());
     }
     return data;
   }
 
   Future<void> loadContactByDepartment(String dept) async{
-    contactList = await visitorformModule.getContactByDept(dept);
+    contactList = await _module.getContactByDept(dept);
     contactControl.clear();
   }
 

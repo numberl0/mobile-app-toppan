@@ -1,42 +1,37 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
-
-import 'package:toppan_app/config/api_config.dart';
-import 'package:toppan_app/userEntity.dart';
-
-import 'package:http/http.dart' as http;
+import 'dart:typed_data';
+import 'package:dio/dio.dart';
+import 'package:toppan_app/api/api_client.dart';
 
 class LogBookModel {
   
-  UserEntity userEntity = UserEntity();
-
-  Future<List<dynamic>> getLogBook(String startDate, String endDate) async {
-    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/getLogBook' + '?start_date=${Uri.encodeComponent(startDate)}&end_date=${Uri.encodeComponent(endDate)}');
-    String token = await userEntity.getUserPerfer(userEntity.token);
-    List<dynamic> data = [];
+  Future<Uint8List?> getLogBook(
+    String type,
+    String startDate,
+    String endDate,
+  ) async {
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${token}'
+      final res = await ApiClient.dio.get(
+        '/pdf/preview',
+        queryParameters: {
+          'docType': type,
+          'sDate': startDate,
+          'eDate': endDate,
         },
-      ).timeout(
-        Duration(seconds: 10),
-        onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
+        options: Options(
+          responseType: ResponseType.json,
+        ),
       );
-      if(response.statusCode >= 200 && response.statusCode <= 299) {
-        var responseDecode = jsonDecode(response.body);
-        if(responseDecode['data'] != null){
-          data = responseDecode['data'];
-        }
-      }else{
-        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
-      }
-    } catch (err) {
-      throw err;
+
+      final String base64pdf = res.data['pdfBase64'];
+      return base64Decode(base64pdf);
+
+    } on DioException catch (e) {
+      print('[getLogBook] ${e.message}');
+      rethrow;
+    } catch (e) {
+      rethrow;
     }
-    return data;
   }
 }

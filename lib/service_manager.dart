@@ -1,134 +1,83 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:toppan_app/visitorService/visitorServiceCenter_controller.dart';
+import 'package:toppan_app/home/home_model.dart';
+import 'package:toppan_app/visitorService/center_controller.dart';
 
 import 'userEntity.dart';
 
-class ServiceEntity {
-  String title;
-  bool enable;
-  String iconPath;
-  double iconWidth;
-  double iconHeight;
-  List<Color> backGroundColor;
-  Function(BuildContext)? onTap;
-  bool userIn;
-
-  ServiceEntity({
-    required this.title,
-    required this.enable,
-    required this.iconPath,
-    required this.iconWidth,
-    required this.iconHeight, 
-    required this.backGroundColor,
-    required this.onTap,
-    required this.userIn
-  });
-}
 
 class ServiceManager {
 
-  UserEntity userEntity = UserEntity();
-  VisitorServiceCenterController _controllerVisistorServiceCenter = VisitorServiceCenterController();
+  static final ServiceManager _instance = ServiceManager._internal();
+  factory ServiceManager() => _instance;
+  ServiceManager._internal();
 
-  List<ServiceEntity> serviceList = [];
-  Map<String, dynamic> taskServices = {};
+
+
+  UserEntity userEntity = UserEntity();
+  CenterController _controllerVisistorServiceCenter = CenterController();
+
+  List<Map<String, dynamic>> taskServices = [];
   Map<String, dynamic> taskPermissions = {};
 
-  Future<List<ServiceEntity>> getAllService() async {
-    return serviceList;
-  }
 
-  void preparePermissionsServices(Map<String, bool> servicesStatus) {
+
+  Future<void> preparePermissionsServices() async {
+    String username =  await userEntity.getUserPerfer(userEntity.username);
+    List<String> roles =  await userEntity.getUserPerfer(userEntity.roles_visitorService);
+    bool status = await HomeModel().hasNotification(username, roles);
+    List<String> managerRoles = [
+      'Manager',
+      'CardManager',
+      'Administrator',
+      'SecurityManager'
+    ];
+    bool isAdmin = roles.any(managerRoles.contains);
+
     // --------------------------- Task Service --------------------------- //
-    taskServices = {
-      'visitorService': 
-      [
-        {'key': 'visitor', 'label': 'ผู้ติดต่อ', 'icon': Icons.directions_walk_outlined, 'enable': true},
-        {'key': 'employee', 'label': 'พนักงาน', 'icon': Icons.cases_rounded, 'enable': true},
-        {'key': 'search', 'label': 'ค้นหา', 'icon': Icons.content_paste_search, 'enable': true},
-        {'key': 'approve', 'label': 'อนุมัติ', 'icon': Icons.fact_check_outlined, 'enable': true},
-        {'key': 'logBook', 'label': 'ล็อกบุ๊ค', 'icon': Icons.menu_book_rounded, 'enable': true},
-      ],
-      // other service task
-    };
+     taskServices = [
+    {'key': 'visitor', 'label': 'ผู้ติดต่อ', 'description': 'ใบผ่านบุคคลภายนอก', 'icon': Icons.person, 'enable': true, 'notify': false},
+    {'key': 'employee', 'label': 'พนักงาน', 'description': 'ใบผ่านพนักงาน', 'icon': Icons.engineering, 'enable': true, 'notify': false},
+    {'key': 'cardOff', 'label': 'ลืมบัตร', 'description': 'ใบคำร้องกรณีบัตรหาย/ชำรุด', 'icon': Icons.credit_card_off_outlined, 'enable': true, 'notify': false},
+    {'key': 'search', 'label': 'ค้นหา', 'description': 'ค้นหาใบผ่านและใบคำร้อง', 'icon': Icons.content_paste_search, 'enable': true, 'notify': !isAdmin ? status : false},
+    {'key': 'partTime', 'label': 'พาร์ทไทม์', 'description': 'พนักงานชั่วคราวและอื่นๆ', 'icon': Icons.transfer_within_a_station_rounded, 'enable': true, 'notify': false},
+    {'key': 'approve', 'label': 'อนุมัติ', 'description': 'อนุมัติการเข้า/ออก', 'icon': Icons.fact_check_outlined, 'enable': true, 'notify': isAdmin ? status : false},
+    {'key': 'logBook', 'label': 'ล็อกบุ๊ค', 'description': 'ล็อกบุ๊ค', 'icon': Icons.menu_book_rounded, 'enable': true, 'notify': false},
+      // อื่นๆ...
+    ];
 
     // --------------------------- Permission Task Service --------------------------- //
     taskPermissions = {
-      'visitorService': [
-        {'key': 'approve', 'canOpen': ['Manager', 'CardManager', 'Administrator', 'SecurityManager']},
-        {'key': 'logBook', 'canOpen': ['Manager', 'CardManager', 'Administrator', 'SecurityManager']},
-      ],
-      //other service task permission
+      'approve': managerRoles,
+      'logBook': managerRoles,
+      // อื่นๆ...
     };
 
-    filterTaskByPermissions();
-
-    // --------------------------- All Service --------------------------- //
-    serviceList = [
-      // Visitor
-      ServiceEntity(
-        title: "Visitor",
-        enable: servicesStatus['visitor']!,
-        iconPath: 'assets/images/visitorService/icon_visitor.png',
-        iconHeight: 150,
-        iconWidth: 150,
-        backGroundColor: [
-                        Colors.blue.shade100,
-                        Colors.blue.shade200,
-                        Colors.blue.shade300,
-                        Colors.blue.shade400,
-                        Colors.blue.shade500
-                      ],
-        onTap: (context) {
-          dialogServiceTask(context, taskServices['visitorService']);
-        },
-        userIn: false,
-      ),
-      // add other service
-    ];
-
-    filterServiceByRoles();
+    await filterTaskByPermissions();
     
   }
 
-  // check user don't have roles in service can't use service
-  void filterServiceByRoles() async {
-    for (final service in serviceList) {
-      final serviceKey = service.title.toLowerCase() + 'Service';
-      List<String> userRoles = (await userEntity.getUserPerfer('roles_' + serviceKey)) ?? [];
-      service.userIn = userRoles.isNotEmpty;
+  Future<void> filterTaskByPermissions() async {
+    // ดึง roles ของ user จาก storage / entity
+    List<String> userRoles = await userEntity.getUserPerfer(userEntity.roles_visitorService) ?? [];
+
+    for (var task in taskServices) {
+      String taskKey = task['key'];
+      
+      // มีการกำหนด permission สำหรับ task นี้หรือไม่
+      if (taskPermissions.containsKey(taskKey)) {
+        List<String> allowedRoles = taskPermissions[taskKey] ?? [];
+
+        // ถ้า user ไม่มี role ที่ match กับ allowedRoles ให้ปิด task
+        bool hasPermission = userRoles.any((role) => allowedRoles.contains(role));
+        if (!hasPermission) {
+          task['enable'] = false;
+        }
+      }
     }
   }
 
-  void filterTaskByPermissions() {
-    taskServices.forEach((serviceKey, taskList) async {
-      if (taskPermissions.containsKey(serviceKey)) {
-        List<Map<String, dynamic>> permissionList = List<Map<String, dynamic>>.from(taskPermissions[serviceKey]);
-        List<String> userRoles =(await userEntity.getUserPerfer('roles_' + serviceKey)) ?? [];
-        for (var task in taskList) {
-          String taskKey = task['key'];
-
-          var permissions = permissionList.firstWhere(
-            (perm) => perm['key'] == taskKey,
-            orElse: () => {},
-          );
-
-          if (permissions.isNotEmpty) {
-            List<String> allowedRoles = List<String>.from(permissions['canOpen'] ?? []);
-
-            bool hasPermission = userRoles.any((role) => allowedRoles.contains(role));
-            if (!hasPermission) {
-              task['enable'] = false;
-            }
-          }
-        }
-      }
-    });
-  }
-
-
-   // Navigate to page
+  // Navigate to page
   void navigateToPage(BuildContext context, String selectedOption) {
       try {
         String route;
@@ -148,6 +97,12 @@ class ServiceManager {
           case 'logBook':
             route = '/visitor?option=logBook'; 
             break;
+          case 'cardOff':
+            route = '/visitor?option=cardOff'; 
+            break;
+          case 'partTime':
+            route = '/visitor?option=partTime'; 
+            break;
           default:
             return;
         }
@@ -155,143 +110,6 @@ class ServiceManager {
       } catch (err, stackTrace) {
         _controllerVisistorServiceCenter.logError(err.toString(), stackTrace.toString());
       }
-  }
-
-  // Dialog Task Service
-  void dialogServiceTask(BuildContext context, List<Map<String, dynamic>> serviceTask) {
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: "Service Tasks",
-      transitionDuration: Duration(milliseconds: 300),
-      pageBuilder: (context, anim1, anim2) {
-        final screenSize = MediaQuery.of(context).size;
-        double dialogWidth = screenSize.width * 0.8;
-        double dialogHeight = screenSize.height * 0.6;
-
-        bool isTablet = screenSize.width > 799;
-        int crossAxisCount = isTablet ? 3 : 2;
-        double childAspectRatio = 1;
-        
-        double itemSize = isTablet ? 180 : 120;
-        double iconSize = isTablet ? 60 : 40;
-        double fontSize = isTablet ? 24 : 18;
-
-        return FadeTransition(
-          opacity: anim1,
-          child: AlertDialog(
-            backgroundColor:  Colors.white.withOpacity(0.8),
-            contentPadding: EdgeInsets.all(0),
-            content: Container(
-              padding: EdgeInsets.fromLTRB(20.0, 0, 20.0, 0),
-              width: dialogWidth,
-              height: dialogHeight,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: GridView.builder(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        crossAxisSpacing: 20,
-                        mainAxisSpacing: 20,
-                        childAspectRatio: childAspectRatio,
-                      ),
-                      itemCount: serviceTask.where((task) => task['enable'] == true).length,
-                      itemBuilder: (context, index) {
-                        var enabledTasks = serviceTask.where((task) => task['enable'] == true).toList();
-                        var item = enabledTasks[index];
-
-                        return Center(
-                          child: InkWell(
-                            onTap: () {
-                              Navigator.of(context).pop();
-                              navigateToPage(context, item['key']);
-                            },
-                            splashColor: Colors.blueAccent.withOpacity(0.3),
-                            highlightColor: Colors.blueAccent.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(360),
-                            child: Ink(
-                              width: itemSize,
-                              height: itemSize,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: LinearGradient(
-                                  colors: [Color.fromARGB(255, 0, 93, 199), Colors.blue.shade300],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.5),
-                                    blurRadius: 6,
-                                    spreadRadius: 1,
-                                    offset: Offset(2, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    item['icon'],
-                                    size: iconSize + 10,
-                                    color: Colors.white,
-                                    shadows: [
-                                      Shadow(
-                                        offset: Offset(2, 2),
-                                        blurRadius: 6,
-                                        color: Colors.black.withOpacity(0.8),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    item['label'],
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: fontSize + 8,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                      shadows: [
-                                        Shadow(
-                                          offset: Offset(2, 2),
-                                          blurRadius: 6,
-                                          color: Colors.black.withOpacity(0.8),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-      transitionBuilder: (context, anim1, anim2, child) {
-        return FadeTransition(
-          opacity: anim1,
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.95, end: 1.0).animate(
-              CurvedAnimation(
-                parent: anim1,
-                curve: Curves.easeOutQuart,
-              ),
-            ),
-            alignment: Alignment.center,
-            child: child,
-          ),
-        );
-      },
-    );
   }
 
 }

@@ -1,0 +1,21 @@
+
+[2026-02-06 16:35:36] 
+[Error] HttpException: Request failed: 404 
+[Stack Trace]
+#0      LogBookModel.getLogBook (package:toppan_app/visitorService/logBook/logBook_model.dart:46:9)
+<asynchronous suspension>
+#1      LogBookController.searchLogBook (package:toppan_app/visitorService/logBook/logBook_controller.dart:70:18)
+<asynchronous suspension>
+#2      _LogBookPageState.SearchInputBar.<anonymous closure> (package:toppan_app/visitorService/logBook/logBook_view.dart:378:56)
+<asynchronous suspension>
+
+-------------------
+[2026-02-06 16:40:55] 
+[Error] type 'Null' is not a subtype of type 'String' 
+[Stack Trace]
+#0      HomeController.logout (package:toppan_app/home/home_controller.dart:68:14)
+<asynchronous suspension>
+#1      _HomePageState.buildDashboardHeader.<anonymous closure>.<anonymous closure> (package:toppan_app/home/home_view.dart:198:31)
+<asynchronous suspension>
+
+-------------------

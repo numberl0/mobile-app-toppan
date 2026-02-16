@@ -1,134 +1,130 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-import 'package:http/http.dart' as http;
-import 'package:toppan_app/config/api_config.dart';
-import 'package:toppan_app/userEntity.dart';
+import 'package:dio/dio.dart';
+import 'package:toppan_app/api/api_client.dart';
 
 class ApproveModel {
 
-  UserEntity userEntity = UserEntity();
-
-  Future<List<dynamic>> getRequestApproved(List<String> building_card) async {
-    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/getRequestApproved').replace(queryParameters: { 'building_card': building_card });
-    String token = await userEntity.getUserPerfer(userEntity.token);
-    List<dynamic> data = [];
+  Future<String> getFirstnameApprover(String username) async {
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${token}'
+      final res = await ApiClient.dio.get(
+        '/user/get-firstname',
+        queryParameters: {
+          'username': username,
         },
-      ).timeout(
-        Duration(seconds: 10),
-        onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode >= 200 && response.statusCode <= 299) {
-        var responseDecode = jsonDecode(response.body);
-        if(responseDecode['data'] != null){
-          data = responseDecode['data'];
-        }
-      }else{
-        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
+
+      return res.data['first_name'] ?? '';
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return '';
       }
-    }catch (err) {
-      throw err;
+      rethrow;
     }
-    return data;
   }
 
-  Future<String> getSignatureFilenameByUsername(String username) async {
-    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/getSignaturFilenameByUsername' + '?username=${Uri.encodeComponent(username)}');
-    String token = await userEntity.getUserPerfer(userEntity.token);
-    String data = '';
+
+  Future<Map<String, List<dynamic>>> getRequestForApproved(
+    String username,
+    List<String> buildingCard,
+  ) async {
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${token}'
+      final res = await ApiClient.dio.get(
+        '/approval/requests',
+        queryParameters: {
+          'username': username,
+          'building_card': buildingCard,
         },
-      ).timeout(
-        Duration(seconds: 10),
-        onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode >= 200 && response.statusCode <= 299) {
-        var responseDecode = jsonDecode(response.body);
-        if(responseDecode['data'] != null){
-          data = responseDecode['data'][0]['sign_name'] ?? '';
-        }
-      }else{
-        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
+
+      final decoded = res.data;
+
+      List<dynamic> getList(String key) {
+        final value = decoded[key];
+        return value is List ? value : [];
       }
-    }catch (err) {
-      throw err;
+
+      return {
+        'visitor': getList('visitor'),
+        'employee': getList('employee'),
+        'permission': getList('permission'),
+      };
+    } on DioException {
+      rethrow;
     }
-    return data;
   }
 
-  Future<bool> approvedDocument(String tno, String type, String year, String month, Map<String,dynamic> sign_info) async {
-    bool status = false;
-    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/approvedDocument');
-    String token = await userEntity.getUserPerfer(userEntity.token);
+    Future<Map<String, dynamic>> approvedDocument(
+    String tno,
+    String type,
+    String date,
+    Map<String, dynamic> signInfo,
+    String username,
+  ) async {
     try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${token}'
-        },
-        body: jsonEncode({
-          'tno': tno,
+      final res = await ApiClient.dio.patch(
+        '/approval/document/$tno',
+        data: {
           'type': type,
-          'year': year,
-          'month': month,
-          'data': sign_info
-          }),
-      ).timeout(
-        Duration(seconds: 10),
-        onTimeout: () => throw TimeoutException("Timed Out."),
+          'date': date,
+          'sign_info': signInfo,
+          'username': username,
+        },
       );
-      if(response.statusCode >= 200 && response.statusCode <= 299) {
-        status = true;
-        print('Update successful');
-      }else{
-        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
-      }
-    }catch (err) {
-      throw err;
+
+      return _mapApproveResponse(res.data);
+    } on DioException {
+      rethrow;
     }
-    return status;
   }
 
-  Future<bool> approvedAll(List<Map<String, dynamic>> tno_listMap, Map<String,dynamic> sign_info) async {
-    bool status = false;
-    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/approvedAll');
-    String token = await userEntity.getUserPerfer(userEntity.token);
+  Future<Map<String, dynamic>> approvedList(
+    String docType,
+    List<Map<String, dynamic>> tnoListMap,
+    Map<String, dynamic> signInfo,
+    String username,
+  ) async {
     try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${token}'
+      final res = await ApiClient.dio.patch(
+        '/approval/list_document',
+        data: {
+          'docType': docType,
+          'tno_listMap': tnoListMap,
+          'sign_info': signInfo,
+          'username': username,
         },
-        body: jsonEncode({
-          'tno_listMap': tno_listMap,
-          'sign_info': sign_info
-          }),
-      ).timeout(
-        Duration(seconds: 10),
-        onTimeout: () => throw TimeoutException("Timed Out."),
       );
-      if(response.statusCode >= 200 && response.statusCode <= 299) {
-        status = true;
-        print('Update successful');
-      }else{
-        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
-      }
-    }catch (err) {
-      throw err;
+
+      return _mapApproveResponse(res.data);
+    } on DioException {
+      rethrow;
     }
-    return status;
+  }
+
+  /// -----------------------------
+  /// Helper: map approve response
+  /// -----------------------------
+  Map<String, dynamic> _mapApproveResponse(Map<String, dynamic> json) {
+    final String flag = json['flag'] ?? 'unknown';
+    String message;
+
+    switch (flag) {
+      case 'approved':
+        message = 'อนุมัติสำเร็จ';
+        break;
+      case 'no_signature':
+        message = 'บัญชีนี้ยังไม่มีลายเซ็น';
+        break;
+      case 'already_approved':
+        message = 'เอกสารนี้ถูกอนุมัติไปแล้ว';
+        break;
+      default:
+        message = 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ';
+    }
+
+    return {
+      'success': json['success'] ?? false,
+      'flag': flag,
+      'message': message,
+    };
   }
 }

@@ -1,26 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:toppan_app/component/AppDateTime.dart';
 import 'package:toppan_app/loading_dialog.dart';
 import 'package:toppan_app/userEntity.dart';
 import 'package:toppan_app/visitorService/approve/approve_model.dart';
-import 'package:toppan_app/visitorService/visitorServiceCenter_controller.dart';
+import 'package:toppan_app/visitorService/center_controller.dart';
+
+enum RequestType { visitor, employee, permission}
 
 class ApproveController {
   ApproveModel approveModel = ApproveModel();
 
-  VisitorServiceCenterController _controllerServiceCenter = VisitorServiceCenterController();
+  CenterController _centerController = CenterController();
 
   UserEntity userEntity = UserEntity();
 
   // List document
   List<dynamic> list_Request = [];
 
-  List<dynamic> filteredDocument = [];
-  final List<String> typeOptions = ['All', 'Employee', 'Visitor'];
-  String? selectedType;
+  // List document
+  List<dynamic> listV = [];
+  List<dynamic> listE = [];
+  List<dynamic> listLC = [];
 
-  // Controller for search fields
-  TextEditingController companyController = TextEditingController();
-  TextEditingController nameController = TextEditingController();
+  List<dynamic> filteredVisiorList = [];
+  List<dynamic> filteredEmployeeList = [];
+  List<dynamic> filteredPermissionList = [];
+  
+  TextEditingController filterCompanyController = TextEditingController();
+  TextEditingController filterEmployeeIdController = TextEditingController();
+  TextEditingController filterNameController = TextEditingController();
+  ValueNotifier<DateTime?> filteredDate = ValueNotifier(null);
+  TextEditingController filteredCardNo = TextEditingController();
+
+  final List<RequestType> typeOptions = RequestType.values;
+  late RequestType? selectedType = RequestType.values.first;
+
+
 
   bool startAnimation = false;
 
@@ -37,7 +52,7 @@ class ApproveController {
       for (String role in roles) {
         if (role == 'Administrator') {
           building_card = ['O','Y','N'];
-          break; // exit loop
+          break;
         }
         switch (role) {
           case 'Manager':
@@ -50,100 +65,218 @@ class ApproveController {
         }
       }
 
-      
-      list_Request = await approveModel.getRequestApproved(building_card);
+      await clearSearch();
+      String username = await userEntity.getUserPerfer(userEntity.username);
+      var result = await approveModel.getRequestForApproved(username,building_card);
+      listV = result['visitor'] ?? [];
+      listE = result['employee'] ?? [];
+      listLC = result['permission'] ?? [];
+
     } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _centerController.logError(err.toString(), stackTrace.toString());
     } finally {
       await Future.delayed(Duration(seconds: 1));
       _loadingDialog.hide();
     }
   }
+  
 
-  Future<void> filterRequestList() async {
-    try {
-      String searchCompany = companyController.text.toLowerCase();
-      String searchName = nameController.text.toLowerCase();
-
-      filteredDocument = list_Request.where((entry) {
-        final String requestType = entry['request_type']?.toLowerCase() ?? '';
-        final String companyName = entry['company']?.toLowerCase() ?? '';
-        final List<dynamic>? peopleList = entry['people'];
-
-        // Filter by type
-        final matchesType = selectedType == 'All' ||
-            requestType.contains(selectedType!.toLowerCase());
-
-        // Filter by company name
-        final matchesCompany =
-            searchCompany.isEmpty || companyName.contains(searchCompany);
-
-        // Filter by person's name inside "people" list
-        final matchesPerson = searchName.isEmpty ||
-            (peopleList != null &&
-                peopleList.any((person) {
-                  final String fullName =
-                      person['FullName']?.toString().toLowerCase() ?? '';
-                  return fullName.contains(searchName);
-                }));
-
-        return matchesType && matchesCompany && matchesPerson;
-      }).toList();
-    } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+  Future<void> clearSearch() async {
+    try{
+      filterCompanyController.clear();
+      filterEmployeeIdController.clear();
+      filterNameController.clear();
+      filteredCardNo.clear();
+      filteredDate = ValueNotifier(null);
+    }catch (err, stackTrace) {
+      await _centerController.logError(err.toString(), stackTrace.toString());
     }
   }
 
-  Future<bool> approvedDocument(Map<String,dynamic> entry) async {
-    bool status = false;
+  Future<void> filterRequestList() async {
     try {
-      String dateStr;
-      if(entry['request_type'].toLowerCase() == 'visitor'){
-        dateStr = entry['date_in'];
-      }else{
-        dateStr = entry['date_out'];
-      }
-      DateTime parsedDate = DateTime.parse(dateStr);
-      String year = parsedDate.year.toString();
-      String month = parsedDate.month.toString().padLeft(2, '0');
+      final searchName = filterNameController.text.toLowerCase();
+      final searchCompany = filterCompanyController.text.toLowerCase();
+      final searchEmpId = filterEmployeeIdController.text.toLowerCase();
+      final searchCard = filteredCardNo.text.toLowerCase();
+      final searchDate = filteredDate.value;
 
-      String approvedBy = await userEntity.getUserPerfer(userEntity.username);
-      String signaturFilename = await approveModel.getSignatureFilenameByUsername(approvedBy);
-      Map<String,dynamic> data = {
-        'approved_status': 1,
-        'approved_sign': signaturFilename,
-        'approved_datetime': DateTime.now().toString(),
-        'approved_by': approvedBy,
-      };
-      status = await approveModel.approvedDocument(entry['tno_pass'], entry['request_type'], year, month, data);
-      if(status) {
-        await _controllerServiceCenter.insertActvityLog('$approvedBy approved document TNO_PASS : ${entry['tno_pass']}');
-      }
+      switch (selectedType) {
+        case RequestType.visitor:
+          filteredVisiorList = listV.where((entry) {
+            final company = entry['company'].toString().toLowerCase();
+            final List<dynamic>? personList = entry['people'];
+            final matchesCompany = searchCompany.isEmpty || company.contains(searchCompany);
+            final matchesPerson = searchName.isEmpty ||
+                (personList != null &&
+                    personList.any((person) {
+                      final String fullName =
+                          person['FullName']?.toString().toLowerCase() ?? '';
+                      return fullName.contains(searchName);
+                    }));
+            return matchesCompany && matchesPerson;
+          }).toList();
+          break;
+        case RequestType.employee:
+          filteredEmployeeList = listE.where((entry) {
+            final List<dynamic>? personList = entry['people'];
+            // Employee Id
+            final matchesEmployeeId = searchEmpId.isEmpty ||
+                (personList != null &&
+                    personList.any((person) {
+                      final String employeeId =
+                          person['EmployeeId']?.toString().toLowerCase() ?? '';
+                      return employeeId.contains(searchEmpId);
+                    }));
+            // Name
+            final matchesPerson = searchName.isEmpty ||
+                (personList != null &&
+                    personList.any((person) {
+                      final String fullName =
+                          person['FullName']?.toString().toLowerCase() ?? '';
+                      return fullName.contains(searchName);
+                    }));
+            return matchesEmployeeId && matchesPerson;
+          }).toList();
+          break;
+        case RequestType.permission:
+           filteredPermissionList = listLC.where((entry) {
+            final fullName = entry['emp_name'].toString().toLowerCase();
+            final cardNo = entry['brw_card'].toString().toLowerCase();
+            DateTime? entryDate;
+            final dateStr = entry['doc_date']?.toString();
+            if (dateStr != null && dateStr.isNotEmpty) {
+              entryDate = DateTime.tryParse(dateStr)?.toLocal();
+            }
 
-      } catch (err, stackTrace) {
-        await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
-      }
-    return status;
+            final matchesName =
+                searchName.isEmpty || fullName.contains(searchName);
+            final matchesCard =
+                searchCard.isEmpty || cardNo.contains(searchCard);
+            final matchesDate = searchDate == null ||
+                (entryDate != null &&
+                    entryDate.year == filteredDate.value!.year &&
+                    entryDate.month == filteredDate.value!.month &&
+                    entryDate.day == filteredDate.value!.day);
+            return matchesName && matchesCard && matchesDate;
+          }).toList();
+          break;
+        default:
+
+     }
+    } catch (err, stackTrace) {
+      await _centerController.logError(err.toString(), stackTrace.toString());
+    }
   }
 
-  Future<bool> approvedAll() async {
-    bool status = false;
+  Future<Map<String, dynamic>> approvedDocument(Map<String,dynamic> entry) async {
+    Map<String, dynamic> response = {
+    'success': false,
+    'message': 'เกิดข้อผิดพลาดโปรดลองใหม่ภายหลัง',
+    };
     try {
-      String approvedBy = await userEntity.getUserPerfer(userEntity.username);
-      String signaturFilename = await approveModel.getSignatureFilenameByUsername(approvedBy);
-      // List<Map<String, dynamic>> tno_listMap = filteredDocument.map((item) => {
-      //   'tno_pass': item['tno_pass'].toString(),
-      //   'type': item['request_type'].toString(),
-      // }).toList();
-      List<Map<String, dynamic>> tno_listMap = filteredDocument.map((item) {
+      String dateStr;
+      Map<String,dynamic> signInfo = {};
+      String username = await userEntity.getUserPerfer(userEntity.username);
+      String first_name = await approveModel.getFirstnameApprover(username);
+
+      switch (entry['request_type'].toString().toUpperCase()) {
+        case 'VISITOR':
+          dateStr = entry['date_in'];
+          signInfo = {
+            'appr_status': 1,
+            'appr_at': AppDateTime.now().toString(),
+            'appr_by': first_name,
+          };
+          break;
+        case 'EMPLOYEE':
+          dateStr = entry['date_out'];
+          signInfo = {
+            'appr_status': 1,
+            'appr_at': AppDateTime.now().toString(),
+            'appr_by': first_name,
+          };
+          break;
+        case 'PERMISSION':
+          dateStr = entry['doc_date'];
+          signInfo = {
+            'sign_respon_status': 1,
+            'sign_respon_at': AppDateTime.now().toString(),
+            'sign_respon_by': first_name,
+          };
+          break;
+        default:
+          dateStr = "";
+          signInfo = {};
+      }
+      var status = await approveModel.approvedDocument(entry['tno_pass'], entry['request_type'], dateStr, signInfo, username);
+      if(status['success']) {
+        await _centerController.insertActvityLog('$username approved document TNO_PASS : ${entry['tno_pass']}');
+      }
+      return status;
+      } catch (err, stackTrace) {
+        await _centerController.logError(err.toString(), stackTrace.toString());
+        return response;
+      }
+  }
+
+  Future<Map<String, dynamic>> approvedAllDocumentByList() async {
+    Map<String, dynamic> response = {
+    'success': false,
+    'message': 'เกิดข้อผิดพลาดโปรดลองใหม่ภายหลัง',
+    };
+    try {
+      List<dynamic> filteredList = [];
+      String username = await userEntity.getUserPerfer(userEntity.username);
+      String first_name = await approveModel.getFirstnameApprover(username);
+      Map<String,dynamic> sign_info = {};
+      switch (selectedType!) {
+        case RequestType.visitor:
+          filteredList = filteredVisiorList;
+          sign_info = {
+            'appr_status': 1,
+            'appr_at': AppDateTime.now().toString(),
+            'appr_by': first_name,
+          };
+          break;
+        case RequestType.employee:
+          filteredList = filteredEmployeeList;
+          sign_info = {
+            'appr_status': 1,
+            'appr_at': AppDateTime.now().toString(),
+            'appr_by': first_name,
+          };
+          break;
+        case RequestType.permission:
+          filteredList = filteredPermissionList;
+          sign_info = {
+            'sign_respon_status': 1,
+            'sign_respon_at': AppDateTime.now().toString(),
+            'sign_respon_by': first_name,
+          };
+          break;
+        default:
+            sign_info = {};
+      }
+      if (filteredList.length == 0) return {
+        'success': false,
+        'message': 'ไม่พบข้อมูลเอกสารสำหรับการอนุมัติ',
+        };
+      List<Map<String, dynamic>> tno_listMap = filteredList.map((item) {
         String dateStr;
-
-        if (item['request_type'].toString().toLowerCase() == 'visitor') {
-          dateStr = item['date_in'];
-        } else {
-          dateStr = item['date_out'];
+        switch (item['request_type'].toString().toUpperCase()) {
+          case 'VISITOR':
+            dateStr = item['date_in'];
+            break;
+          case 'EMPLOYEE':
+            dateStr = item['date_out'];
+            break;
+          case 'PERMISSION':
+            dateStr = item['doc_date'];
+            break;
+          default:
+            dateStr = "";
         }
-
         DateTime parsedDate = DateTime.parse(dateStr);
         String year = parsedDate.year.toString();
         String month = parsedDate.month.toString().padLeft(2, '0');
@@ -151,25 +284,19 @@ class ApproveController {
         return {
           'tno_pass': item['tno_pass'].toString(),
           'type': item['request_type'].toString(),
-          'year': year,
-          'month': month,
+          'path': '${item['request_type'].toString()}/$year/$month/${item['tno_pass'].toString()}',
         };
       }).toList();
 
-      Map<String,dynamic> data = {
-        'approved_status': 1,
-        'approved_sign': signaturFilename,
-        'approved_datetime': DateTime.now().toString(),
-        'approved_by': approvedBy,
-      };
-      status = await approveModel.approvedAll(tno_listMap, data);
-      if(status) {
-        await _controllerServiceCenter.insertActvityLog('Approved documents : [${tno_listMap.map((e) => e['tno_pass']).join(", ")}]');
+      var status = await approveModel.approvedList(selectedType!.name.toUpperCase(), tno_listMap, sign_info, username);
+      if(status['success']) {
+        await _centerController.insertActvityLog('Approved documents : [${tno_listMap.map((e) => e['tno_pass']).join(", ")}]');
       }
+      return status;
       } catch (err, stackTrace) {
-        await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+        await _centerController.logError(err.toString(), stackTrace.toString());
+        return response;
       }
-    return status;
   }
 
   Future<bool> isAdmin() async {
@@ -177,7 +304,7 @@ class ApproveController {
       List<String> roles = await userEntity.getUserPerfer(userEntity.roles_visitorService);
       return roles.contains('Administrator');
     } catch (err, stackTrace) {
-      await _controllerServiceCenter.logError(err.toString(), stackTrace.toString());
+      await _centerController.logError(err.toString(), stackTrace.toString());
       return false;
     }
   }

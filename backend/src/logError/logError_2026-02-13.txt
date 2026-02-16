@@ -1,0 +1,115 @@
+
+[2026-02-13 10:32:37] 
+[Error] DioException [bad response]: This exception was thrown because the response has a status code of 404 and RequestOptions.validateStatus was configured to throw for this status code.
+The status code of 404 has the following meaning: "Client error - the request contains bad syntax or cannot be fulfilled"
+Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
+ 
+[Stack Trace]
+#0      DioMixin.fetch (package:dio/src/dio_mixin.dart:523:7)
+<asynchronous suspension>
+#1      LogBookModel.getLogBook (package:toppan_app/visitorService/logBook/logBook_model.dart:15:19)
+<asynchronous suspension>
+#2      LogBookController.searchLogBook (package:toppan_app/visitorService/logBook/logBook_controller.dart:70:18)
+<asynchronous suspension>
+#3      _LogBookPageState.SearchInputBar.<anonymous closure> (package:toppan_app/visitorService/logBook/logBook_view.dart:378:56)
+<asynchronous suspension>
+
+-------------------
+[2026-02-13 10:38:58] 
+[Error] DioException [bad response]: This exception was thrown because the response has a status code of 404 and RequestOptions.validateStatus was configured to throw for this status code.
+The status code of 404 has the following meaning: "Client error - the request contains bad syntax or cannot be fulfilled"
+Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
+ 
+[Stack Trace]
+#0      DioMixin.fetch (package:dio/src/dio_mixin.dart:523:7)
+<asynchronous suspension>
+#1      LogBookModel.getLogBook (package:toppan_app/visitorService/logBook/logBook_model.dart:15:19)
+<asynchronous suspension>
+#2      LogBookController.searchLogBook (package:toppan_app/visitorService/logBook/logBook_controller.dart:67:18)
+<asynchronous suspension>
+#3      _LogBookPageState.SearchInputBar.<anonymous closure> (package:toppan_app/visitorService/logBook/logBook_view.dart:378:56)
+<asynchronous suspension>
+
+-------------------
+[2026-02-13 10:39:06] 
+[Error] DioException [bad response]: This exception was thrown because the response has a status code of 404 and RequestOptions.validateStatus was configured to throw for this status code.
+The status code of 404 has the following meaning: "Client error - the request contains bad syntax or cannot be fulfilled"
+Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
+ 
+[Stack Trace]
+#0      DioMixin.fetch (package:dio/src/dio_mixin.dart:523:7)
+<asynchronous suspension>
+#1      LogBookModel.getLogBook (package:toppan_app/visitorService/logBook/logBook_model.dart:15:19)
+<asynchronous suspension>
+#2      LogBookController.searchLogBook (package:toppan_app/visitorService/logBook/logBook_controller.dart:67:18)
+<asynchronous suspension>
+#3      _LogBookPageState.SearchInputBar.<anonymous closure> (package:toppan_app/visitorService/logBook/logBook_view.dart:378:56)
+<asynchronous suspension>
+
+-------------------
+[2026-02-13 14:59:36] 
+[Error] DioException [bad response]: This exception was thrown because the response has a status code of 401 and RequestOptions.validateStatus was configured to throw for this status code.
+The status code of 401 has the following meaning: "Client error - the request contains bad syntax or cannot be fulfilled"
+Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
+ 
+[Stack Trace]
+#0      DioMixin.fetch (package:dio/src/dio_mixin.dart:523:7)
+<asynchronous suspension>
+#1      CenterModel.refreshToken (package:toppan_app/visitorService/center_model.dart:86:19)
+<asynchronous suspension>
+#2      CenterController.refreshSession (package:toppan_app/visitorService/center_controller.dart:79:26)
+<asynchronous suspension>
+#3      CenterController.ensureAuthenticated (package:toppan_app/visitorService/center_controller.dart:104:14)
+<asynchronous suspension>
+#4      HomeController.preparePage (package:toppan_app/home/home_controller.dart:24:29)
+<asynchronous suspension>
+#5      _HomePageState.reloadPage (package:toppan_app/home/home_view.dart:107:5)
+<asynchronous suspension>
+
+-------------------
+[2026-02-13 15:55:36] 
+[Error] DioException [bad response]: This exception was thrown because the response has a status code of 401 and RequestOptions.validateStatus was configured to throw for this status code.
+The status code of 401 has the following meaning: "Client error - the request contains bad syntax or cannot be fulfilled"
+Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
+ 
+[Stack Trace]
+#0      DioMixin.fetch (package:dio/src/dio_mixin.dart:523:7)
+<asynchronous suspension>
+#1      CenterModel.refreshToken (package:toppan_app/visitorService/center_model.dart:86:19)
+<asynchronous suspension>
+#2      CenterController.refreshSession (package:toppan_app/visitorService/center_controller.dart:77:26)
+<asynchronous suspension>
+#3      CenterController.ensureAuthenticated (package:toppan_app/visitorService/center_controller.dart:102:14)
+<asynchronous suspension>
+#4      HomeController.preparePage (package:toppan_app/home/home_controller.dart:24:29)
+<asynchronous suspension>
+#5      _HomePageState.reloadPage (package:toppan_app/home/home_view.dart:107:5)
+<asynchronous suspension>
+
+-------------------
+[2026-02-13 16:03:45] 
+[Error] DioException [bad response]: This exception was thrown because the response has a status code of 401 and RequestOptions.validateStatus was configured to throw for this status code.
+The status code of 401 has the following meaning: "Client error - the request contains bad syntax or cannot be fulfilled"
+Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
+ 
+[Stack Trace]
+#0      DioMixin.fetch (package:dio/src/dio_mixin.dart:523:7)
+<asynchronous suspension>
+#1      CenterModel.refreshToken (package:toppan_app/visitorService/center_model.dart:86:19)
+<asynchronous suspension>
+#2      CenterController.refreshSession (package:toppan_app/visitorService/center_controller.dart:77:26)
+<asynchronous suspension>
+#3      CenterController.ensureAuthenticated (package:toppan_app/visitorService/center_controller.dart:102:14)
+<asynchronous suspension>
+#4      HomeController.preparePage (package:toppan_app/home/home_controller.dart:24:29)
+<asynchronous suspension>
+#5      _HomePageState.reloadPage (package:toppan_app/home/home_view.dart:107:5)
+<asynchronous suspension>
+
+-------------------

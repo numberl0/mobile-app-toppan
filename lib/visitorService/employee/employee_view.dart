@@ -2,18 +2,20 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 
-import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_switch/flutter_switch.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_signaturepad/signaturepad.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
+import 'package:toppan_app/component/AppDateTime.dart';
 import 'package:toppan_app/config/api_config.dart';
 import 'package:toppan_app/visitorService/employee/employee_controller.dart';
+
+import '../../component/CustomDIalog.dart';
 
 class EmployeeForm {
   Widget employeeFormWidget(Map<String, dynamic>? docData) {
@@ -32,9 +34,12 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
     with SingleTickerProviderStateMixin {
   EmployeeController _controller = EmployeeController();
 
-  Color? _cancelBtnColor = Colors.red[400];
-  Color? _acceptBtnColor = Colors.blue[400];
+  Color? _cancelBtnColor = Colors.red;
+  Color? _acceptBtnColor = Colors.blue;
   double _fontSize = ApiConfig.fontSize;
+  bool _isPhoneScale = false;
+  final FocusNode _focusNode = FocusNode();
+  
 
   AnimationController? _animateController;
   Animation<double>? _animation;
@@ -46,14 +51,11 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
     prepareForm();
     prepareAnimations();
     
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final screenWidth = MediaQuery.of(context).size.width;
-      setState(() {
-        if (screenWidth > 799) {
-          _fontSize += 8.0;
-        }
-      });
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   setState(() {
+
+    //   });
+    // });
   }
 
   void prepareForm() async {
@@ -78,11 +80,14 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
   @override
   void dispose() {
     _animateController!.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    _fontSize = ApiConfig.getFontSize(context);
+    _isPhoneScale = ApiConfig.getPhoneScale(context);
     //Back ground
     return Container(
       width: double.infinity,
@@ -92,11 +97,8 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
         begin: Alignment.topRight,
         end: Alignment.bottomLeft,
         colors: [
-          Color.fromARGB(255, 255, 151, 66),
-          Color.fromARGB(255, 238, 135, 50),
-          Color.fromARGB(255, 224, 114, 23),
-          Color.fromARGB(255, 228, 113, 20),
-          Color.fromARGB(255, 230, 107, 7),
+          Colors.orange,
+          Colors.orange,
         ],
       )),
       child: _getPageContent(context),
@@ -142,36 +144,26 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Center(
-                          key: _controller.inputSectionKey,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.assignment_outlined,
-                                size: 36,
-                                color: Colors.orange,
-                              ),
-                              SizedBox(
-                                width: 10,
-                              ),
-                              Text('No. ${_controller.formatSequenceRunning}',
-                                  style: TextStyle(
-                                      fontSize: _fontSize + 4,
-                                      fontWeight: FontWeight.bold)),
-                            ],
+                        // Tno Display
+                        if (_controller.flagUpdateForm && (_controller.formatSequenceRunning?.isNotEmpty ?? false)) ...[
+                          Container(
+                            key: _controller.inputSectionKey,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Text('No.${_controller.formatSequenceRunning}',
+                                    style: TextStyle(
+                                        fontSize: _fontSize + 4,
+                                        fontWeight: FontWeight.bold)),
+                              ],
+                            ),
                           ),
-                        ),
-                        Divider(
-                          color: Colors.black,
-                          thickness: 0.5,
-                          height: 10,
-                        ),
+                        ],
                         
                         SizedBox(
-                          height: 10,
-                        ),
-                        
+                            height: 10,
+                          ),
+
                         //DropDown Type Objective
                         Text(
                           "ประเภทของวัตถุประสงค์:",
@@ -184,7 +176,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                         dropDownTypeObjective(),
                         
                         SizedBox(
-                          height: 15,
+                          height: 20,
                         ),
                         
                         // Objective
@@ -197,7 +189,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                         ),
                         
                         SizedBox(
-                          height: 15,
+                          height: 20,
                         ),
                         
                         FractionallySizedBox(
@@ -247,7 +239,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                               width: 10,
                             ),
                             Text(
-                              '-   ออกไม่กลับ?',
+                              '-   ไปไม่กลับ?',
                               style: TextStyle(
                                   fontSize: _fontSize,
                                   fontWeight: FontWeight.bold),
@@ -272,7 +264,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   },
                                   icon: Icon(
                                     Icons.access_time_rounded,
-                                    color: Colors.grey,
+                                    color: Colors.blue,
                                   ),
                                 ),
                               ),
@@ -287,8 +279,8 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                 controller: _controller.dateOutController,
                                 widget: IconButton(
                                   icon: Icon(
-                                    Icons.calendar_today_outlined,
-                                    color: Colors.grey,
+                                    Icons.calendar_month,
+                                    color: Colors.blue,
                                   ),
                                   onPressed: () async {
                                     await _datePicker(context, _controller.flagDateOut, 'out');
@@ -323,7 +315,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                         },
                                         icon: Icon(
                                           Icons.access_time_rounded,
-                                          color: Colors.grey,
+                                          color: Colors.blue,
                                         ),
                                       ),
                                     ),
@@ -336,8 +328,8 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                       controller: _controller.dateInController,
                                       widget: IconButton(
                                         icon: Icon(
-                                          Icons.calendar_today_outlined,
-                                          color: Colors.grey,
+                                          Icons.calendar_month,
+                                          color: Colors.blue,
                                         ),
                                         onPressed: () async {
                                           await _datePicker(context, _controller.flagDateIn, 'in');
@@ -356,13 +348,6 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                         //Employee
                         Container(
                           key: _controller.personSectionKey,
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Colors.black,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
                           child: Padding(
                             padding: EdgeInsets.all(8.0),
                             child: Column(
@@ -374,12 +359,12 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                       child: Row(
                                         children: [
                                           Icon(
-                                            Icons.person,
+                                            Icons.groups,
                                             color: Colors.black,
                                             size: 50,
                                           ),
                                           SizedBox(
-                                            width: 5,
+                                            width: 10,
                                           ),
                                           Text(
                                             "รายชื่อพนักงาน:",
@@ -392,15 +377,6 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                         ],
                                       ),
                                     ),
-                                    IconButton(
-                                      onPressed: _togglePersonList,
-                                      icon: Icon(
-                                        _controller.isExpanded_listPerson
-                                            ? Icons.keyboard_double_arrow_down
-                                            : Icons.keyboard_double_arrow_up,
-                                        size: 24,
-                                      ),
-                                    )
                                   ],
                                 ),
                                 Divider(
@@ -470,316 +446,11 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                         ),
                         
                         SizedBox(
-                          height: 20,
+                          height: 30,
                         ),
-                        
-                        // //Item In/Out
-                        // Container(
-                        //   decoration: BoxDecoration(
-                        //     border: Border.all(
-                        //       color: Colors.black,
-                        //       width: 1,
-                        //     ),
-                        //     borderRadius: BorderRadius.circular(8),
-                        //   ),
-                        //   child: Padding(
-                        //     padding: EdgeInsets.all(8.0),
-                        //     child: Column(
-                        //       children: [
-                        //         Row(
-                        //           mainAxisAlignment: MainAxisAlignment.start,
-                        //           children: [
-                        //             Expanded(
-                        //               child: Row(
-                        //                 crossAxisAlignment: CrossAxisAlignment.center,
-                        //                 children: [
-                        //                   Icon(
-                        //                     Icons.shopping_bag,
-                        //                     color: Colors.black,
-                        //                     size: 50,
-                        //                   ),
-                        //                   SizedBox(
-                        //                     width: 5,
-                        //                   ),
-                        //                   Text(
-                        //                     "นำสิ่งของ เข้า/ออก",
-                        //                     style: TextStyle(
-                        //                         fontSize: _fontSize,
-                        //                         fontWeight: FontWeight.bold),
-                        //                     overflow: TextOverflow.ellipsis,
-                        //                     maxLines: 1,
-                        //                   ),
-                        //                 ],
-                        //               ),
-                        //             ),
-                        //             SizedBox(
-                        //               width: 20.0,
-                        //             ),
-                        //             IconButton(
-                        //               onPressed: _toggleItemList,
-                        //               icon: Icon(
-                        //                 _controller.isExpanded_listItem
-                        //                     ? Icons.keyboard_double_arrow_down
-                        //                     : Icons.keyboard_double_arrow_up,
-                        //                 size: 24,
-                        //               ),
-                        //             ),
-                        //           ],
-                        //         ),
-                        //         Divider(
-                        //           color: Colors.black,
-                        //           thickness: 1,
-                        //           height: 10,
-                        //         ),
-                        //         SizedBox(
-                        //           height: 5,
-                        //         ),
-                        //         Row(
-                        //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        //           crossAxisAlignment: CrossAxisAlignment.center,
-                        //           children: <Widget>[
-                        //             FlutterSwitch(
-                        //               width: 70.0,
-                        //               height: 40.0,
-                        //               toggleSize: 70.0,
-                        //               value: _controller.isSwitchImagePicker,
-                        //               borderRadius: 30.0,
-                        //               padding: 2.0,
-                        //               activeToggleColor:
-                        //                   Color.fromARGB(255, 255, 255, 255),
-                        //               inactiveToggleColor:
-                        //                   Color.fromARGB(255, 255, 255, 255),
-                        //               activeSwitchBorder: Border.all(
-                        //                 color: Color.fromARGB(255, 202, 202, 202),
-                        //                 width: 1.5,
-                        //                 style: BorderStyle.solid,
-                        //               ),
-                        //               inactiveSwitchBorder: Border.all(
-                        //                 color: Color.fromARGB(255, 202, 202, 202),
-                        //                 width: 1.5,
-                        //                 style: BorderStyle.solid,
-                        //               ),
-                        //               activeColor: Colors.orange,
-                        //               inactiveColor:
-                        //                   Color.fromARGB(255, 255, 255, 255),
-                        //               activeIcon: Icon(Icons.view_list),
-                        //               inactiveIcon: Icon(Icons.camera_alt),
-                        //               onToggle: (val) {
-                        //                 AwesomeDialog(
-                        //                   context: context,
-                        //                   dialogType: DialogType.info,
-                        //                   buttonsBorderRadius: const BorderRadius.all(
-                        //                     Radius.circular(2),
-                        //                   ),
-                        //                   dismissOnTouchOutside: true,
-                        //                   dismissOnBackKeyPress: false,
-                        //                   // onDismissCallback: (type) {
-                        //                   //   ScaffoldMessenger.of(context).showSnackBar(
-                        //                   //     SnackBar(
-                        //                   //       content: Text('Dismissed by $type'),
-                        //                   //     ),
-                        //                   //   );
-                        //                   // },
-                        //                   headerAnimationLoop: false,
-                        //                   animType: AnimType.bottomSlide,
-                        //                   title: 'คำเตือน',
-                        //                   titleTextStyle: TextStyle(
-                        //                       fontSize: _fontSize + 10,
-                        //                       fontWeight: FontWeight.bold),
-                        //                   desc:
-                        //                       'ข้อมูลสิ่งของ เข้า/ออก จะสูญหาย ท่านต้องการเปลี่ยนการทำงานหรือไม่?',
-                        //                   descTextStyle: TextStyle(
-                        //                       fontSize: _fontSize,
-                        //                       fontWeight: FontWeight.bold),
-                        //                   showCloseIcon: true,
-                        //                   btnOkText: 'ยืนยัน',
-                        //                   btnOkColor: _acceptBtnColor,
-                        //                   btnOkOnPress: () {
-                        //                     _controller
-                        //                         .itemListClear(); // Clear the lists
-                        //                     setState(() {
-                        //                       _controller.isSwitchImagePicker = val;
-                        //                       if (!_controller.isExpanded_listItem) {
-                        //                         _toggleItemList();
-                        //                       }
-                        //                     });
-                        //                   },
-                        //                   btnCancel: ElevatedButton(
-                        //                     onPressed: () {
-                        //                       Navigator.pop(context);
-                        //                     },
-                        //                     style: ElevatedButton.styleFrom(
-                        //                       backgroundColor: _cancelBtnColor,
-                        //                       shape: RoundedRectangleBorder(
-                        //                         borderRadius: BorderRadius.circular(
-                        //                             30), // Circular shape
-                        //                       ),
-                        //                       padding: EdgeInsets.symmetric(
-                        //                           vertical: 12, horizontal: 24),
-                        //                       elevation:
-                        //                           8, // Add elevation (shadow effect)
-                        //                       shadowColor: Colors.black
-                        //                           .withOpacity(1), // Shadow color
-                        //                     ),
-                        //                     child: Text(
-                        //                       'ยกเลิก',
-                        //                       style: TextStyle(
-                        //                           color: Colors.white,
-                        //                           fontSize: _fontSize,
-                        //                           fontWeight: FontWeight.bold),
-                        //                     ),
-                        //                   ),
-                        //                   btnOk: ElevatedButton(
-                        //                     onPressed: () {
-                        //                       _controller
-                        //                           .itemListClear(); // Clear the lists
-                        //                       setState(() {
-                        //                         _controller.isSwitchImagePicker = val;
-                        //                         if (!_controller
-                        //                             .isExpanded_listItem) {
-                        //                           _toggleItemList();
-                        //                         }
-                        //                       });
-                        //                       Navigator.pop(context);
-                        //                     },
-                        //                     style: ElevatedButton.styleFrom(
-                        //                       backgroundColor: _acceptBtnColor,
-                        //                       shape: RoundedRectangleBorder(
-                        //                         borderRadius: BorderRadius.circular(
-                        //                             30), // Circular shape
-                        //                       ),
-                        //                       padding: EdgeInsets.symmetric(
-                        //                           vertical: 12, horizontal: 24),
-                        //                       elevation:
-                        //                           8, // Add elevation (shadow effect)
-                        //                       shadowColor: Colors.black
-                        //                           .withOpacity(1), // Shadow color
-                        //                     ),
-                        //                     child: Text(
-                        //                       'ยืนยัน',
-                        //                       style: TextStyle(
-                        //                           color: Colors.white,
-                        //                           fontSize: _fontSize,
-                        //                           fontWeight: FontWeight.bold),
-                        //                     ),
-                        //                   ),
-                        //                 ).show();
-                        //               },
-                        //             ),
-                        //             Text(
-                        //               _controller.isSwitchImagePicker
-                        //                   ? "${_controller.imageList_In.length} : ${_controller.imageList_Out.length}"
-                        //                   : "${_controller.listItem_In.length} : ${_controller.listItem_Out.length}",
-                        //               style: TextStyle(
-                        //                   fontSize: _fontSize,
-                        //                   fontWeight: FontWeight.bold,
-                        //                   color: Colors.orange),
-                        //             ),
-                        //           ],
-                        //         ),
-                        //         AnimatedCrossFade(
-                        //           firstChild: Container(),
-                        //           secondChild: _controller
-                        //                   .isSwitchImagePicker //switchImagePicker
-                        //               ? Column(
-                        //                   children: [
-                        //                     SizedBox(
-                        //                       height: 5,
-                        //                     ),
-                        //                     Row(
-                        //                       children: [
-                        //                         Expanded(
-                        //                           child: Divider(
-                        //                             color: Colors.black,
-                        //                             thickness: 1,
-                        //                           ),
-                        //                         ),
-                        //                         Padding(
-                        //                           padding: EdgeInsets.symmetric(
-                        //                               horizontal: 10),
-                        //                           child: Text(
-                        //                             'นำเข้า', // "Items Out" text
-                        //                             style: TextStyle(
-                        //                               fontSize: _fontSize,
-                        //                               fontWeight: FontWeight.bold,
-                        //                             ),
-                        //                           ),
-                        //                         ),
-                        //                         Expanded(
-                        //                           child: Divider(
-                        //                             color: Colors.black,
-                        //                             thickness: 1,
-                        //                           ),
-                        //                         ),
-                        //                       ],
-                        //                     ),
-                        //                     SizedBox(
-                        //                       height: 10,
-                        //                     ),
-                        //                     _contentItemImage(
-                        //                         _controller.imageList_In),
-                        //                     SizedBox(
-                        //                       height: 10,
-                        //                     ),
-                        //                     Row(
-                        //                       children: [
-                        //                         Expanded(
-                        //                           child: Divider(
-                        //                             color: Colors
-                        //                                 .black, // Color of the line
-                        //                             thickness:
-                        //                                 1, // Thickness of the line
-                        //                           ),
-                        //                         ),
-                        //                         Padding(
-                        //                           padding: EdgeInsets.symmetric(
-                        //                               horizontal:
-                        //                                   10), // Space around the text
-                        //                           child: Text(
-                        //                             'นำออก', // "Items Out" text
-                        //                             style: TextStyle(
-                        //                               fontSize: _fontSize,
-                        //                               fontWeight: FontWeight.bold,
-                        //                             ),
-                        //                           ),
-                        //                         ),
-                        //                         Expanded(
-                        //                           child: Divider(
-                        //                             color: Colors.black,
-                        //                             thickness: 1,
-                        //                           ),
-                        //                         ),
-                        //                       ],
-                        //                     ),
-                        //                     SizedBox(
-                        //                       height: 10,
-                        //                     ),
-                        //                     _contentItemImage(
-                        //                         _controller.imageList_Out),
-                        //                   ],
-                        //                 )
-                        //               : _contentItemList(),
-                        //           crossFadeState: _controller.isExpanded_listItem
-                        //               ? CrossFadeState.showSecond
-                        //               : CrossFadeState.showFirst,
-                        //           duration: Duration(milliseconds: 300),
-                        //         ),
-                        //       ],
-                        //     ),
-                        //   ),
-                        // ),
-                        
-                        /////////////////////////////////////////////////////////////////////////////////////////////////
-                        
+                       
                         //Item In/Out
                         Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Colors.black,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
                           child: Padding(
                             padding: EdgeInsets.all(8.0),
                             child: Column(
@@ -792,7 +463,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                         crossAxisAlignment: CrossAxisAlignment.center,
                                         children: [
                                           Icon(
-                                            Icons.shopping_bag,
+                                            Icons.auto_awesome_motion_rounded,
                                             color: Colors.black,
                                             size: 50,
                                           ),
@@ -810,28 +481,9 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                         ],
                                       ),
                                     ),
-                                    SizedBox(
-                                      width: 20.0,
-                                    ),
-                                    IconButton(
-                                      onPressed: _toggleItemList,
-                                      icon: Icon(
-                                        _controller.isExpanded_listItem
-                                            ? Icons.keyboard_double_arrow_down
-                                            : Icons.keyboard_double_arrow_up,
-                                        size: 24,
-                                      ),
-                                    ),
                                   ],
                                 ),
-                                Divider(
-                                  color: Colors.black,
-                                  thickness: 1,
-                                  height: 10,
-                                ),
-                                SizedBox(
-                                  height: 5,
-                                ),
+
                                 
                                 _contentItemList(),
                               ],
@@ -899,8 +551,9 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                               padding: EdgeInsets.all(10.0),
                               decoration: BoxDecoration(
                                 border: Border.all(
-                                  color: const Color.fromARGB(255, 0, 0, 0),
+                                  color: Colors.black,
                                 ),
+                                borderRadius: BorderRadius.circular(15),
                               ),
                               child: Column(
                                 children: [
@@ -947,8 +600,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   ),
                                 );
                               } else {
-                                bool uploadSuccess =
-                                    await _controller.uploadForm();
+                                bool uploadSuccess = await _controller.insertRequestForm();
                                 if (uploadSuccess) {
                                   showTopSnackBar(
                                     Overlay.of(context),
@@ -1015,10 +667,8 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
 
     // initial value
     int currentIndex = 0;
-    Uint8List? signatureDisplay =
-        _controller.signatureSectionMap[sectionKeys[currentIndex]]?[0];
-    DateTime? dateTimeSignDisplay =
-        _controller.signatureSectionMap[sectionKeys[currentIndex]]?[1];
+    Uint8List? signatureDisplay = _controller.signatureSectionMap[sectionKeys[currentIndex]]?[0];
+    DateTime? dateTimeSignDisplay = _controller.signatureSectionMap[sectionKeys[currentIndex]]?[1];
     TextEditingController signaturesByDisplay = TextEditingController(
         text: _controller.signatureSectionMap[sectionKeys[currentIndex]]?[3] ??
             '');
@@ -1080,9 +730,6 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
             currentIndex = _controller.signatureSectionMap.length - 1;
           }
         }
-        // setStateDialog(() {
-        //   setStateSignature();
-        // });
         setStateSignature();
         setStateDialog(() {});
         menuRowController.animateToItem(currentIndex,
@@ -1094,10 +741,20 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
     Widget _headerMenu(double screenWidth, StateSetter setStateDialog) {
       return Container(
         decoration: BoxDecoration(
+          color: Colors.white,
             border: Border.all(
               color: Color.fromARGB(255, 0, 0, 0).withOpacity(0.5),
             ),
-            borderRadius: BorderRadius.circular(20.0)),
+            borderRadius: BorderRadius.circular(20.0),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.15),
+                spreadRadius: 2,
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ],
+        ),
         child: screenWidth < 799
             ? Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -1138,7 +795,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   sectionKeys[index],
                                   style: TextStyle(
                                       color: Colors.black,
-                                      fontSize: _fontSize + 8),
+                                      fontSize: _fontSize),
                                 ),
                               ),
                             );
@@ -1169,8 +826,6 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                         .toList()
                         .indexOf(entry.key);
                     String sectionLabel = entry.key;
-                    // List<dynamic> signatureData = entry.value;
-
                     BorderRadius borderRadius;
                     bool _isPressed = currentIndex == index;
 
@@ -1242,7 +897,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                       child: Text(
                                         sectionLabel,
                                         style: TextStyle(
-                                          fontSize: _fontSize + 4,
+                                          fontSize: _fontSize,
                                           color: _isPressed
                                               ? Colors.orange
                                               : Colors.black,
@@ -1295,7 +950,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                             _controller.signatureSectionMap[
                                 sectionKeys[currentIndex]]?[2],
                             style: TextStyle(
-                              fontSize: _fontSize + 8,
+                              fontSize: _fontSize + 4,
                               fontWeight: FontWeight.bold,
                               color: Colors.blueGrey[800],
                             ),
@@ -1303,14 +958,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                         ],
                       ),
                       SizedBox(height: 10),
-                      Divider(
-                        color: Colors.black.withOpacity(0.5),
-                        thickness: 1.0,
-                        height: 10,
-                      ),
-                      SizedBox(height: 10),
-            
-                      // Signature Pad
+                      
+                      Stack(
+                                children: [
+                                   // Signature Pad
                       Container(
                         constraints: BoxConstraints(maxHeight: 250),
                         width: double.infinity,
@@ -1334,60 +985,15 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                 maximumStrokeWidth: 6.0,
                               ),
                       ),
-            
-                      SizedBox(
-                        height: 10,
-                      ),
-                      Container(
-                        height: 52,
-                        margin: EdgeInsets.only(top: 2.5),
-                        padding: EdgeInsets.only(left: 10),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Colors.grey,
-                            width: 1.5,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextFormField(
-                                onEditingComplete: () {
-                                  FocusScope.of(context)
-                                      .unfocus(); // Also remove focus on enter
-                                },
-                                cursorColor: Colors.orange,
-                                readOnly: signaturesByDisplay.text.isNotEmpty,
-                                autofocus: false,
-                                controller: signaturesByDisplay,
-                                maxLines: null,
-                                minLines: 1,
-                                decoration: InputDecoration(
-                                  hintText: 'ลงชื่อ*',
-                                  border: InputBorder.none,
-                                ),
-                                style: TextStyle(fontSize: _fontSize),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                        height: 10,
-                      ),
-            
-                      // Buttons
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          double screenWidth = constraints.maxWidth;
-                          double buttonPadding = screenWidth < 799 ? 10.0 : 20.0;
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              ElevatedButton(
-                                onPressed: () {
-                                  if (_controller.signatureSectionMap[
+
+                                  // Reset Button (Positioned at Bottom-Left)
+                                  Positioned(
+                                    left: 10,
+                                    bottom: 10,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        // _controller.signatureGlobalKey.currentState!.clear();
+                                        if (_controller.signatureSectionMap[
                                               sectionKeys[currentIndex]]?[0] !=
                                           null &&
                                       _controller.signatureSectionMap[
@@ -1421,94 +1027,134 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                     _controller.signatureGlobalKey.currentState!
                                         .clear();
                                   }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: _cancelBtnColor,
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: buttonPadding, vertical: 10),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.cleaning_services_outlined,
-                                        color: Colors.white, size: _fontSize),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'ล้าง',
-                                      style: TextStyle(
-                                          fontSize: _fontSize,
-                                          color: Colors.white),
+                                      },
+                                      child: CircleAvatar(
+                                        radius: 20,
+                                        backgroundColor: Colors.black.withOpacity(
+                                            0.5),
+                                        child: Icon(
+                                          Icons.cached,
+                                          color: Colors.white,
+                                          size: 24,
+                                        ),
+                                      ),
                                     ),
-                                  ],
-                                ),
-                              ),
-                              ElevatedButton(
-                                onPressed: _controller.signatureSectionMap[
-                                                sectionKeys[currentIndex]]?[0] ==
-                                            null &&
-                                        _controller.signatureSectionMap[
-                                                sectionKeys[currentIndex]]?[1] ==
-                                            null &&
-                                        _controller.signatureSectionMap[
-                                                sectionKeys[currentIndex]]?[3] ==
-                                            null
-                                    ? () async {
-                                        if (_controller
-                                                .signatureGlobalKey.currentState!
-                                                .toPathList()
-                                                .isNotEmpty &&
-                                            signaturesByDisplay.text.isNotEmpty) {
-                                          await stampSignatureApprove(
-                                              DateTime.now(),
-                                              _controller.signatureGlobalKey);
-                                          setStateDialog(() {});
-                                        } else {
-                                          showTopSnackBar(
-                                            Overlay.of(context),
-                                            CustomSnackBar.error(
-                                              backgroundColor:
-                                                  Colors.red.shade700,
-                                              icon: Icon(
-                                                  Icons.sentiment_very_satisfied,
-                                                  color: Colors.red.shade900,
-                                                  size: 120),
-                                              message:
-                                                  "กรุณากรอกข้อมูลให้ครบถ้วน",
-                                            ),
-                                          );
-                                        }
-                                      }
-                                    : null, // Disable button
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: _acceptBtnColor,
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: buttonPadding, vertical: 10),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.save_alt_outlined,
-                                        color: Colors.white, size: _fontSize),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'ลงนาม',
-                                      style: TextStyle(
-                                          fontSize: _fontSize,
-                                          color: Colors.white),
-                                    ),
-                                  ],
-                                ),
+                                ],
                               ),
-                            ],
-                          );
-                        },
+
+
+                      SizedBox(
+                        height: 10,
                       ),
+                      SizedBox(
+                        width: double.infinity,
+                        child: Row(
+                          children: [
+                            /// 🔹 ช่องกรอกชื่อ
+                            Expanded(
+                              child: Container(
+                                height: 52,
+                                margin: const EdgeInsets.only(top: 2.5),
+                                padding: const EdgeInsets.only(left: 10),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: Colors.grey,
+                                    width: 1.5,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: TextFormField(
+                                  onEditingComplete: () {
+                                    FocusScope.of(context).unfocus();
+                                  },
+                                  cursorColor: Colors.orange,
+                                  readOnly: signaturesByDisplay.text.isNotEmpty,
+                                  controller: signaturesByDisplay,
+                                  maxLines: null,
+                                  minLines: 1,
+                                  decoration: const InputDecoration(
+                                    hintText: 'ลงชื่อ*',
+                                    border: InputBorder.none,
+                                  ),
+                                  style: TextStyle(fontSize: _fontSize - 2),
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(width: 8),
+
+                            /// 🔹 ปุ่มบันทึก
+                            ElevatedButton(
+                              onPressed: _controller.signatureSectionMap[
+                                              sectionKeys[currentIndex]]?[0] ==
+                                          null &&
+                                      _controller.signatureSectionMap[
+                                              sectionKeys[currentIndex]]?[1] ==
+                                          null &&
+                                      _controller.signatureSectionMap[
+                                              sectionKeys[currentIndex]]?[3] ==
+                                          null
+                                  ? () async {
+                                      if (_controller
+                                              .signatureGlobalKey.currentState!
+                                              .toPathList()
+                                              .isNotEmpty &&
+                                          signaturesByDisplay.text.isNotEmpty) {
+
+                                        await stampSignatureApprove(
+                                          AppDateTime.now(),
+                                          _controller.signatureGlobalKey,
+                                        );
+
+                                        setStateDialog(() {});
+                                      } else {
+                                        showTopSnackBar(
+                                          Overlay.of(context),
+                                          CustomSnackBar.error(
+                                            backgroundColor: Colors.red.shade700,
+                                            icon: Icon(
+                                              Icons.sentiment_very_satisfied,
+                                              color: Colors.red.shade900,
+                                              size: 120,
+                                            ),
+                                            message: "กรุณากรอกข้อมูลให้ครบถ้วน",
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  : null,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _acceptBtnColor,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 10),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.save_as_rounded,
+                                    color: Colors.white,
+                                    size: _fontSize,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'บันทึก',
+                                    style: TextStyle(
+                                      fontSize: _fontSize,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
             
                       SizedBox(height: 10),
             
@@ -1569,8 +1215,8 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
 
           // Exit Button (Close)
           Positioned(
-            top: 10,
-            right: 10,
+            top: 0,
+            right: 0,
             child: IconButton(
               onPressed: () {
                 Navigator.of(context).pop();
@@ -1578,9 +1224,9 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
               icon: Icon(
                 Icons.cancel_rounded,
                 color: _cancelBtnColor,
-                size: 50, // Slightly larger for better tap target
+                size: _isPhoneScale?47:50,
               ),
-              tooltip: "Close", // Tooltip for better accessibility
+              tooltip: "Close",
             ),
           ),
         ],
@@ -1590,8 +1236,8 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
     //show Dialog
     showGeneralDialog(
       context: context,
-      barrierDismissible: false,
-      barrierLabel: '',
+      barrierDismissible: true,
+      barrierLabel: 'Close',
       transitionDuration: const Duration(milliseconds: 160),
       pageBuilder: (BuildContext context, Animation<double> animation1,
           Animation<double> animation2) {
@@ -1604,6 +1250,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
           behavior: HitTestBehavior.opaque,
           onTap: () {
             FocusManager.instance.primaryFocus?.unfocus(); // Dismiss keyboard
+            Navigator.of(context).pop(); // Close dialog 
           },
           child: ScaleTransition(
             scale: Tween<double>(begin: 0.6, end: 1.0).animate(a1),
@@ -1613,11 +1260,8 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                 data: MediaQuery.of(context)
                     .copyWith(viewInsets: EdgeInsets.zero), // Prevent movement
                 child: AlertDialog(
+                  backgroundColor: Colors.transparent,
                   insetPadding: EdgeInsets.all(16.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16.0),
-                    side: BorderSide(color: Colors.white, width: 2.0),
-                  ),
                   contentPadding: EdgeInsets.all(0),
                   content: StatefulBuilder(
                     builder:
@@ -1645,7 +1289,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                               child: Column(
                                 children: [
                                   _headerMenu(screenWidth, setStateDialog),
-                                  SizedBox(height: 10),
+                                  SizedBox(height: 20),
                                   _signPad(setStateDialog),
                                 ],
                               ),
@@ -1694,7 +1338,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
 
     showDialog(
       context: context,
-      barrierDismissible: false, // Prevent closing by tapping outside
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
@@ -1703,11 +1347,11 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
           },
           child: MediaQuery(
             data: MediaQuery.of(context)
-                .copyWith(viewInsets: EdgeInsets.zero), // Prevent UI shifting
+                .copyWith(viewInsets: EdgeInsets.zero),
             child: Dialog(
               shape: RoundedRectangleBorder(
                 borderRadius:
-                    BorderRadius.circular(24), // Rounded dialog corners
+                    BorderRadius.circular(24),
               ),
               child: Container(
                 constraints: BoxConstraints(
@@ -1715,9 +1359,8 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                   maxHeight: MediaQuery.of(context).size.height * 0.6,
                 ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min, // Fit to content size
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // 🔹 Header Section
                     Stack(
                       children: [
                         Container(
@@ -1845,76 +1488,105 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
 
   //Item list generate by Widget
   Widget _itemListGenerate(List<Map<String, String>> itemList, String type) {
-    return itemList.isNotEmpty
-        ? Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: itemList.map((entry) {
-              return Card(
-                color: Colors.orange.shade50,
-                margin: EdgeInsets.symmetric(vertical: 5),
-                elevation: 2.0,
-                semanticContainer: true,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(
-                    color: const Color.fromARGB(255, 0, 0, 0),
-                    width: 0.5,
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Row(
+  return itemList.isNotEmpty
+      ? Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: itemList.map((entry) {
+            return Card(
+              color: Colors.orange.shade50,
+              margin: EdgeInsets.symmetric(vertical: 5),
+              elevation: 2.0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: Slidable(
+                  key: ValueKey(entry['item']),
+                  startActionPane: ActionPane(
+                    motion: ScrollMotion(),
+                    extentRatio: 0.20,
                     children: [
-                      // Left side: Item icon
-                      Icon(Icons.shopping_bag, // Icon item
-                          color: Colors.black,
-                          size: 40),
-                      SizedBox(width: 15),
-                      Expanded(
-                        // Name item
-                        child: Text(
-                          '${entry['item']}',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: _fontSize),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
+                      CustomSlidableAction(
+                        onPressed: (context) => popUpEditItem(entry),
+                        backgroundColor: Colors.blue,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(15),
+                          bottomLeft: Radius.circular(15),
                         ),
-                      ),
-                      // Right side: Item name
-                      IconButton(
-                        // Edit button
-                        icon: Icon(Icons.edit_document),
-                        onPressed: () => popUpEditItem(entry),
-                      ),
-                      IconButton(
-                        //  Delete button
-                        icon: Icon(
-                          Icons.delete,
-                          color: _cancelBtnColor,
-                        ),
-                        onPressed: () => warningDialog(
-                            'ต้องการลบรายการ ${entry['item']} ใช่หรือไม่?', () {
-                          setState(() {
-                            if (type == 'in') {
-                              _controller.listItem_In
-                                  .remove(entry); // Remove item from 'In' list
-                              Navigator.pop(context);
-                            } else {
-                              _controller.listItem_Out
-                                  .remove(entry); // Remove item from 'Out' list
-                              Navigator.pop(context);
-                            }
-                          });
-                        }),
+                        child: Icon(
+                              Icons.edit_document,
+                              size: 30,
+                              color: Colors.white,
+                            ),
                       ),
                     ],
                   ),
+                  endActionPane: ActionPane(
+                    motion: ScrollMotion(),
+                    extentRatio: 0.20,
+                    children: [
+                      CustomSlidableAction(
+                        onPressed: (context) {
+                          warningDialog(
+                            'ต้องการลบรายการ ${entry['item']} ใช่หรือไม่?',
+                            () {
+                              setState(() {
+                                if (type == 'in') {
+                                  _controller.listItem_In.remove(entry);
+                                } else {
+                                  _controller.listItem_Out.remove(entry);
+                                }
+                              });
+                              Navigator.pop(this.context);
+                            },
+                          );
+                        },
+                        backgroundColor: Colors.red,
+                        borderRadius: BorderRadius.only(
+                          topRight: Radius.circular(15),
+                          bottomRight: Radius.circular(15),
+                        ),
+                        child: Icon(
+                              Icons.delete,
+                              size: 30,
+                              color: Colors.white,
+                            ),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.auto_awesome_mosaic_rounded,
+                          color: Colors.orange,
+                          size: 40,
+                        ),
+                        SizedBox(width: 15),
+                        Expanded(
+                          child: Text(
+                            '${entry['item']}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: _fontSize,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              );
-            }).toList(),
-          )
-        : Container();
-  }
+              ),
+            );
+          }).toList(),
+        )
+      : Container();
+}
+
 
   //Function Delete Image
   void _deleteImage(int index, List<File?> _imageList) {
@@ -2086,45 +1758,20 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
               flex: 1,
               child: Column(
                 children: [
-                  // "Items Out" Section with Line and Centered Text
-                  Container(
-                    margin: EdgeInsets.symmetric(vertical: 5),
-                    child: Row(
-                      children: [
-                        SizedBox(width: 10),
-                        Expanded(
+                  Row(children: [Expanded(
                           child: Divider(
                             color: Colors.black,
                             thickness: 1,
                           ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 10),
-                          child: Text(
-                            'นำออก', // "Items Out" text
-                            style: TextStyle(
-                              fontSize: _fontSize,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Divider(
-                            color: Colors.black,
-                            thickness: 1,
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                      ],
-                    ),
-                  ),
-
+                        ),],),
                   // Button add Item IN
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      ElevatedButton(
+                      Row(
+                        children: [
+                          ElevatedButton(
                         onPressed: () => popUpAddItem('out'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.orange,
@@ -2136,6 +1783,17 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                         ),
                         child: Icon(Icons.add_box_outlined,
                             color: Colors.white, size: 24),
+                      ),
+                      SizedBox(
+                              width: 10,
+                            ),
+                            Text(
+                              '-  นำออก',
+                              style: TextStyle(
+                                  fontSize: _fontSize,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                        ],
                       ),
                       Text(
                         "${_controller.listItem_Out.length} : ${_controller.imageList_Out.length}",
@@ -2150,6 +1808,8 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                   SizedBox(
                     height: 10,
                   ),
+
+                  
                   // Build the item list for "Items In"
                   _itemListGenerate(_controller.listItem_Out, 'out'),
                   SizedBox(
@@ -2158,49 +1818,23 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                   _contentItemImage(_controller.imageList_Out),
 
                   SizedBox(
-                    height: 30,
+                    height: 10,
                   ),
 
-                  Container(
-                    margin: EdgeInsets.symmetric(vertical: 5),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        SizedBox(width: 10),
-                        Expanded(
+                   Row(children: [Expanded(
                           child: Divider(
                             color: Colors.black,
                             thickness: 1,
                           ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 10),
-                          child: Text(
-                            'นำเข้า', // "Items Out" text
-                            style: TextStyle(
-                              fontSize: _fontSize,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Divider(
-                            color: Colors.black,
-                            thickness: 1,
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                      ],
-                    ),
-                  ),
+                        ),],),
                   
                   // Button add Item IN
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      ElevatedButton(
+                      Row(children: [
+                        ElevatedButton(
                         onPressed: () => popUpAddItem('in'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.orange,
@@ -2213,6 +1847,20 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                         child: Icon(Icons.add_box_outlined,
                             color: Colors.white, size: 24),
                       ),
+                      SizedBox(
+                              width: 10,
+                            ),
+                            Text(
+                              '-  นำเข้า',
+                              style: TextStyle(
+                                  fontSize: _fontSize,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                      ],),
+
+
+
+
                       Text(
                         "${_controller.listItem_In.length} : ${_controller.imageList_In.length}",
                         style: TextStyle(
@@ -2283,12 +1931,18 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                 width: 300,
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(15),
                 ),
+                clipBehavior: Clip.hardEdge,
                 child: _image != null
-                    ? Image.file(
+                    ? ClipRRect(
+                      borderRadius: BorderRadius.circular(15),
+                      child: Image.file(
                         _image.absolute,
-                        fit: BoxFit.fill,
-                      )
+                        key: ValueKey(_image.absolute.path + AppDateTime.now().millisecondsSinceEpoch.toString()),
+                        fit: BoxFit.cover,
+                      ),
+                    )
                     : Center(
                         child: Icon(
                           Icons.add_photo_alternate_outlined,
@@ -2310,8 +1964,18 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                 width: 30,
               ),
               IconButton(
-                  onPressed: () => _deleteImage(index, _imageList),
-                  icon: Icon(Icons.delete, color: _cancelBtnColor, size: 40)),
+                  onPressed: () {
+                    if(_imageList.isNotEmpty && _imageList[index] != null) {
+                      warningDialog('คุณต้องการจะลบรูปภาพใช่หรือไม่?', () {
+                                            setState(() {
+                                              _deleteImage(index, _imageList);
+                                              Navigator.of(context).pop();
+                                            });
+                                          });
+                    }
+                  },
+                  icon: Icon(Icons.delete, color: _cancelBtnColor, size: 40)
+                ),
             ],
           ),
         ],
@@ -2331,9 +1995,6 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
               style: TextStyle(
                   fontSize: _fontSize + 2, fontWeight: FontWeight.bold),
             ),
-          ),
-          SizedBox(
-            height: 10,
           ),
           if (_imageList.isEmpty) ...[
             Center(
@@ -2397,15 +2058,16 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
 
   //Function clear input controller Employee
   void _clearPersonInfoController() {
-    _controller.fullNameController.clear();
-    _controller.cardIdController.clear();
+    _controller.empNameController.clear();
+    _controller.empIdController.clear();
     _controller.signatureGlobalKey.currentState!.clear(); //signature
   }
 
   void popUpEditPerson(Map<String, dynamic> entry) {
-    _controller.titleNameController.text = entry['TitleName']!;
-    _controller.fullNameController.text = entry['FullName']!;
-    _controller.cardIdController.text = entry['Card_Id']!;
+    _controller.empTitleController.text = entry['TitleName']!;
+    _controller.empNameController.text = entry['FullName']!;
+    _controller.empIdController.text = entry['EmployeeId']!;
+    _controller.empDeptController.text = entry['Department']!;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -2421,29 +2083,28 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
             child: Dialog(
               shape: RoundedRectangleBorder(
                 borderRadius:
-                    BorderRadius.circular(24), // Rounded corners for the dialog
+                    BorderRadius.circular(24),
               ),
               child: Container(
                 constraints: BoxConstraints(
                   maxWidth: MediaQuery.of(context).size.width * 0.8,
-                  maxHeight: MediaQuery.of(context).size.height * 0.8,
+                  maxHeight: MediaQuery.of(context).size.height * 0.6,
                 ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min, // Ensures dialog fits content
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     // Header Section with Close Button
                     Stack(
                       children: [
-                        // Header Background
                         Container(
                           width: double.infinity,
                           padding: EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: Colors
-                                .orange, // Change this to any color you like
+                                .orange,
                             borderRadius: BorderRadius.vertical(
                                 top:
-                                    Radius.circular(24)), // Rounded top corners
+                                    Radius.circular(24)),
                           ),
                           child: Center(
                             child: Text(
@@ -2451,7 +2112,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                               style: TextStyle(
                                 fontSize: _fontSize + 4,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white, // White text for contrast
+                                color: Colors.white,
                               ),
                             ),
                           ),
@@ -2470,27 +2131,123 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Dropdown
-                              Text('คำนำหน้า:',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: _fontSize)),
-                              SizedBox(height: 2.5),
-                              dropDownTitleName(),
+                              SizedBox(height: 5),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // 🔹 คอลัมน์ซ้าย (Dropdown)
+                                  Expanded(
+                                    flex: 2,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'คำนำหน้า:',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: _fontSize,
+                                          ),
+                                        ),
+                                        SizedBox(height: 2.5),
+                                        dropDownTitleName(),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(width: 12),
+
+                                  // 🔹 ช่องกรอกรหัสพนักงาน
+                                  Expanded(
+                                    flex: 3,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'รหัสพนักงาน:',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: _fontSize,
+                                          ),
+                                        ),
+                                        SizedBox(height: 2.5),
+                                        TextFormField(
+                                          controller: _controller.empIdController,
+                                          decoration: InputDecoration(
+                                            hintText: 'ค้นหา...',
+                                            hintStyle: TextStyle(
+                                              fontSize: _fontSize - 4,
+                                              color: Colors.blue,
+                                              fontStyle: FontStyle.italic,
+                                            ),
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            isDense: true,
+                                            suffixIcon: IconButton(
+                                              icon: Icon(
+                                                Icons.person_search,
+                                                color: Colors.yellow,
+                                                size: _fontSize + 8,
+                                              ),
+                                              onPressed: () async {
+                                                bool status = await _controller
+                                                    .searchInfoByPid(_controller.empIdController.text);
+                                                if (!status) {
+                                                  showTopSnackBar(
+                                                    Overlay.of(context),
+                                                    CustomSnackBar.error(
+                                                      backgroundColor: Colors.red.shade700,
+                                                      icon: Icon(
+                                                        Icons.sentiment_very_satisfied,
+                                                        color: Colors.red.shade900,
+                                                        size: 120,
+                                                      ),
+                                                      message: 'ไม่พบข้อมูลพนักงาน',
+                                                    ),
+                                                  );
+                                                }
+                                              },
+                                            ),
+                                            contentPadding:
+                                                EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                                            errorBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(color: Colors.red, width: 2),
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            focusedErrorBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(color: Colors.red, width: 2),
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                          validator: (value) {
+                                            if (value == null || value.trim().isEmpty) {
+                                              return 'กรุณาระบุรหัสพนักงาน';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                               SizedBox(height: 20),
 
                               // Name
                               InputField(
-                                  title: 'ชื่อ-สกุล:',
-                                  hint: '',
-                                  controller: _controller.fullNameController),
+                                title: 'ชื่อ-สกุล:',
+                                hint: '',
+                                controller: _controller.empNameController,
+                                // isRequired: true,
+                              ),
                               SizedBox(height: 20),
 
-                              // Card ID
+                              // Employe ID
                               InputField(
-                                  title: 'รหัสพนักงาน:',
-                                  hint: '',
-                                  controller: _controller.cardIdController),
+                                title: 'แผนก:',
+                                hint: '',
+                                controller: _controller.empDeptController,
+                                // isRequired: true,
+                              ),
                               SizedBox(height: 20),
 
                               // Signature Pad Section
@@ -2516,7 +2273,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                       child: SfSignaturePad(
                                         key: _controller.signatureGlobalKey,
                                         backgroundColor: Colors
-                                            .white, // Set background for better visibility
+                                            .transparent, // Set background for better visibility
                                         strokeColor: Colors.black,
                                         minimumStrokeWidth: 3.0,
                                         maximumStrokeWidth: 6.0,
@@ -2555,7 +2312,6 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                       ),
                     ),
 
-                    // Full-Width "เพิ่ม" Button
                     // Full-Width "เพิ่ม" Button
                     Padding(
                       padding: EdgeInsets.all(16),
@@ -2627,53 +2383,132 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
     );
   }
 
-  //list generate person by widget
-  Widget personListGenerate() {
-    return _controller.personList.isNotEmpty
-        ? Column(
-            children: _controller.personList.map((entry) {
-              return Container(
-                child: Card(
-                    margin: EdgeInsets.symmetric(vertical: 5),
-                    color: Colors.orange.shade50,
-                    elevation: 4.0,
-                    semanticContainer: true,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(
-                        color: Colors.black,
-                        width: 1,
+    Widget personListGenerate() {
+  return _controller.personList.isNotEmpty
+      ? Column(
+          children: _controller.personList.map((entry) {
+            return Card(
+              margin: EdgeInsets.symmetric(vertical: 5),
+              color: Colors.orange.shade50,
+              elevation: 2.0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: Slidable(
+                  key: ValueKey(entry['EmployeeId']),
+                  startActionPane: ActionPane(
+                    motion: ScrollMotion(),
+                    extentRatio: 0.20,
+                    children: [
+                      CustomSlidableAction(
+                        onPressed: (context) => popUpEditPerson(entry),
+                        backgroundColor: Colors.blue,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(15),
+                          bottomLeft: Radius.circular(15),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.edit_document,
+                              size: 40,
+                              color: Colors.white,
+                            ),
+                            SizedBox(width: 10),
+                            Text(
+                              'แก้ไข',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: _fontSize,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    child: Stack(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
+                    ],
+                  ),
+                  endActionPane: ActionPane(
+                    motion: ScrollMotion(),
+                    extentRatio: 0.20,
+                    children: [
+                      CustomSlidableAction(
+                        onPressed: (context) {
+                          warningDialog(
+                            'ต้องการลบข้อมูลรายการของ ${entry['TitleName']} ${entry['FullName']} ใช่หรือไม่?',
+                            () {
+                              setState(() {
+                                _controller.personList.remove(entry);
+                              });
+                              Navigator.pop(this.context);
+                            },
+                          );
+                        },
+                        backgroundColor: Colors.red,
+                        borderRadius: BorderRadius.only(
+                          topRight: Radius.circular(15),
+                          bottomRight: Radius.circular(15),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.person_remove_rounded,
+                              size: 40,
+                              color: Colors.white,
+                            ),
+                            Text(
+                              'ลบ',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: _fontSize,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.vertical(
-                                      top: Radius.circular(
-                                          12)), // Rounded top corners
+                              Icon(
+                                  Icons.person,
+                                  size: 70,
+                                  color: Colors.orange,
                                 ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
+                              SizedBox(width: 20),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Icon(
-                                      Icons.person,
-                                      color: Colors.black,
-                                      size: 70,
+                                    Text(
+                                      '${entry['TitleName']} ${entry['FullName']}',
+                                      style: TextStyle(
+                                        fontSize: _fontSize - 2,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
                                     ),
-                                    SizedBox(width: 5),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                    SizedBox(height: 8),
+                                    if(!_isPhoneScale) ...[
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
-                                            '${entry['TitleName']} ${entry['FullName']}',
+                                            'รหัสพนักงาน : ${entry['EmployeeId']}',
                                             style: TextStyle(
                                               fontSize: _fontSize - 2,
                                               fontWeight: FontWeight.bold,
@@ -2682,9 +2517,37 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                             overflow: TextOverflow.ellipsis,
                                             maxLines: 1,
                                           ),
-                                          SizedBox(height: 8),
+                                          if(entry['Department'] != null && entry['Department'].toString().trim().isNotEmpty) ...[
+                                            Text(
+                                            'แผนก : ${entry['Department']}',
+                                              style: TextStyle(
+                                                fontSize: _fontSize - 2,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 1,
+                                            ),
+                                          ],
+                                          Container(),
+                                          Container(),
+                                        ],
+                                      ),
+                                    ] else ...[
+                                      Text(
+                                          'รหัสพนักงาน : ${entry['EmployeeId']}',
+                                          style: TextStyle(
+                                            fontSize: _fontSize - 2,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                        ),
+                                        SizedBox(height: 5,),
+                                         if(entry['Department'] != null && entry['Department'].toString().trim().isNotEmpty) ...[
                                           Text(
-                                            'รหัสพนักงาน : ${entry['Card_Id']}',
+                                          'แผนก : ${entry['Department']}',
                                             style: TextStyle(
                                               fontSize: _fontSize - 2,
                                               fontWeight: FontWeight.bold,
@@ -2694,75 +2557,82 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                             maxLines: 1,
                                           ),
                                         ],
-                                      ),
-                                    ),
+                                    ],
+                                    
+                                    // Row(
+                                    //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    //   children: [
+                                    //     Text(
+                                    //       'รหัสพนักงาน : ${entry['EmployeeId']}',
+                                    //       style: TextStyle(
+                                    //         fontSize: _fontSize - 2,
+                                    //         fontWeight: FontWeight.bold,
+                                    //         color: Colors.black,
+                                    //       ),
+                                    //       overflow: TextOverflow.ellipsis,
+                                    //       maxLines: 1,
+                                    //     ),
+                                    //     if(entry['Department'] != null && entry['Department'].toString().trim().isNotEmpty) ...[
+                                    //       Text(
+                                    //       'แผนก : ${entry['Department']}',
+                                    //         style: TextStyle(
+                                    //           fontSize: _fontSize - 2,
+                                    //           fontWeight: FontWeight.bold,
+                                    //           color: Colors.black,
+                                    //         ),
+                                    //         overflow: TextOverflow.ellipsis,
+                                    //         maxLines: 1,
+                                    //       ),
+                                    //     ],
+                                    //     Container(),
+                                    //     Container(),
+                                    //   ],
+                                    // ),
                                   ],
                                 ),
                               ),
-                              Divider(
-                                color: Colors.black,
-                                height: 10.0,
-                                thickness: 1.0,
-                              ),
-                              SizedBox(
-                                height: 5,
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'ลายเซ็น:',
-                                    style: TextStyle(
-                                        fontSize: _fontSize,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                  SizedBox(
-                                    height: 5,
-                                  ),
-                                  Center(
-                                    child: Image.memory(
-                                      entry['Signature'],
-                                      fit: BoxFit.contain,
-                                    ),
-                                  ),
-                                ],
-                              ),
                             ],
                           ),
-                        ),
-                        Positioned(
-                          right: 50,
-                          bottom: 0,
-                          child: IconButton(
-                            icon: Icon(Icons.edit_document,
-                                color: const Color.fromARGB(255, 0, 0, 0),
-                                size: 40),
-                            onPressed: () => popUpEditPerson(entry),
+                          Divider(
+                            color: Colors.orange,
+                            height: 10.0,
+                            thickness: 1.0,
                           ),
-                        ),
-                        Positioned(
-                          right: 0,
-                          bottom: 0,
-                          child: IconButton(
-                            icon: Icon(Icons.group_remove,
-                                color: _cancelBtnColor, size: 40),
-                            onPressed: () => warningDialog(
-                                'ต้องการลบข้อมูลรายการของ ${entry['TitleName']} ${entry['FullName']} ใช่หรือไม่?',
-                                () {
-                              setState(() {
-                                _controller.personList.remove(entry);
-                              });
-                              Navigator.pop(context);
-                            }),
+                          SizedBox(height: 5),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(height: 10),
+                              Center(
+                                child: entry['Signature'] != null
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Image.memory(
+                                          entry['Signature'],
+                                          fit: BoxFit.contain,
+                                        ),
+                                      )
+                                    : Text(
+                                        'No Signature Available',
+                                        style: TextStyle(color: Colors.grey),
+                                      ),
+                              ),
+                              SizedBox(height: 10),
+                            ],
                           ),
-                        ),
-                      ],
-                    )),
-              );
-            }).toList(),
-          )
-        : Container();
-  }
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        )
+      : Container();
+}
+
+
 
   void popUpAddPerson() {
     showDialog(
@@ -2780,12 +2650,12 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
             child: Dialog(
               shape: RoundedRectangleBorder(
                 borderRadius:
-                    BorderRadius.circular(24), // Rounded corners for the dialog
+                    BorderRadius.circular(24),
               ),
               child: Container(
                 constraints: BoxConstraints(
                   maxWidth: MediaQuery.of(context).size.width * 0.8,
-                  maxHeight: MediaQuery.of(context).size.height * 0.8,
+                  maxHeight: MediaQuery.of(context).size.height * 0.6,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min, // Ensures dialog fits content
@@ -2798,19 +2668,18 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                           width: double.infinity,
                           padding: EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors
-                                .orange, // Change this to any color you like
+                            color: Colors.orange,
                             borderRadius: BorderRadius.vertical(
                                 top:
-                                    Radius.circular(24)), // Rounded top corners
+                                    Radius.circular(24)),
                           ),
                           child: Center(
                             child: Text(
-                              'รายละเอียด', // Title
+                              'รายละเอียด',
                               style: TextStyle(
                                 fontSize: _fontSize + 4,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white, // White text for contrast
+                                color: Colors.white,
                               ),
                             ),
                           ),
@@ -2829,29 +2698,121 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Dropdown
-                              Text('คำนำหน้า:',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: _fontSize)),
-                              SizedBox(height: 2.5),
-                              dropDownTitleName(),
+                              SizedBox(height: 5),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // 🔹 คอลัมน์ซ้าย (Dropdown)
+                                  Expanded(
+                                    flex: 2,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'คำนำหน้า:',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: _fontSize,
+                                          ),
+                                        ),
+                                        SizedBox(height: 2.5),
+                                        dropDownTitleName(),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(width: 12),
+
+                                  // 🔹 ช่องกรอกรหัสพนักงาน
+                                  Expanded(
+                                    flex: 3,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'รหัสพนักงาน:',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: _fontSize,
+                                          ),
+                                        ),
+                                        SizedBox(height: 2.5),
+                                        TextFormField(
+                                          controller: _controller.empIdController,
+                                          decoration: InputDecoration(
+                                            hintText: 'ค้นหา...',
+                                            hintStyle: TextStyle(
+                                              fontSize: _fontSize - 4,
+                                              color: Colors.grey,
+                                              fontStyle: FontStyle.italic,
+                                            ),
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            isDense: true,
+                                            suffixIcon: IconButton(
+                                              icon: Icon(
+                                                Icons.person_search,
+                                                color: Colors.blue,
+                                                size: _fontSize + 8,
+                                              ),
+                                              onPressed: () async {
+                                                bool status = await _controller
+                                                    .searchInfoByPid(_controller.empIdController.text);
+                                                if (!status) {
+                                                  showTopSnackBar(
+                                                    Overlay.of(context),
+                                                    CustomSnackBar.error(
+                                                      backgroundColor: Colors.red.shade700,
+                                                      icon: Icon(
+                                                        Icons.sentiment_very_satisfied,
+                                                        color: Colors.red.shade900,
+                                                        size: 120,
+                                                      ),
+                                                      message: 'ไม่พบข้อมูลพนักงาน',
+                                                    ),
+                                                  );
+                                                }
+                                              },
+                                            ),
+                                            contentPadding:
+                                                EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                                            errorBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(color: Colors.red, width: 2),
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            focusedErrorBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(color: Colors.red, width: 2),
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                          validator: (value) {
+                                            if (value == null || value.trim().isEmpty) {
+                                              return 'กรุณาระบุรหัสพนักงาน';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                               SizedBox(height: 20),
 
                               // Name
                               InputField(
                                 title: 'ชื่อ-สกุล:',
                                 hint: '',
-                                controller: _controller.fullNameController,
+                                controller: _controller.empNameController,
                                 // isRequired: true,
                               ),
                               SizedBox(height: 20),
 
-                              // Card ID
+                              // Employe ID
                               InputField(
-                                title: 'รหัสพนักงาน:',
+                                title: 'แผนก:',
                                 hint: '',
-                                controller: _controller.cardIdController,
+                                controller: _controller.empDeptController,
                                 // isRequired: true,
                               ),
                               SizedBox(height: 20),
@@ -2879,7 +2840,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                       child: SfSignaturePad(
                                         key: _controller.signatureGlobalKey,
                                         backgroundColor: Colors
-                                            .white, // Set background for better visibility
+                                            .transparent, // Set background for better visibility
                                         strokeColor: Colors.black,
                                         minimumStrokeWidth: 3.0,
                                         maximumStrokeWidth: 6.0,
@@ -2954,8 +2915,8 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                             child: ElevatedButton(
                               onPressed: () async {
                                 if (_controller
-                                        .fullNameController.text.isEmpty ||
-                                    _controller.cardIdController.text.isEmpty ||
+                                        .empNameController.text.isEmpty ||
+                                    _controller.empIdController.text.isEmpty ||
                                     _controller.signatureGlobalKey.currentState!
                                         .toPathList()
                                         .isEmpty) {
@@ -3055,8 +3016,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                               ),
                             ),
                             Icon(_controller.isStrechedDropDown
-                                ? Icons.arrow_upward
-                                : Icons.arrow_downward),
+                                ? Icons.arrow_upward_rounded
+                                : Icons.arrow_downward_rounded,
+                              color: Colors.blue,
+                            ),
                           ],
                         ),
                       ),
@@ -3137,10 +3100,20 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                 fontSize: _fontSize,
                 fontFamily: 'NotoSans')),
             backgroundColor:
-                WidgetStatePropertyAll<Color>(Colors.orange.shade50),
+                WidgetStatePropertyAll<Color>(Colors.white),
           ),
         );
       }).toList(),
+
+      menuStyle: MenuStyle(
+              backgroundColor: MaterialStateProperty.all(Colors.white),
+              shape: MaterialStateProperty.all(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
+            ),
+
       onSelected: (value) {
         setState(() {
           _controller.selectedBuilding = value;
@@ -3160,8 +3133,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
       builder: (BuildContext context, Widget? child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(
-              textScaler: TextScaler.linear(
-                  MediaQuery.of(context).size.width > 799 ? 1.5 : 1.0)),
+              textScaler: TextScaler.linear(MediaQuery.of(context).size.width > 799 ? 1.5 : 1.0)),
           child: Theme(
             data: ThemeData.light().copyWith(
               primaryColor: Colors.orange,
@@ -3215,12 +3187,12 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
 
   //Function Date Picker
   Future<void> _datePicker(BuildContext context, DateTime? _date, String type) async {
-    DateTime initialDate = _date ?? DateTime.now();
+    DateTime initialDate = _date ?? AppDateTime.now();
     DateTime? _pickerDate = await showDatePicker(
         context: context,
         initialDate: initialDate,
-        firstDate: DateTime(DateTime.now().year - 7),
-        lastDate: DateTime(DateTime.now().year + 7),
+        firstDate: DateTime(AppDateTime.now().year - 7),
+        lastDate: DateTime(AppDateTime.now().year + 7),
         builder: (BuildContext context, Widget? child) {
           return MediaQuery(
             data: MediaQuery.of(context).copyWith(
@@ -3277,21 +3249,21 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
   }
 
   Widget dropDownTitleName() {
-    List<String> titleNameList = ['นาย', 'น.ส.', 'นาง', 'Mr.', 'Ms.', 'Mrs.'];
-    if (_controller.titleNameController.text.isEmpty) {
-      _controller.titleNameController.text = titleNameList[0];
+    List<String> titleNameList = ['คุณ', 'นาย', 'น.ส.', 'นาง', 'Mr.', 'Ms.', 'Mrs.'];
+    if (_controller.empTitleController.text.isEmpty) {
+      _controller.empTitleController.text = titleNameList[0];
     }
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey),
       ),
       padding: EdgeInsets.symmetric(horizontal: 10),
       child: DropdownButtonFormField<String>(
-        value: _controller.titleNameController.text,
+        value: _controller.empTitleController.text,
         decoration: InputDecoration(
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          contentPadding: EdgeInsets.symmetric(vertical: 13.5, horizontal: 8),
         ),
         icon: Icon(Icons.arrow_drop_down, color: Colors.black),
         style: TextStyle(
@@ -3309,70 +3281,24 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
         }).toList(),
         onChanged: (String? newValue) {
           setState(() {
-            _controller.titleNameController.text = newValue!;
+            _controller.empTitleController.text = newValue!;
           });
         },
       ),
     );
   }
 
-  void warningDialog(String description, VoidCallback test) {
-    AwesomeDialog(
-      context: context,
-      dialogType: DialogType.warning,
-      headerAnimationLoop: true,
-      animType: AnimType.topSlide,
-      buttonsBorderRadius: const BorderRadius.all(
-        Radius.circular(2),
-      ),
-      showCloseIcon: true,
-      title: 'คำเตือน',
-      titleTextStyle:
-          TextStyle(fontSize: _fontSize + 10, fontWeight: FontWeight.bold),
-      desc: description,
-      descTextStyle:
-          TextStyle(fontSize: _fontSize, fontWeight: FontWeight.bold),
-      btnCancel: ElevatedButton(
-        onPressed: () {
-          Navigator.pop(context);
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _cancelBtnColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30), // Circular shape
-          ),
-          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-          elevation: 8, // Add elevation (shadow effect)
-          shadowColor: Colors.black.withOpacity(1), // Shadow color
-        ),
-        child: Text(
-          'ยกเลิก',
-          style: TextStyle(
-              color: Colors.white,
-              fontSize: _fontSize,
-              fontWeight: FontWeight.bold),
-        ),
-      ),
-      btnOk: ElevatedButton(
-        onPressed: test,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _acceptBtnColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30), // Circular shape
-          ),
-          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-          elevation: 8, // Add elevation (shadow effect)
-          shadowColor: Colors.black.withOpacity(1), // Shadow color
-        ),
-        child: Text(
-          'ยืนยัน',
-          style: TextStyle(
-              color: Colors.white,
-              fontSize: _fontSize,
-              fontWeight: FontWeight.bold),
-        ),
-      ),
-    ).show();
+  void warningDialog(String description, VoidCallback action) {
+    CustomDialog.show(
+                      context: context,
+                      title: 'คำเตือน',
+                      message: description,
+                      type: DialogType.warning,
+                      onConfirm: action,
+                      onCancel: () {
+                        Navigator.pop(context);
+                      },
+                    );
   }
 }
 
@@ -3403,6 +3329,7 @@ class InputField extends StatefulWidget {
 class _InputFieldState extends State<InputField> {
   bool _isError = false;
   double _fontSize = ApiConfig.fontSize;
+  bool _isPhoneScale = false;
 
   @override
   void initState() {
@@ -3410,11 +3337,8 @@ class _InputFieldState extends State<InputField> {
     _validateInput();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final screenWidth = MediaQuery.of(context).size.width;
       setState(() {
-        if (screenWidth > 799) {
-          _fontSize += 8.0;
-        }
+        _fontSize = ApiConfig.getFontSize(context);
       });
     });
   }
@@ -3429,6 +3353,8 @@ class _InputFieldState extends State<InputField> {
 
   @override
   Widget build(BuildContext context) {
+    _fontSize = ApiConfig.getFontSize(context);
+    _isPhoneScale = ApiConfig.getPhoneScale(context);
     return GestureDetector(
       behavior: HitTestBehavior.opaque, // Ensures taps outside are detected
       onTap: () {

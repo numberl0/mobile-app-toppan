@@ -1,7 +1,6 @@
 import 'package:toppan_app/main.dart';
 import 'dart:ui';
 
-import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
@@ -11,6 +10,8 @@ import 'package:toppan_app/config/api_config.dart';
 import 'package:toppan_app/home/home_controller.dart';
 import 'package:toppan_app/service_manager.dart';
 
+import '../component/CustomDIalog.dart';
+
 
 class HomePage extends StatefulWidget {
   HomePage({super.key});
@@ -19,27 +20,46 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with RouteAware {
+class _HomePageState extends State<HomePage> with RouteAware, SingleTickerProviderStateMixin {
   static HomeController _controller = HomeController();
-
+  static ServiceManager _controllerMenu = ServiceManager();
   Cleartemporary cleartemporary = Cleartemporary();
 
+  bool _isLoading = true;
   double _fontSize = ApiConfig.fontSize; 
+  bool isPhoneScale = false;
+
+  AnimationController? _rotateController;
+  Animation<double>? _rotation;
 
   @override
   void initState() {
     super.initState();
-    preparePage();
-    clearTemp();
+    reloadPage();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final screenWidth = MediaQuery.of(context).size.width;
-      setState(() {
-        if (screenWidth > 799) {
-          _fontSize += 8.0;
-        }
-      });
-    });
+  if (_controller.hasNotification) {
+      _rotateController = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 200),
+      );
+
+      _rotation = Tween<double>(
+        begin: -0.02,
+        end: 0.02,
+      ).animate(
+        CurvedAnimation(
+          parent: _rotateController!,
+          curve: Curves.easeInOut,
+        ),
+      );
+
+      _rotateController?.repeat(reverse: true);
+    }
+
+
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   setState(() { });
+    // });
   }
 
   @override
@@ -50,396 +70,438 @@ class _HomePageState extends State<HomePage> with RouteAware {
 
   @override
   void dispose() {
+    _rotateController?.dispose();
     routeObserver.unsubscribe(this);
     super.dispose();
   }
 
   @override
   void didPush() {
-    clearTemp();
+    // clearTemp();
+    // reloadPage();
   }
 
   @override
   void didPopNext() {
-    clearTemp(); // called when coming back from another page
+    // clearTemp();
+    reloadPage();
   }
 
-  void clearTemp() async {
-    await cleartemporary.clearCache();
-  }
+  // void clearTemp() async {
+  //   await cleartemporary.clearCache();
+  // }
 
   void preparePage() async {
     await _controller.preparePage(context);
-    setState(() {});
+    setState(() {
+       _isLoading = false;
+    });
   }
 
+  Future<void> reloadPage() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    await cleartemporary.clearCache();
+    await _controller.preparePage(context);
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    _fontSize = ApiConfig.getFontSize(context);
+    isPhoneScale = ApiConfig.getPhoneScale(context);
     return Container(
       decoration: const BoxDecoration(
-          gradient: LinearGradient(
-        begin: Alignment.topRight,
-        end: Alignment.bottomLeft,
-        colors: [
-          Color.fromARGB(255, 132, 194, 252),
-          Color.fromARGB(255, 45, 152, 240),
-          Color.fromARGB(255, 48, 114, 236),
-          Color.fromARGB(255, 0, 93, 199),
-        ],
-      )),
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          title: Text(
-            'Menu',
-            style: TextStyle(
-                color: Colors.white,
-                fontSize: _fontSize + 20,
-                fontWeight: FontWeight.bold,
-                shadows: [
-                Shadow(
-                  offset: Offset(2, 2),
-                  blurRadius: 6,
-                  color: Colors.black.withOpacity(0.8),
-                ),
-              ],
-              ),
-          ),
-          centerTitle: true,
-          flexibleSpace: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topRight,
-                end: Alignment.bottomLeft,
-                colors: [
-                  Colors.transparent,
-                  Colors.transparent,
-                ],
-                transform: GradientRotation(90),
-              ),
-            ),
-          ),
-          actions: [
-            Container(
-                margin: EdgeInsets.only(right: 12),
-                child: Chip(
-                  avatar: CircleAvatar(
-                    radius: 12,
-                    backgroundColor: Colors.white,
-                    child: Center(
-                      child: Text(
-                        _controller.displayName.isNotEmpty
-                        ? _controller.displayName.substring(0, 1).toUpperCase()
-                        : '?',
-                        style: TextStyle(
-                          color: Colors.blue,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                  label: Text(
-                    _controller.displayName,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  backgroundColor: Colors.blueGrey,
-                )),
+        gradient: LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [
+            Color.fromARGB(255, 132, 194, 252),
+            Color.fromARGB(255, 45, 152, 240),
+            Color.fromARGB(255, 48, 114, 236),
+            Color.fromARGB(255, 0, 93, 199),
           ],
-
-          leading: IconButton(
-            icon: Icon(
-              size: 40,
-              Icons.logout,
-              color: Colors
-                  .white,
-              shadows: [
-                Shadow(
-                  offset: Offset(2, 2),
-                  blurRadius: 6,
-                  color: Colors.black.withOpacity(0.8),
-                ),
-              ],
-            ),
-            onPressed: () {
-              AwesomeDialog(
-                context: context,
-                dialogType: DialogType.info,
-                buttonsBorderRadius: const BorderRadius.all(
-                  Radius.circular(2),
-                ),
-                dismissOnTouchOutside: true,
-                dismissOnBackKeyPress: false,
-                headerAnimationLoop: false,
-                animType: AnimType.bottomSlide,
-                title: 'คำเตือน',
-                titleTextStyle: TextStyle(
-                    fontSize: _fontSize + 20, fontWeight: FontWeight.bold),
-                desc: 'ต้องการออกจากระบบหรือไม่?',
-                descTextStyle:
-                    TextStyle(fontSize: _fontSize + 10, fontWeight: FontWeight.bold),
-                showCloseIcon: true,
-                // btnCancelColor: Colors.red.shade600,
-                btnCancel: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.shade600,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30), // Circular shape
-                    ),
-                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                    elevation: 8, // Add elevation (shadow effect)
-                    shadowColor: Colors.black.withOpacity(1), // Shadow color
-                  ),
-                  child: Text(
-                    'ยกเลิก',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: _fontSize + 3,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ),
-                btnOk: ElevatedButton(
-                  onPressed: () async {
-                    bool isLogout = await _controller.logout(context);
-                    if (isLogout) {
-                      showTopSnackBar(
-                        Overlay.of(context),
-                        CustomSnackBar.success(
-                          backgroundColor: Colors.green.shade500,
-                          icon: Icon(Icons.sentiment_very_satisfied,
-                              color: Colors.green.shade600, size: 120),
-                          message: 'ออกจากระบบเรียบร้อย',
-                        ),
-                      );
-                      GoRouter.of(context).go('/login');
-                    } else {
-                      showTopSnackBar(
-                        Overlay.of(context),
-                        CustomSnackBar.error(
-                          backgroundColor: Colors.red.shade700,
-                          icon: Icon(Icons.sentiment_very_satisfied,
-                              color: Colors.red.shade900, size: 120),
-                          message: 'ออกจากระบบไม่สำเร็จ',
-                        ),
-                      );
-                      Navigator.of(context).pop();
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30), // Circular shape
-                    ),
-                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                    elevation: 8, // Add elevation (shadow effect)
-                    shadowColor: Colors.black.withOpacity(1), // Shadow color
-                  ),
-                  child: Text(
-                    'ยืนยัน',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: _fontSize + 3,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ).show();
-            },
-          ),
         ),
+      ),
+      child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: page(context),
+        body: Column(
+          children: [
+            Expanded(
+              flex: 25,
+              child: buildDashboardHeader(),
+            ),
+            Expanded(
+              flex: isPhoneScale ? 60:75,
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(64),
+                    topRight: Radius.circular(64),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      offset: Offset(0, -2),
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(32),
+                    topRight: Radius.circular(32),
+                  ),
+                  child: _isLoading
+                    ? Center(child: CircularProgressIndicator())
+                    : SingleChildScrollView(child: page(context)),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget page(BuildContext context) {
-    final ScrollController scrollController = ScrollController();
-    double screenWidth = MediaQuery.of(context).size.width;
-    double paddingHorizontal = screenWidth * 0.07;
-    return Center(
-    child: LayoutBuilder(
-      builder: (context, constraints) {
-        return Container(
-          padding: EdgeInsets.all(16),
-          child: _controller.serviceList.length == 1
-              ? Center(child: buildService(context, _controller.serviceList[0]))
-              : ScrollConfiguration(
-                  behavior: ScrollConfiguration.of(context).copyWith(
-                    dragDevices: {
-                      PointerDeviceKind.touch,
-                      PointerDeviceKind.mouse,
-                    },
-                    scrollbars: false,
-                  ),
-                  child: SingleChildScrollView(
-                    controller: scrollController,
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(paddingHorizontal, 16, paddingHorizontal, 16),
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.95),
-                          child: GridView.builder(
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: constraints.maxWidth > 799 ? 2 : 2,
-                              childAspectRatio: 0.9,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
-                            ),
-                            itemCount: _controller.serviceList.length,
-                            itemBuilder: (context, index) {
-                              return buildService(context, _controller.serviceList[index]);
-                            },
-                          ),
-                        ),
-                      ),
+  Widget buildDashboardHeader() {
+  return Container(
+    width: double.infinity,
+    margin: EdgeInsets.all(5),
+    padding: EdgeInsets.all(0),
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        colors: [
+          Colors.transparent,
+          Colors.transparent,
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      borderRadius: BorderRadius.only(
+        bottomLeft: Radius.circular(30),
+        bottomRight: Radius.circular(30),
+      ),
+    ),
+    child: SafeArea(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+
+          Row(
+  children: [
+    Spacer(),
+    PopupMenuButton<String>(
+      onSelected: (value) async {
+        if (value == 'logout') {
+          CustomDialog.show(
+            context: context,
+            title: 'คำเตือน',
+            message: 'คุณแน่ใจว่าต้องการออกจากระบบหรือไม่?',
+            type: DialogType.info,
+            onConfirm: () async {
+              bool isLogout = await _controller.logout(context);
+              if (isLogout) {
+                showTopSnackBar(
+                  Overlay.of(context),
+                  CustomSnackBar.success(
+                    backgroundColor: Colors.green.shade500,
+                    icon: Icon(
+                      Icons.sentiment_very_satisfied,
+                      color: Colors.green.shade600,
+                      size: 120,
                     ),
+                    message: 'ออกจากระบบเรียบร้อย',
                   ),
-                ),
-        );
+                );
+                GoRouter.of(context).go('/login');
+              } else {
+                showTopSnackBar(
+                  Overlay.of(context),
+                  CustomSnackBar.error(
+                    backgroundColor: Colors.red.shade700,
+                    icon: Icon(
+                      Icons.sentiment_very_satisfied,
+                      color: Colors.red.shade900,
+                      size: 120,
+                    ),
+                    message: 'ออกจากระบบไม่สำเร็จ',
+                  ),
+                );
+              }
+            },
+            onCancel: () => Navigator.pop(context),
+          );
+        }
       },
+
+      // ⭐ ตัวที่แสดงบนหน้าจอ (ชื่อผู้ใช้)
+      child: Container(
+        margin: EdgeInsets.only(right: 12),
+        child: Chip(
+          side: BorderSide.none,
+          avatar: CircleAvatar(
+            radius: 12,
+            backgroundColor: Colors.white,
+            child: Text(
+              _controller.displayName.isNotEmpty
+                  ? _controller.displayName.substring(0, 1).toUpperCase()
+                  : '?',
+              style: TextStyle(
+                color: Colors.blue,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          label: Text(
+            _controller.displayName,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.blueGrey,
+        ),
+      ),
+
+      // 📋 เมนูที่เด้งออกมา
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'logout',
+          child: Row(
+            children: [
+              Icon(Icons.logout, color: Colors.black),
+              SizedBox(width: 8),
+              Text('ออกจากระบบ'),
+            ],
+          ),
+        ),
+      ],
+    ),
+  ],
+),
+
+
+
+
+
+
+
+          Expanded(
+  child: Padding(
+    padding: EdgeInsets.symmetric(
+      horizontal: MediaQuery.of(context).size.width * 0.05,
+    ),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'เมนูหลัก',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: _fontSize + 34,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          'เลือกหัวข้อที่ต้องการได้เลย!!',
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.8),
+            fontSize: _fontSize,
+          ),
+        ),
+      ],
+    ),
+  ),
+),
+
+
+// SizedBox(height: 20),
+// Padding(
+//   padding: EdgeInsets.symmetric(
+//     horizontal: MediaQuery.of(context).size.width * 0.05,
+//   ),
+//   child: Column(
+//     crossAxisAlignment: CrossAxisAlignment.start,
+//     children: [
+//       Text(
+//         'เมนูหลัก',
+//         style: TextStyle(
+//           color: Colors.white,
+//           fontSize: _fontSize + 34,
+//           fontWeight: FontWeight.bold,
+//         ),
+//       ),
+//       Text(
+//         'เลือกหัวข้อที่ต้องการได้เลย!!',
+//         style: TextStyle(
+//           color: Colors.white.withOpacity(0.8),
+//           fontSize: _fontSize,
+//         ),
+//       ),
+//     ],
+//   ),
+// ),
+
+
+
+
+        ],
+      ),
     ),
   );
-  }
+}
 
-  Widget buildService(BuildContext context, ServiceEntity data) {
-    int imageLengthControl = 2;
-    if(MediaQuery.of(context).size.width > 799 && _controller.servicesStatus.length <= 2) {
-        imageLengthControl = 1;
-    }
-    return Stack(
+  Widget page(BuildContext context) {
+  final ScrollController scrollController = ScrollController();
+  double screenWidth = MediaQuery.of(context).size.width;
+  double paddingHorizontal = screenWidth * 0.07;
+
+  final List<Map<String, dynamic>> serviceTask = _controllerMenu.taskServices;
+  final List<Map<String, dynamic>> enabledTasks = serviceTask.where((task) => task['enable'] == true).toList();
+
+  int crossAxisCount = isPhoneScale ? 2 : 2;
+  double iconSize = isPhoneScale ? 60 : 120;
+  double fontSize = isPhoneScale ? 24 : 36 ;
+
+  return Center(
+    child: Container(
+      
+      padding: EdgeInsets.fromLTRB(paddingHorizontal, 16, paddingHorizontal, 16),
+      child: SingleChildScrollView(
+        controller: scrollController,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: screenWidth * 0.95),
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                crossAxisSpacing: 40,
+                mainAxisSpacing: 40,
+                childAspectRatio: 1,
+              ),
+              itemCount: enabledTasks.length,
+              itemBuilder: (context, index) {
+  final item = enabledTasks[index];
+
+  return InkWell(
+    onTap: () {
+      _controllerMenu.navigateToPage(context, item['key']);
+    },
+    borderRadius: BorderRadius.circular(16),
+    child: Stack(
       children: [
-        InkWell(
-          onTap: data.enable == false
-              ? () {
-                  AwesomeDialog(
-                    context: context,
-                    dialogType: DialogType.warning,
-                    headerAnimationLoop: false,
-                    animType: AnimType.topSlide,
-                    showCloseIcon: true,
-                    title: 'แจ้งเตือน',
-                    titleTextStyle: TextStyle(
-                      fontSize: _fontSize + 30,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    desc:
-                        'ระบบ ${data.title} ไม่สามารถให้บริการได้ในตอนนี้ ขออภัยในความไม่สะดวก',
-                    descTextStyle: TextStyle(
-                      fontSize: _fontSize + 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    btnOk: ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        padding:
-                            EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                        elevation: 8,
-                        shadowColor: Colors.black.withOpacity(1),
-                      ),
-                      child: Text(
-                        'ยืนยัน',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: _fontSize + 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ).show();
-                }
-              : () {
-                  if(data.userIn) {
-                    data.onTap!(context);
-                  }else{
-                    showTopSnackBar(
-                      Overlay.of(context),
-                      CustomSnackBar.error(
-                        backgroundColor: Colors.red.shade700,
-                        icon: Icon(Icons.sentiment_very_satisfied,
-                            color: Colors.red.shade900, size: 120),
-                        message: "ไม่สามารถเข้าใช้งานระบบ ${data.title} ได้เนื่องจากไม่มีข้อมูลผู้ใช้ในระบบ",
-                      ),
-                    );
-                  }
-                },
-          borderRadius: BorderRadius.circular(20),
+        Positioned.fill(
           child: Container(
-            height: 300,
-            width: 275,
-            padding: EdgeInsets.all(16.0),
+            padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(24),
               gradient: LinearGradient(
-                colors: data.enable == false
-                    ? [Colors.grey.shade300, Colors.grey.shade500]
-                    : data.backGroundColor,
+                colors: [
+                  Color(0xFFe3f2fd),
+                  Color(0xFFbbdefb),
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.grey.withOpacity(0.3),
                   blurRadius: 8,
-                  spreadRadius: 2,
-                  offset: Offset(0, 6),
+                  offset: Offset(2, 4),
                 ),
               ],
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  data.iconPath,
-                  width: data.iconWidth / imageLengthControl,
-                  height: data.iconHeight / imageLengthControl,
-                ),
-                SizedBox(height: 15),
-                Text(
-                  data.title,
-                  style: TextStyle(
-                    fontSize: _fontSize + 10,
-                    fontWeight: FontWeight.bold,
+                ShaderMask(
+                  shaderCallback: (bounds) => LinearGradient(
+                    colors: [Colors.blue.shade300, Colors.blue, Colors.indigo],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ).createShader(bounds),
+                  child: Icon(
+                    item['icon'],
+                    size: iconSize,
                     color: Colors.white,
-                    shadows: [
-                      Shadow(
-                        offset: Offset(2, 2),
-                        blurRadius: 6,
-                        color: Colors.black.withOpacity(0.8),
-                      ),
-                    ],
                   ),
-                  textAlign: TextAlign.center,
                 ),
+                SizedBox(height: 12),
+                Text(
+                  item['label'],
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: fontSize,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue.shade900,
+                  ),
+                ),
+                if (!isPhoneScale) ...[
+                  SizedBox(height: 6),
+                  Text(
+                    item['description'] ?? 'คำอธิบายของเมนูนี้',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: fontSize - 16,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
         ),
-        if (data.enable == false)
-          Positioned(
-            top: 10,
-            right: 10,
-            child: Icon(
-              Icons.warning_amber_rounded,
-              color: Colors.red.shade600,
-              size: 40,
+
+            // 🔔 animated notification badge
+            if (item['notify'])
+            Align(
+              alignment: Alignment.topRight,
+              child: Transform.translate(
+                offset: const Offset(10, -10),
+                child: RotationTransition(
+                  turns: _rotation!,
+                  child: Container(
+                    width: isPhoneScale ? 36:50,
+                    height: isPhoneScale ? 36:50,
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.notifications_active_rounded,
+                        color: Colors.white,
+                        size: isPhoneScale ? 30:40,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+
+      ],
+    ),
+  );
+}
             ),
           ),
-      ],
-    );
-  }
+        ),
+      ),
+    ),
+  );
+}
 
 }
 

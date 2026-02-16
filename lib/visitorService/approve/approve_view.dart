@@ -1,13 +1,15 @@
 import 'dart:ui';
-import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
+import 'package:toppan_app/component/AppDateTime.dart';
 import 'package:toppan_app/config/api_config.dart';
 import 'package:toppan_app/visitorService/approve/approve_controller.dart';
+
+import '../../component/CustomDIalog.dart';
 
 class ApproveView {
   Widget approveFormWidget(BuildContext context) {
@@ -24,6 +26,7 @@ class _ApprovePageState extends State<ApprovePage> {
   ApproveController _controller = ApproveController();
 
   double _fontSize = ApiConfig.fontSize;
+  bool isPhoneScale = false;
 
   @override
   void initState() {
@@ -34,25 +37,21 @@ class _ApprovePageState extends State<ApprovePage> {
         _controller.startAnimation = true;
       });
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final screenWidth = MediaQuery.of(context).size.width;
-      setState(() {
-        if (screenWidth > 799) {
-          _fontSize += 8.0;
-        }
-      });
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   setState(() {
+    //     _fontSize = ApiConfig.getFontSize(context);
+    //   });
+    // });
     // Clear Flutter's image cache
     imageCache.clear();
     imageCache.clearLiveImages();
   }
 
   void preparePage() async {
-    _controller.selectedType = _controller.typeOptions[0];
+    // _controller.selectedType = _controller.typeOptions[0];
     await _controller.preparePage(context);
 
     setState(() {
-      _controller.filteredDocument = _controller.list_Request;
       filterDocuments();
     });
   }
@@ -72,6 +71,8 @@ class _ApprovePageState extends State<ApprovePage> {
 
   @override
   Widget build(BuildContext context) {
+    _fontSize = ApiConfig.getFontSize(context);
+    isPhoneScale = ApiConfig.getPhoneScale(context);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.transparent,
@@ -89,7 +90,13 @@ class _ApprovePageState extends State<ApprovePage> {
               padding: EdgeInsets.all(16.0),
               child: SearchInputBar(),
             ),
-            listForm(),
+            Expanded(
+              child: Container(
+                margin: EdgeInsets.fromLTRB(0, 0, 0, 20),
+                padding: EdgeInsets.all(16),
+                child: listRequest(),
+              ),
+            ),
           ],
         ),
       ),
@@ -115,7 +122,7 @@ class _ApprovePageState extends State<ApprovePage> {
                   Color.fromARGB(255, 255, 255, 255),
                 ],
               ),
-              borderRadius: BorderRadius.all(Radius.circular(20)),
+              borderRadius: BorderRadius.all(Radius.circular(36)),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.3),
@@ -145,53 +152,62 @@ class _ApprovePageState extends State<ApprovePage> {
                               height: 5,
                             ),
 
-                            //Select Type Search (Dropdown)
-                            DropdownButtonFormField<String>(
+                            //Select Option Search (Dropdown)
+                            DropdownButtonFormField<RequestType>(
                               value: _controller.selectedType,
                               decoration: InputDecoration(
-                                labelText: 'ประเภท (Employee/Visitor)',
+                                labelText: 'ประเภทคำร้อง...',
                                 labelStyle: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: _fontSize + 2),
+                                    color: Colors.grey,
+                                    fontSize: _fontSize - 2,
+                                    fontStyle: FontStyle.italic),
                                 prefixIcon:
                                     Icon(Icons.search, color: Colors.blue),
+                                contentPadding: EdgeInsets.symmetric(
+                                    vertical: 4, horizontal: 4),
                                 border: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.black),
+                                  borderRadius: BorderRadius.circular(24),
+                                  borderSide: BorderSide(color: Colors.grey),
                                 ),
                                 enabledBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                      color: Colors.black), // White border
+                                  borderRadius: BorderRadius.circular(24),
+                                  borderSide: BorderSide(color: Colors.grey),
                                 ),
                                 focusedBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                      color: Colors
-                                          .black), // White border on focus
+                                  borderRadius: BorderRadius.circular(24),
+                                  borderSide: BorderSide(color: Colors.grey),
                                 ),
                               ),
-                              items: _controller.typeOptions.map((String type) {
+                              items: _controller.typeOptions
+                                  .map((RequestType type) {
                                 Icon icon;
+                                String label = '';
                                 switch (type) {
-                                  case 'Employee':
-                                    icon = Icon(Icons.layers_rounded,
-                                        color: Colors.orange);
-                                    break;
-                                  case 'Visitor':
+                                  case RequestType.visitor:
                                     icon = Icon(Icons.layers_rounded,
                                         color: Colors.green);
+                                    label = 'Visitor';
                                     break;
-                                  default:
+                                  case RequestType.employee:
                                     icon = Icon(Icons.layers_rounded,
-                                        color: Colors.blue);
+                                        color: Colors.orange);
+                                    label = 'Employee';
+                                    break;
+                                  case RequestType.permission:
+                                    icon = Icon(Icons.layers_rounded,
+                                        color: Colors.yellow);
+                                    label = 'Permission';
+                                    break;
                                 }
 
-                                return DropdownMenuItem<String>(
+                                return DropdownMenuItem<RequestType>(
                                   value: type,
                                   child: Row(
                                     children: [
                                       icon,
                                       SizedBox(width: 10),
                                       Text(
-                                        type,
+                                        label,
                                         style: TextStyle(
                                             color: Colors.black,
                                             fontSize: _fontSize),
@@ -200,10 +216,11 @@ class _ApprovePageState extends State<ApprovePage> {
                                   ),
                                 );
                               }).toList(),
-                              onChanged: (String? newValue) {
+                              onChanged: (RequestType? newValue) async {
                                 setState(() {
                                   _controller.selectedType = newValue;
                                 });
+                                await _controller.clearSearch();
                                 filterDocuments();
                               },
                               style: TextStyle(color: Colors.black),
@@ -212,68 +229,11 @@ class _ApprovePageState extends State<ApprovePage> {
                               dropdownColor: Colors.white.withOpacity(0.8),
                             ),
 
-                            SizedBox(height: 20),
-
-                            //Select Company Search
-                            TextField(
-                              controller: _controller.companyController,
-                              cursorColor: Colors.black,
-                              style: TextStyle(
-                                  color: Colors.black, fontSize: _fontSize),
-                              decoration: InputDecoration(
-                                labelText: 'องค์กร',
-                                labelStyle: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: _fontSize + 2),
-                                prefixIcon: Icon(Icons.business_rounded,
-                                    color: Colors.black),
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.black),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.black),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.black),
-                                ),
-                              ),
-                              onChanged: (_) => filterDocuments(),
-                            ),
-
-                            SizedBox(height: 20),
-
-                            //Select Name Search
-                            TextField(
-                              controller: _controller.nameController,
-                              cursorColor: Colors.black,
-                              style: TextStyle(
-                                  color: Colors.black, fontSize: _fontSize),
-                              decoration: InputDecoration(
-                                labelText: 'ชื่อ',
-                                labelStyle: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: _fontSize + 2),
-                                prefixIcon:
-                                    Icon(Icons.person, color: Colors.black),
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.black),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                      color: Colors.black), // White border
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                      color: Colors
-                                          .black), // White border on focus
-                                ),
-                              ),
-                              onChanged: (_) => filterDocuments(),
-                            ),
-
                             SizedBox(
-                              height: 10,
+                              height: 12,
                             ),
+
+                            GetSearchTool(),
 
                             //button approve
                             Padding(
@@ -284,164 +244,180 @@ class _ApprovePageState extends State<ApprovePage> {
                                     .infinity, // Button expands to full width
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    AwesomeDialog(
-                                      context: context,
-                                      dialogType: DialogType.info,
-                                      buttonsBorderRadius:
-                                          const BorderRadius.all(
-                                        Radius.circular(2),
-                                      ),
-                                      dismissOnTouchOutside: true,
-                                      dismissOnBackKeyPress: false,
-                                      headerAnimationLoop: false,
-                                      animType: AnimType.bottomSlide,
-                                      title: 'คำเตือน',
-                                      titleTextStyle: TextStyle(
-                                          fontSize: _fontSize + 10,
-                                          fontWeight: FontWeight.bold),
-                                      desc:
-                                          'คุณต้องการอนุมัติเอกสารทั้งหมดใช่หรือไม่?',
-                                      descTextStyle: TextStyle(
-                                          fontSize: _fontSize,
-                                          fontWeight: FontWeight.bold),
-                                      showCloseIcon: true,
-                                      btnCancelText: 'ยกเลิก',
-                                      btnOkText: 'ยืนยัน',
-                                      // btnCancelColor: Colors.red.shade600,
-                                      btnCancel: ElevatedButton(
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.red.shade600,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                                30), // Circular shape
-                                          ),
-                                          padding: EdgeInsets.symmetric(
-                                              vertical: 12, horizontal: 24),
-                                          elevation:
-                                              8, // Add elevation (shadow effect)
-                                          shadowColor: Colors.black
-                                              .withOpacity(1), // Shadow color
-                                        ),
-                                        child: Text(
-                                          'ยกเลิก',
-                                          style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: _fontSize,
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                      btnOk: ElevatedButton(
-                                        onPressed: () async {
-                                          if (_controller
-                                              .filteredDocument.isNotEmpty) {
-                                            bool isAdmin =
-                                                await _controller.isAdmin();
-                                            if (isAdmin) {
-                                              if (isAdmin) {
-                                                showTopSnackBar(
-                                                  Overlay.of(context),
-                                                  CustomSnackBar.error(
-                                                    backgroundColor:
-                                                        Colors.red.shade700,
-                                                    icon: Icon(
-                                                        Icons
-                                                            .sentiment_very_satisfied,
-                                                        color:
-                                                            Colors.red.shade900,
-                                                        size: 120),
-                                                    message:
-                                                        'ผู้ดูแลระบบไม่มีสิทธิ์อนุมัติเอกสาร',
-                                                  ),
-                                                );
-                                              }
-                                            } else {
-                                              bool status = await _controller
-                                                  .approvedAll();
-                                              if (!status) {
-                                                showTopSnackBar(
-                                                  Overlay.of(context),
-                                                  CustomSnackBar.error(
-                                                    backgroundColor:
-                                                        Colors.red.shade700,
-                                                    icon: Icon(
-                                                        Icons
-                                                            .sentiment_very_satisfied,
-                                                        color:
-                                                            Colors.red.shade900,
-                                                        size: 120),
-                                                    message: 'อนุมัติไม่สำเร็จ',
-                                                  ),
-                                                );
-                                              } else {
-                                                setState(() {
-                                                  preparePage();
-                                                });
-                                                showTopSnackBar(
-                                                  Overlay.of(context),
-                                                  CustomSnackBar.success(
-                                                    backgroundColor:
-                                                        Colors.green.shade500,
-                                                    icon: Icon(
-                                                        Icons
-                                                            .sentiment_very_satisfied,
-                                                        color: Colors
-                                                            .green.shade600,
-                                                        size: 120),
-                                                    message: 'อนุมัติเรียบร้อย',
-                                                  ),
-                                                );
-                                                Navigator.pop(context);
-                                              }
+
+                                            List<dynamic> listToApprove = [];
+                                            switch (_controller.selectedType!) {
+                                              case RequestType.visitor:
+                                                listToApprove = _controller.filteredVisiorList;
+                                                break;
+                                              case RequestType.employee:
+                                                listToApprove = _controller.filteredEmployeeList;
+                                                break;
+                                              case RequestType.permission:
+                                                listToApprove = _controller.filteredPermissionList;
+                                                break;
                                             }
-                                          } else {
-                                            showTopSnackBar(
-                                              Overlay.of(context),
-                                              CustomSnackBar.error(
-                                                backgroundColor:
-                                                    Colors.red.shade700,
-                                                icon: Icon(
-                                                    Icons
-                                                        .sentiment_very_satisfied,
-                                                    color: Colors.red.shade900,
-                                                    size: 120),
-                                                message: 'ไม่มีรายการคำร้อง',
-                                              ),
-                                            );
-                                            Navigator.pop(context);
-                                          }
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.blue,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                                30), // Circular shape
-                                          ),
-                                          padding: EdgeInsets.symmetric(
-                                              vertical: 12, horizontal: 24),
-                                          elevation: 8,
-                                          shadowColor:
-                                              Colors.black.withOpacity(1),
-                                        ),
-                                        child: Text(
-                                          'อนุมัติ',
-                                          style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: _fontSize,
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                    ).show();
+                                            if (listToApprove.isEmpty) {
+                                              showTopSnackBar(
+                                                Overlay.of(context),
+                                                CustomSnackBar.error(
+                                                  backgroundColor:
+                                                      Colors.red.shade700,
+                                                  icon: Icon(
+                                                      Icons
+                                                          .sentiment_very_satisfied,
+                                                      color:
+                                                          Colors.red.shade900,
+                                                      size: 120),
+                                                  message:
+                                                      'ไม่มีรายการสำหรับอนุมัติ',
+                                                ),
+                                              );
+                                            }else{
+                                              
+                                               CustomDialog.show(
+                                                context: context,
+                                                title: 'คำเตือน',
+                                                message:
+                                                    'คุณต้องการอนุมัติคำร้อง ${_controller.selectedType!.name } ทั้งหมดใช่หรือไม่',
+                                                type: DialogType.info,
+                                                onConfirm: () async {
+                                              
+                                                    bool isAdmin = await _controller.isAdmin();
+                                                    if (isAdmin) {
+                                                      showTopSnackBar(
+                                                          Overlay.of(context),
+                                                          CustomSnackBar.error(
+                                                            backgroundColor:
+                                                                Colors.red.shade700,
+                                                            icon: Icon(
+                                                                Icons
+                                                                    .sentiment_very_satisfied,
+                                                                color:
+                                                                    Colors.red.shade900,
+                                                                size: 120),
+                                                            message:
+                                                                'ผู้ดูแลระบบไม่มีสิทธิ์อนุมัติเอกสาร',
+                                                          ),
+                                                        );
+                                                    } else {
+                                                      var response = await _controller.approvedAllDocumentByList();
+                                                      if (!response['success']) {
+                                                        showTopSnackBar(
+                                                          Overlay.of(context),
+                                                          CustomSnackBar.error(
+                                                            backgroundColor:
+                                                                Colors.red.shade700,
+                                                            icon: Icon(
+                                                                Icons
+                                                                    .sentiment_very_satisfied,
+                                                                color:
+                                                                    Colors.red.shade900,
+                                                                size: 120),
+                                                            message: 'อนุมัติไม่สำเร็จ',
+                                                          ),
+                                                        );
+                                                      } else {
+                                                        preparePage();
+                                                        showTopSnackBar(
+                                                          Overlay.of(context),
+                                                          CustomSnackBar.success(
+                                                            backgroundColor:
+                                                                Colors.green.shade500,
+                                                            icon: Icon(
+                                                                Icons
+                                                                    .sentiment_very_satisfied,
+                                                                color:
+                                                                    Colors.green.shade600,
+                                                                size: 120),
+                                                            message: 'อนุมัติเรียบร้อย',
+                                                          ),
+                                                        );
+                                                        Navigator.pop(context);
+                                                      }
+                                                    }
+                                                },
+                                                onCancel: () {
+                                                  Navigator.pop(context);
+                                                },
+                                              );
+
+                                            }
+                                    // CustomDialog.show(
+                                    //   context: context,
+                                    //   title: 'คำเตือน',
+                                    //   message:
+                                    //       'คุณต้องการอนุมัติคำร้อง ${_controller.selectedType!.name } ทั้งหมดใช่หรือไม่',
+                                    //   type: DialogType.info,
+                                    //   onConfirm: () async {
+                                    
+                                    //       bool isAdmin = await _controller.isAdmin();
+                                    //       if (isAdmin) {
+                                    //         showTopSnackBar(
+                                    //             Overlay.of(context),
+                                    //             CustomSnackBar.error(
+                                    //               backgroundColor:
+                                    //                   Colors.red.shade700,
+                                    //               icon: Icon(
+                                    //                   Icons
+                                    //                       .sentiment_very_satisfied,
+                                    //                   color:
+                                    //                       Colors.red.shade900,
+                                    //                   size: 120),
+                                    //               message:
+                                    //                   'ผู้ดูแลระบบไม่มีสิทธิ์อนุมัติเอกสาร',
+                                    //             ),
+                                    //           );
+                                    //       } else {
+                                    //         var response = await _controller.approvedAllDocumentByList();
+                                    //         if (!response['success']) {
+                                    //           showTopSnackBar(
+                                    //             Overlay.of(context),
+                                    //             CustomSnackBar.error(
+                                    //               backgroundColor:
+                                    //                   Colors.red.shade700,
+                                    //               icon: Icon(
+                                    //                   Icons
+                                    //                       .sentiment_very_satisfied,
+                                    //                   color:
+                                    //                       Colors.red.shade900,
+                                    //                   size: 120),
+                                    //               message: 'อนุมัติไม่สำเร็จ',
+                                    //             ),
+                                    //           );
+                                    //         } else {
+                                    //           setState(() {
+                                    //             preparePage();
+                                    //           });
+                                    //           showTopSnackBar(
+                                    //             Overlay.of(context),
+                                    //             CustomSnackBar.success(
+                                    //               backgroundColor:
+                                    //                   Colors.green.shade500,
+                                    //               icon: Icon(
+                                    //                   Icons
+                                    //                       .sentiment_very_satisfied,
+                                    //                   color:
+                                    //                       Colors.green.shade600,
+                                    //                   size: 120),
+                                    //               message: 'อนุมัติเรียบร้อย',
+                                    //             ),
+                                    //           );
+                                    //           Navigator.pop(context);
+                                    //         }
+                                    //       }
+                                       
+                                    //   },
+                                    //   onCancel: () {
+                                    //     Navigator.pop(context);
+                                    //   },
+                                    // );
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.red.shade400,
+                                    backgroundColor: Colors.blue,
                                     padding: EdgeInsets.symmetric(vertical: 12),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
-                                      side: BorderSide(
-                                          color: Colors.white, width: 1),
                                     ),
                                     elevation: 5,
                                   ),
@@ -469,97 +445,373 @@ class _ApprovePageState extends State<ApprovePage> {
                         ))))));
   }
 
-  Widget listForm() {
-    final ScrollController controller = ScrollController();
-    return Expanded(
-      child: _controller.filteredDocument.isEmpty
-          ? SingleChildScrollView(
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height *
-                    0.4, // Adjust height dynamically
-                child: Center(
-                  child: Text(
-                    '-------- ยังไม่มีรายการในตอนนี้ --------',
-                    style: TextStyle(fontSize: 18, color: Colors.grey.shade300),
-                  ),
-                ),
-              ),
-            )
-          : ScrollConfiguration(
-              behavior: ScrollConfiguration.of(context).copyWith(
-                dragDevices: {
-                  PointerDeviceKind.touch,
-                  PointerDeviceKind.mouse,
-                },
-              ),
-              child: ListView.builder(
-                controller: controller,
-                shrinkWrap: true,
-                padding: EdgeInsets.zero,
-                itemCount: _controller.filteredDocument.length,
-                itemBuilder: (context, index) {
-                  Map<String, dynamic> entry =
-                      _controller.filteredDocument[index];
-                  return itemForm(index, entry);
-                },
-              ),
+  Widget GetSearchTool() {
+    switch (_controller.selectedType) {
+      case RequestType.visitor:
+        return SearchToolVisitor();
+      case RequestType.employee:
+        return SearchToolEmployee();
+      case RequestType.permission:
+        return SearchToolPermission();
+      default:
+        return SizedBox.shrink();
+    }
+  }
+
+  Widget SearchToolVisitor() {
+    return Column(
+      children: [
+        // Search company
+        TextField(
+          controller: _controller.filterCompanyController,
+          cursorColor: Colors.grey,
+          style: TextStyle(color: Colors.black, fontSize: _fontSize),
+          decoration: InputDecoration(
+            labelText: 'ชื่อองค์กรหรือบริษัท...',
+            labelStyle: TextStyle(
+                fontSize: _fontSize - 2,
+                color: Colors.grey,
+                fontStyle: FontStyle.italic),
+            prefixIcon: Icon(Icons.business_rounded, color: Colors.blue),
+            contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(24),
+              borderSide: BorderSide(color: Colors.grey),
             ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(24),
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(24),
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+          ),
+          onChanged: (_) => filterDocuments(),
+        ),
+        SizedBox(height: 12),
+
+        // Search name
+        TextField(
+          controller: _controller.filterNameController,
+          cursorColor: Colors.grey,
+          style: TextStyle(color: Colors.black, fontSize: _fontSize),
+          decoration: InputDecoration(
+            labelText: 'รายชื่อในเอกสาร...',
+            labelStyle: TextStyle(
+                fontSize: _fontSize - 2,
+                color: Colors.grey,
+                fontStyle: FontStyle.italic),
+            prefixIcon: Icon(Icons.person, color: Colors.blue),
+            contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(24),
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(24),
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(24),
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+          ),
+          onChanged: (_) => filterDocuments(),
+        ),
+      ],
     );
   }
 
-  void initializeDateThaiFormatting() async {
-    await initializeDateFormatting('th_TH', null);
+  Widget SearchToolEmployee() {
+    return Column(
+      children: [
+        // Search employeeId
+        TextField(
+          controller: _controller.filterEmployeeIdController,
+          cursorColor: Colors.grey,
+          style: TextStyle(color: Colors.black, fontSize: _fontSize),
+          decoration: InputDecoration(
+            labelText: 'รหัสพนักงาน...',
+            labelStyle: TextStyle(
+                fontSize: _fontSize - 2,
+                color: Colors.grey,
+                fontStyle: FontStyle.italic),
+            prefixIcon: Icon(Icons.tag, color: Colors.blue),
+            contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(24),
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(24),
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(24),
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+          ),
+          onChanged: (_) => filterDocuments(),
+        ),
+        SizedBox(height: 12),
+        // Search name
+        TextField(
+          controller: _controller.filterNameController,
+          cursorColor: Colors.grey,
+          style: TextStyle(color: Colors.black, fontSize: _fontSize),
+          decoration: InputDecoration(
+            labelText: 'รายชื่อในเอกสาร...',
+            labelStyle: TextStyle(
+                fontSize: _fontSize - 2,
+                color: Colors.grey,
+                fontStyle: FontStyle.italic),
+            prefixIcon: Icon(Icons.person, color: Colors.blue),
+            contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(24),
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(24),
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(24),
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+          ),
+          onChanged: (_) => filterDocuments(),
+        ),
+      ],
+    );
   }
 
-  Widget itemForm(int index, Map<String, dynamic> entry) {
-    // Color
-    Color borderColor = Colors.black;
+  Widget SearchToolPermission() {
+    return Column(
+      children: [
+        //Select Name Search
+        TextField(
+          controller: _controller.filterNameController,
+          cursorColor: Colors.grey,
+          style: TextStyle(color: Colors.black, fontSize: _fontSize),
+          decoration: InputDecoration(
+            labelText: 'รายชื่อในเอกสาร...',
+            labelStyle: TextStyle(
+                fontSize: _fontSize - 2,
+                color: Colors.grey,
+                fontStyle: FontStyle.italic),
+            prefixIcon: Icon(Icons.person, color: Colors.blue),
+            contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(24),
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(24),
+              borderSide: BorderSide(color: Colors.grey), // White border
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(24),
+              borderSide:
+                  BorderSide(color: Colors.grey), // White border on focus
+            ),
+          ),
+          onChanged: (_) => filterDocuments(),
+        ),
+
+        SizedBox(
+          height: 12,
+        ),
+        Row(
+          children: [
+            SizedBox(
+              width: isPhoneScale
+                  ? MediaQuery.of(context).size.width * 0.4
+                  : MediaQuery.of(context).size.width * 0.22,
+              child: ValueListenableBuilder<DateTime?>(
+                valueListenable: _controller.filteredDate,
+                builder: (context, date, _) {
+                  return TextFormField(
+                    readOnly: true,
+                    style: TextStyle(
+                      fontSize: _fontSize - 4,
+                      color: Colors.black,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'วว/ดด/ปปปป',
+                      hintStyle: TextStyle(
+                        fontSize: _fontSize - 2,
+                        color: Colors.grey,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      isDense: true,
+                      contentPadding:
+                          EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                      prefixIcon: IconButton(
+                        icon: Icon(Icons.date_range,
+                            color: Colors.blue, size: _fontSize + 8),
+                        onPressed: () =>
+                            _datePicker(context, _controller.filteredDate),
+                      ),
+                      suffixIcon: date != null
+                          ? IconButton(
+                              icon: Icon(Icons.clear_rounded,
+                                  color: Colors.red, size: _fontSize + 8),
+                              onPressed: () {
+                                _controller.filteredDate.value = null;
+                                filterDocuments();
+                              },
+                            )
+                          : null,
+                    ),
+                    controller: TextEditingController(
+                      text: date != null
+                          ? DateFormat('dd/MM/yyyy').format(date)
+                          : '',
+                    ),
+                    onTap: () => _datePicker(context, _controller.filteredDate),
+                  );
+                },
+              ),
+            ),
+
+            SizedBox(width: 10),
+
+            // หมายเลขบัตร
+            Expanded(
+              child: TextField(
+                controller: _controller.filteredCardNo,
+                cursorColor: Colors.grey,
+                style: TextStyle(color: Colors.black, fontSize: _fontSize),
+                decoration: InputDecoration(
+                  labelText: 'หมายเลขบัตร...',
+                  labelStyle: TextStyle(
+                    fontSize: _fontSize - 2,
+                    color: Colors.grey,
+                    fontStyle: FontStyle.italic,
+                  ),
+                  prefixIcon: Icon(Icons.credit_card, color: Colors.blue),
+                  contentPadding:
+                      EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide(color: Colors.grey),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide(color: Colors.grey),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide(color: Colors.grey),
+                  ),
+                ),
+                onChanged: (_) => filterDocuments(),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget listRequest() {
+    final ScrollController controller = ScrollController();
+    var filteredRequest;
+    switch (_controller.selectedType) {
+      case RequestType.visitor:
+        filteredRequest = _controller.filteredVisiorList;
+      case RequestType.employee:
+        filteredRequest = _controller.filteredEmployeeList;
+      case RequestType.permission:
+        filteredRequest = _controller.filteredPermissionList;
+      default:
+        filteredRequest = [];
+    }
+    return filteredRequest.isEmpty
+        ? SingleChildScrollView(
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.4,
+              child: Center(
+                child: Text(
+                  '-------- ยังไม่มีรายการในตอนนี้ --------',
+                  style: TextStyle(fontSize: 18, color: Colors.grey.shade300),
+                ),
+              ),
+            ),
+          )
+        : ScrollConfiguration(
+            behavior: ScrollConfiguration.of(context).copyWith(
+              dragDevices: {
+                PointerDeviceKind.touch,
+                PointerDeviceKind.mouse,
+              },
+            ),
+            child: ListView.builder(
+              controller: controller,
+              shrinkWrap: true,
+              padding: EdgeInsets.zero,
+              itemCount: filteredRequest.length,
+              itemBuilder: (context, index) {
+                Map<String, dynamic> entry = filteredRequest[index];
+                switch (entry['request_type']) {
+                  case 'VISITOR':
+                    return ItemRequestVE(index, entry);
+                  case 'EMPLOYEE':
+                    return ItemRequestVE(index, entry);
+                  case 'PERMISSION':
+                    return ItemRequestPermission(index, entry);
+                  default:
+                    return SizedBox.shrink();
+                }
+              },
+            ),
+          );
+  }
+
+  Widget ItemRequestVE(int index, Map<String, dynamic> entry) {
     String timeRanges = '';
     String formattedDate = '';
     // DateTime
     initializeDateThaiFormatting();
     final dateIn = DateTime.parse(entry['date_in']).toLocal();
     final dateOut = DateTime.parse(entry['date_out']).toLocal();
-
     final timeIn = entry['time_in'].substring(0, 5);
     final timeOut = entry['time_out'].substring(0, 5);
-
-
     final bool sameDate = dateIn.year == dateOut.year &&
-      dateIn.month == dateOut.month &&
-      dateIn.day == dateOut.day;
+        dateIn.month == dateOut.month &&
+        dateIn.day == dateOut.day;
     final bool sameTime = timeIn == timeOut;
-
-    // Set styles and display
     if (entry['request_type'] == 'VISITOR') {
-      borderColor = Colors.green;
-
-      formattedDate = DateFormat("d MMMM yyyy", "th_TH").format(dateIn);
-      timeRanges = '$timeIn ถึง $timeOut';
+      formattedDate = DateFormat("d MMM yyyy", "th_TH").format(dateIn);
+      timeRanges = '$timeIn น. - $timeOut น.';
     } else if (entry['request_type'] == 'EMPLOYEE') {
-      borderColor = Colors.orange;
-
-      formattedDate = DateFormat("d MMMM yyyy", "th_TH").format(dateOut);
-
+      formattedDate = DateFormat("d MMM yyyy", "th_TH").format(dateOut);
       if (sameDate && sameTime) {
-        timeRanges = '$timeOut';
+        timeRanges = '$timeOut น.';
       } else {
-        timeRanges = '$timeOut ถึง $timeIn';
+        timeRanges = '$timeOut น. - $timeIn น.';
       }
     }
+    bool isApproved = entry['approved_status'] == 1;
 
-    double screenWidth = MediaQuery.of(context).size.width;
     return AnimatedContainer(
       margin: EdgeInsets.all(0),
       padding: EdgeInsets.all(0),
       curve: Curves.easeInOut,
       duration: Duration(milliseconds: 300 + (index * 200)),
       transform: Matrix4.translationValues(
-          _controller.startAnimation ? 0 : screenWidth, 0, 0),
+          _controller.startAnimation ? 0 : MediaQuery.of(context).size.width,
+          0,
+          0),
       child: Container(
         margin: EdgeInsets.all(16),
         width: double.infinity,
-        height: 150,
+        height: isPhoneScale ? 105 : 150,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
@@ -569,7 +821,7 @@ class _ApprovePageState extends State<ApprovePage> {
               offset: Offset(0, 5),
             ),
             BoxShadow(
-              color: borderColor,
+              color: Colors.blue,
               offset: Offset(-5, 0),
             ),
           ],
@@ -577,193 +829,377 @@ class _ApprovePageState extends State<ApprovePage> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20.0),
           child: Slidable(
-              // startActionPane: ActionPane(motion: ScrollMotion(), children: [
-              //   CustomSlidableAction(
-              //     onPressed: (BuildContext context) {
-              //       notApproveDocument();
-              //     },
-              //     backgroundColor: Color(0xFFFE4A49),
-              //     foregroundColor: Colors.white,
-              //     child: Column(
-              //       mainAxisAlignment: MainAxisAlignment.center,
-              //       children: [
-              //         Icon(
-              //           Icons.delete,
-              //           size: 40,
-              //         ),
-              //         SizedBox(
-              //           height: 5,
-              //         ),
-              //         Text(
-              //           "Delete",
-              //           style:
-              //               TextStyle(fontSize: _fontSize, color: Colors.white),
-              //         ),
-              //       ],
-              //     ),
-              //   ),
-              // ]),
-              // endActionPane: ActionPane(motion: ScrollMotion(), children: [
-              //   CustomSlidableAction(
-              //     onPressed: (BuildContext context) {
-              //       approveDocument();
-              //     },
-              //     backgroundColor: Colors.blue,
-              //     foregroundColor: Colors.white,
-              //     child: Column(
-              //       mainAxisAlignment: MainAxisAlignment.center,
-              //       children: [
-              //         Icon(
-              //           Icons.library_add_check,
-              //           size: 40,
-              //         ),
-              //         SizedBox(
-              //           height: 5,
-              //         ),
-              //         Text(
-              //           "Approve",
-              //           style:
-              //               TextStyle(fontSize: _fontSize, color: Colors.white),
-              //         ),
-              //       ],
-              //     ),
-              //   ),
-              // ]),
-              child: Material(
-            color: const Color.fromARGB(185, 255, 255, 255),
-            child: InkWell(
-              child: Container(
-                // padding: EdgeInsets.all(30.0),
-                padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20.0),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
+              child: Stack(
+            children: [
+              Material(
+                color: const Color.fromARGB(255, 237, 247, 255),
+                child: InkWell(
+                  child: Container(
+                    padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                              border:
-                                  Border.all(color: borderColor, width: 3.0),
-                              shape: BoxShape.circle),
-                          child: Icon(
-                            Icons.feed,
-                            color: borderColor,
-                            size: 55,
-                          ),
-                        ),
-                        SizedBox(
-                          width: 20,
-                        ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'องค์กร : ${entry['company']}',
-                                style: TextStyle(
-                                  fontSize: _fontSize + 4,
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            ShaderMask(
+                                shaderCallback: (Rect bounds) {
+                                  return LinearGradient(
+                                    colors: [
+                                      Color.fromARGB(255, 132, 194, 252),
+                                      Color.fromARGB(255, 45, 152, 240),
+                                      Color.fromARGB(255, 48, 114, 236),
+                                      Color.fromARGB(255, 0, 93, 199),
+                                    ],
+                                    begin: Alignment.topRight,
+                                    end: Alignment.bottomLeft,
+                                  ).createShader(bounds);
+                                },
+                                child: Icon(
+                                  Icons.description,
+                                  size: isPhoneScale ? 50 : 90,
+                                  color: Colors.white, // จะถูกแทนที่ด้วย gradient
                                 ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                                softWrap: true,
                               ),
-                              Divider(
-                                color: borderColor,
-                                thickness: 2,
-                              ),
-                              SizedBox(height: 3),
-                              Text(
-                                'ประเภท ${entry['request_type'][0] + entry['request_type'].substring(1).toLowerCase()}',
-                                style: TextStyle(
-                                  fontSize: _fontSize,
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                                softWrap: true,
-                              ),
-                              SizedBox(height: 5),
-                              if (MediaQuery.of(context).size.width > 799) ...[
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'วันที่: ${formattedDate}',
-                                      style: TextStyle(
-                                        fontSize: _fontSize,
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                      softWrap: true,
+                            SizedBox(
+                              width: isPhoneScale ? 5 : 20,
+                            ),
+                            Expanded(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${entry['request_type'].toString().toUpperCase() == 'EMPLOYEE' ? 'TETH' : entry['company']}',
+                                    style: TextStyle(
+                                      fontSize: _fontSize + 4,
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                    SizedBox(
-                                      width: 30,
-                                    ),
-                                    Text(
-                                      'เวลา: ${timeRanges}',
-                                      style: TextStyle(
-                                        fontSize: _fontSize,
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                      softWrap: true,
-                                    ),
-                                  ],
-                                )
-                              ] else ...[
-                                Text(
-                                  'วันที่: ${formattedDate}',
-                                  style: TextStyle(
-                                    fontSize: _fontSize,
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    softWrap: true,
                                   ),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                  softWrap: true,
-                                ),
-                                SizedBox(height: 3),
-                                Text(
-                                  'เวลา: ${timeRanges}',
-                                  style: TextStyle(
-                                    fontSize: _fontSize,
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
+                                  Divider(
+                                    color: Colors.blue,
+                                    thickness: 2,
+                                    height: 4,
                                   ),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                  softWrap: true,
-                                ),
-                              ],
-                            ],
-                          ),
+                                  SizedBox(height: isPhoneScale ? 7 : 10),
+                                  Text(
+                                    'ประเภท : ${entry['request_type'][0] + entry['request_type'].substring(1).toLowerCase()}',
+                                    style: TextStyle(
+                                      fontSize: _fontSize - 4,
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    softWrap: true,
+                                  ),
+                                  SizedBox(height: 5),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          Icon(
+                                            Icons.calendar_month,
+                                            size: isPhoneScale ? 18 : 30,
+                                            color: Colors.black,
+                                          ),
+                                          SizedBox(
+                                            width: isPhoneScale ? 3 : 10,
+                                          ),
+                                          Text(
+                                            formattedDate,
+                                            style: TextStyle(
+                                              fontSize: _fontSize - 2,
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
+                                            softWrap: true,
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(
+                                        width: isPhoneScale ? 10 : 30,
+                                      ),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          Icon(
+                                            Icons.access_time,
+                                            size: isPhoneScale ? 18 : 30,
+                                            color: Colors.black,
+                                          ),
+                                          SizedBox(
+                                            width: isPhoneScale ? 3 : 10,
+                                          ),
+                                          Text(
+                                            timeRanges,
+                                            style: TextStyle(
+                                              fontSize: _fontSize - 2,
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
+                                            softWrap: true,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
+                  onTap: () {
+                    showDialogDetailDocument(entry);
+                  },
                 ),
               ),
-              onTap: () {
-                popUpShowInformationForm(entry);
-              },
-            ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isApproved ? Colors.green : Colors.red,
+                    borderRadius: BorderRadius.only(
+                      // topRight: Radius.circular(16),
+                      // bottomLeft: Radius.circular(8),
+                      topLeft: Radius.circular(16),
+                      // bottomLeft: Radius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    isApproved ? 'อนุมัติแล้ว' : 'ยังไม่ได้อนุมัติ',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: _fontSize - 4,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
           )),
         ),
       ),
     );
+  }
+
+  Widget ItemRequestPermission(int index, Map<String, dynamic> entry) {
+    initializeDateThaiFormatting();
+    final docDate = DateTime.parse(entry['doc_date']).toLocal();
+    final untilDate = DateTime.parse(entry['until_date']).toLocal();
+
+    final formattedDateStart =
+        DateFormat("d MMM yyyy", "th_TH").format(docDate);
+    final formattedDateUntil =
+        DateFormat("d MMM yyyy", "th_TH").format(untilDate);
+
+    final timeRanges = "$formattedDateStart  -  $formattedDateUntil";
+
+    bool isApproved = entry['approved_status'] == 1;
+
+    return AnimatedContainer(
+      margin: EdgeInsets.all(0),
+      padding: EdgeInsets.all(0),
+      curve: Curves.easeInOut,
+      duration: Duration(milliseconds: 300 + (index * 200)),
+      transform: Matrix4.translationValues(
+          _controller.startAnimation ? 0 : MediaQuery.of(context).size.width,
+          0,
+          0),
+      child: Container(
+        margin: EdgeInsets.all(16),
+        width: double.infinity,
+        height: isPhoneScale ? 100 : 150,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.6),
+              blurRadius: 5.0,
+              offset: Offset(0, 5),
+            ),
+            BoxShadow(
+              color: Colors.blue,
+              offset: Offset(-5, 0),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20.0),
+          child: Slidable(
+              child: Stack(
+            children: [
+              Material(
+                color: const Color.fromARGB(255, 237, 247, 255),
+                child: InkWell(
+                  child: Container(
+                      padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20.0),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              ShaderMask(
+                                shaderCallback: (Rect bounds) {
+                                  return LinearGradient(
+                                    colors: [
+                                      Color.fromARGB(255, 132, 194, 252),
+                                      Color.fromARGB(255, 45, 152, 240),
+                                      Color.fromARGB(255, 48, 114, 236),
+                                      Color.fromARGB(255, 0, 93, 199),
+                                    ],
+                                    begin: Alignment.topRight,
+                                    end: Alignment.bottomLeft,
+                                  ).createShader(bounds);
+                                },
+                                child: Icon(
+                                  Icons.description,
+                                  size: isPhoneScale ? 50 : 90,
+                                  color: Colors.white, // จะถูกแทนที่ด้วย gradient
+                                ),
+                              ),
+                              SizedBox(
+                                width: isPhoneScale ? 5 : 20,
+                              ),
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${entry['emp_name']}',
+                                      style: TextStyle(
+                                        fontSize: _fontSize + 4,
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                      softWrap: true,
+                                    ),
+                                    Text(
+                                      '${entry['report_to']}',
+                                      style: TextStyle(
+                                        fontSize: _fontSize - 6,
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                      softWrap: true,
+                                    ),
+                                    Divider(
+                                      color: Colors.blue,
+                                      thickness: 2,
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          children: [
+                                            Icon(
+                                              Icons.calendar_month,
+                                              size: isPhoneScale ? 18 : 30,
+                                              color: Colors.black,
+                                            ),
+                                            SizedBox(
+                                              width: isPhoneScale ? 2 : 10,
+                                            ),
+                                            Text(
+                                              timeRanges,
+                                              style: TextStyle(
+                                                fontSize: _fontSize - 2,
+                                                color: Colors.black,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 1,
+                                              softWrap: true,
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      )),
+                  onTap: () async {
+                    showDialogDetailDocument(entry);
+                  },
+                ),
+              ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isApproved ? Colors.green : Colors.red,
+                    borderRadius: BorderRadius.only(
+                      // topRight: Radius.circular(16),
+                      // bottomLeft: Radius.circular(8),
+                      topLeft: Radius.circular(16),
+                      // bottomLeft: Radius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    isApproved ? 'อนุมัติแล้ว' : 'ยังไม่ได้อนุมัติ',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          )),
+        ),
+      ),
+    );
+  }
+
+  void initializeDateThaiFormatting() async {
+    await initializeDateFormatting('th_TH', null);
   }
 
   void notApproveDocument() {
@@ -774,298 +1210,260 @@ class _ApprovePageState extends State<ApprovePage> {
     print("Approve");
   }
 
-  void popUpShowInformationForm(Map<String, dynamic> entry) {
-    final ScrollController dialogScrollController = ScrollController();
 
-    // Determine header color
-    Color? _colorHeader;
-    if (entry['request_type'] == 'VISITOR') {
-      _colorHeader = Colors.green; // Green for visitors
-    } else if (entry['request_type'] == 'EMPLOYEE') {
-      _colorHeader = Colors.orange; // Orange for employees
+  void showDialogDetailDocument(Map<String, dynamic> entry) {
+    String HeaderTitle(String? code) {
+      switch (code) {
+        case 'VISITOR':
+          return 'ใบคำร้องเข้า/ออก';
+        case 'EMPLOYEE':
+          return 'ใบคำร้องเข้า/ออก(พนักงาน)';
+        case 'PERMISSION':
+          return 'ใบคำร้องกรณีบัตรหายหรือชำรุด';
+        default:
+          return '';
+      }
     }
+
+    Widget ContentDetails() {
+    switch (entry['request_type']) {
+      case 'VISITOR':
+        return ContentDetailVisitor(entry);
+
+      case 'EMPLOYEE':
+        return ContentDetailEmployee(entry);
+
+      case 'PERMISSION':
+        return ContentDetailPermission(entry);
+
+      default:
+        return Text("ไม่พบข้อมูลประเภทเอกสาร",
+            style: TextStyle(fontSize: _fontSize));
+    }
+  }
 
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(builder: (context, setStateDialog) {
-          double screenWidth = MediaQuery.of(context).size.width;
-
-          return Dialog(
-            insetPadding:
-                screenWidth > 799 ? null : EdgeInsets.only(left: 16, right: 16),
+      barrierDismissible: true,
+      builder: (context) {
+        return Dialog(
+          insetPadding: EdgeInsets.all(16),
+          backgroundColor: Colors.transparent, // ขอบนอกโปร่ง
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
             child: Container(
-              width:
-                  screenWidth > 799 ? 600 : double.infinity, // Responsive width
-              height: MediaQuery.of(context).size.height * (3 / 4),
-              child: Stack(
+              color: Colors.white, // สีขาวเต็ม popup
+              width: MediaQuery.of(context).size.width * 0.8,
+              height: MediaQuery.of(context).size.height * 0.7,
+              child: Column(
                 children: [
-                  Positioned(
-                    //Close
-                    top: 3,
-                    right: 5,
-                    child: IconButton(
-                      icon: Icon(
-                        Icons.cancel_rounded,
-                        color: Color(0xFFFE4A49),
-                        size: 45,
+                  // Title
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      HeaderTitle(entry['request_type']),
+                      style: TextStyle(
+                        fontSize: _fontSize + 2,
+                        fontWeight: FontWeight.bold,
                       ),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
                     ),
                   ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      // Header
-                      Padding(
-                        padding: EdgeInsets.only(top: 20, left: 10, right: 10),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Icon(
-                              Icons.assignment_outlined,
-                              size: 36,
-                              color: _colorHeader,
-                            ),
-                            SizedBox(width: 10),
-                            Text(
-                              '${entry['request_type'][0] + entry['request_type'].substring(1).toLowerCase()}',
-                              style: TextStyle(
-                                  fontSize: _fontSize + 4,
-                                  fontWeight: FontWeight.bold),
-                            ),
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
+                      height: double.infinity,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topRight,
+                          end: Alignment.bottomLeft,
+                          colors: [
+                            Color.fromARGB(255, 132, 194, 252),
+                            Color.fromARGB(255, 45, 152, 240),
+                            Color.fromARGB(255, 48, 114, 236),
+                            Color.fromARGB(255, 0, 93, 199),
                           ],
                         ),
                       ),
-                      Divider(
-                        color: _colorHeader,
-                        thickness: 1.5,
-                        height: 10,
-                      ),
-                      // Content with scroll
-                      Expanded(
-                        child: ScrollConfiguration(
-                          behavior: ScrollConfiguration.of(context).copyWith(
-                            dragDevices: {
-                              PointerDeviceKind.touch,
-                              PointerDeviceKind.mouse,
-                            },
-                            scrollbars: false,
-                          ),
-                          child: SingleChildScrollView(
-                            controller: dialogScrollController,
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 10),
-                              child: contentViewOnlyDocument(
-                                  setStateDialog, entry),
+                      child: Container(
+                            margin: EdgeInsets.all(isPhoneScale ? 8 : 30),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.all(Radius.circular(20)),
+                            ),
+                            child: Stack(
+                              children: [
+                                ScrollConfiguration(
+                                  behavior: ScrollConfiguration.of(context).copyWith(
+                                    dragDevices: {
+                                      PointerDeviceKind.touch,
+                                      PointerDeviceKind.mouse,
+                                    },
+                                    scrollbars: false,
+                                  ),
+                                  child: SingleChildScrollView(
+                                    padding: EdgeInsets.all(24),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        ContentDetails(),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+
+Positioned(
+  bottom: 5,
+  right: 5,
+  child: SizedBox(
+    width: MediaQuery.of(context).size.width * (isPhoneScale ? 0.225 : 0.12),
+    height: MediaQuery.of(context).size.height * 0.05,
+    child: ElevatedButton(
+      onPressed: () {
+        CustomDialog.show(
+                      context: context,
+                      title: 'คำเตือน',
+                      message: 'คุณต้องการอนุมัติเอกสารใช่หรือไม่? การดำเนินการนี้จะไม่สามารถย้อนกลับมาแก้ไขได้',
+                      type: DialogType.info,
+                      onConfirm: () async {
+                        var response = await _controller.approvedDocument(entry);
+                        if(!response['success']){
+                          showTopSnackBar(
+                                                Overlay.of(context),
+                                                CustomSnackBar.error(
+                                                  backgroundColor:
+                                                      Colors.red.shade700,
+                                                  icon: Icon(
+                                                      Icons
+                                                          .sentiment_very_satisfied,
+                                                      color:
+                                                          Colors.red.shade900,
+                                                      size: 120),
+                                                  message: response['message'],
+                                                ),
+                                              );
+                        }else{
+                          showTopSnackBar(
+                                                Overlay.of(context),
+                                                CustomSnackBar.success(
+                                                  backgroundColor:
+                                                      Colors.green.shade500,
+                                                  icon: Icon(
+                                                      Icons
+                                                          .sentiment_very_satisfied,
+                                                      color:
+                                                          Colors.green.shade600,
+                                                      size: 120),
+                                                  message: response['message'] ?? '',
+                                                ),
+                                              );
+                        }
+                        preparePage();
+                        Navigator.pop(context);
+                        Navigator.pop(context);
+                      },
+                      onCancel: () {
+                        Navigator.pop(context);
+                      }
+                    );
+      },
+      style: ElevatedButton.styleFrom(
+        elevation: 8,
+        shadowColor: Colors.black,
+        padding: EdgeInsets.zero, // สำคัญสำหรับ gradient ครอบเต็ม
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+      ),
+      child: Ink(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color.fromARGB(255, 132, 194, 252),
+              Color.fromARGB(255, 45, 152, 240),
+              Color.fromARGB(255, 48, 114, 236),
+              Color.fromARGB(255, 0, 93, 199),
+            ],
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
+          ),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Container(
+          alignment: Alignment.center,
+          child: Text(
+            'อนุมัติ',
+            style: TextStyle(
+              fontSize: isPhoneScale ? _fontSize : _fontSize - 2,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ),
+    ),
+  ),
+),
+
+
+
+                              ],
                             ),
                           ),
-                        ),
-                      ),
-                      // Footer
-                      Divider(
-                        color: _colorHeader,
-                        thickness: 1.5,
-                        height: 10,
-                      ),
-                      Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.all(10),
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _colorHeader,
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: () async {
-                            bool isAdmin = await _controller.isAdmin();
-                            if (isAdmin) {
-                              if (isAdmin) {
-                                showTopSnackBar(
-                                  Overlay.of(context),
-                                  CustomSnackBar.error(
-                                    backgroundColor: Colors.red.shade700,
-                                    icon: Icon(Icons.sentiment_very_satisfied,
-                                        color: Colors.red.shade900, size: 120),
-                                    message:
-                                        'ผู้ดูแลระบบไม่มีสิทธิ์อนุมัติเอกสาร',
-                                  ),
-                                );
-                              }
-                            } else {
-                              bool status =
-                                  await _controller.approvedDocument(entry);
-                              if (status) {
-                                showTopSnackBar(
-                                  Overlay.of(context),
-                                  CustomSnackBar.success(
-                                    backgroundColor: Colors.green.shade500,
-                                    icon: Icon(Icons.sentiment_very_satisfied,
-                                        color: Colors.green.shade600,
-                                        size: 120),
-                                    message: 'อนุมัติเรียบร้อย',
-                                  ),
-                                );
-                                setState(() {
-                                  preparePage();
-                                });
-                                Navigator.of(context).pop();
-                              } else {
-                                showTopSnackBar(
-                                  Overlay.of(context),
-                                  CustomSnackBar.error(
-                                    backgroundColor: Colors.red.shade700,
-                                    icon: Icon(Icons.sentiment_very_satisfied,
-                                        color: Colors.red.shade900, size: 120),
-                                    message: 'อนุมัติไม่สำเร็จ',
-                                  ),
-                                );
-                              }
-                            }
-                          },
-                          child: Text(
-                            "อนุมัติ",
-                            style: TextStyle(
-                                fontSize: _fontSize, color: Colors.white),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
             ),
-          );
-        });
+          ),
+        );
       },
     );
   }
 
-  Widget contentViewOnlyDocument(
-      StateSetter setStateDialog, Map<String, dynamic> entry) {
-    String objectiveType = '';
-    switch (entry['objective_type']) {
-      case 1:
-        objectiveType = 'ออกนอกโรงงาน';
-        break;
-      case 2:
-        objectiveType = 'นำสินค้า/สิ่งของออกพื้นที่การผลิต';
-        break;
-      case 3:
-        objectiveType = 'นำสินค้า/สิ่งของออกโรงงาน';
-        break;
-    }
-    final dateOut = DateTime.parse(entry['date_out']).toLocal();
-    final dateIn = DateTime.parse(entry['date_in']).toLocal();
-    final formattedDateOut = DateFormat("d MMMM yyyy", "th_TH").format(dateOut);
-    final formattedDateIn = DateFormat("d MMMM yyyy", "th_TH").format(dateIn);
-    final timeOut = entry['time_out'].substring(0, 5);
-    final timeIn = entry['time_in'].substring(0, 5);
-    bool isDateSame = formattedDateOut == formattedDateIn;
-    bool isTimeSame = timeOut == timeIn;
-    bool isDateTime = isDateSame && isTimeSame;
-    return Container(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget buildLabelValueRow(String label, String value,
+      {double leftPadding = 20, double labelWidth = 80, labelBold = false}) {
+    return Padding(
+      padding: EdgeInsets.only(left: leftPadding),
+      child: Row(
         children: [
-          entry['request_type'] == 'EMPLOYEE'
-              // Employee
-              ? Column(
-                  children: [
-                    // add employee
-                    SizedBox(height: 10),
-                    InfoRow(
-                        label: 'ขออนุญาต:',
-                        value: objectiveType,
-                        fontSize: _fontSize),
-                    SizedBox(height: 25),
-                    InfoRow(
-                        label: 'เวลาออก:',
-                        value: '$formattedDateOut     $timeOut น.',
-                        fontSize: _fontSize),
-                    SizedBox(height: 25),
-                    if (!isDateTime) ...[
-                      InfoRow(
-                          label: 'เวลากลับ:',
-                          value: '$formattedDateIn     $timeIn น.',
-                          fontSize: _fontSize),
-                      SizedBox(height: 25),
-                    ],
-                    InfoRow(
-                        label: 'วัตถุประสงค์:',
-                        value: entry['objective'],
-                        fontSize: _fontSize),
-                    SizedBox(height: 25),
-                  ],
-                )
-              // Visitor
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(
+          SizedBox(
+            width: labelWidth,
+            child: Text(label, style: TextStyle(fontSize: _fontSize, fontWeight: labelBold ? FontWeight.bold : FontWeight.normal,)),
+          ),
+          Expanded(
+            child: Text(value, style: TextStyle(fontSize: _fontSize)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget ContentDetailVisitor(Map<String, dynamic> entry) {
+    double spaceLabel = MediaQuery.of(context).size.width * 0.22;
+    double pddingLabel = MediaQuery.of(context).size.width * 0.01;
+    return Column(
+      children: [
+        SizedBox(
                       height: 10,
                     ),
-                    InfoRow(
-                        label: 'องค์กร:',
-                        value: entry['company'],
-                        fontSize: _fontSize),
+                    buildLabelValueRow('องค์กร:', entry['company'] ?? '', leftPadding: pddingLabel, labelWidth: spaceLabel, labelBold: true),
                     SizedBox(height: 25),
-                    InfoRow(
-                        label: 'เวลาเข้า:',
-                        value: DateFormat("d MMMM yyyy", "th_TH").format(
-                                DateTime.parse(entry['date_in']).toLocal()) +
-                            '     ' +
-                            entry['time_in'].substring(0, 5) +
-                            ' น.',
-                        fontSize: _fontSize),
+                    buildLabelValueRow('เวลาเข้า:', DateFormat("d MMM yyyy", "th_TH").format(DateTime.parse(entry['date_in']).toLocal()) +'    ' +entry['time_in'].substring(0, 5) +' น.', leftPadding: pddingLabel, labelWidth: spaceLabel, labelBold: true),
                     SizedBox(height: 25),
-                    InfoRow(
-                        label: 'เวลาออก:',
-                        value: DateFormat("d MMMM yyyy", "th_TH").format(
-                                DateTime.parse(entry['date_out']).toLocal()) +
-                            '     ' +
-                            entry['time_out'].substring(0, 5) +
-                            ' น.',
-                        fontSize: _fontSize),
+                    buildLabelValueRow('เวลาออก:', DateFormat("d MMM yyyy", "th_TH").format(DateTime.parse(entry['date_out']).toLocal()) +'    ' +entry['time_out'].substring(0, 5) +' น.', leftPadding: pddingLabel, labelWidth: spaceLabel, labelBold: true),
                     SizedBox(height: 25),
-                    InfoRow(
-                        label: 'ติดต่อ:',
-                        value: entry['contact'],
-                        fontSize: _fontSize),
+                    buildLabelValueRow('ติดต่อ:', entry['contact'] ?? '', leftPadding: pddingLabel, labelWidth: spaceLabel, labelBold: true),
                     SizedBox(height: 25),
-                    InfoRow(
-                        label: 'แผนก:',
-                        value: entry['dept'],
-                        fontSize: _fontSize),
+                    buildLabelValueRow('แผนก:', entry['contact_dept'] ?? '', leftPadding: pddingLabel, labelWidth: spaceLabel, labelBold: true),
                     SizedBox(height: 25),
-                    InfoRow(
-                        label: 'วัตถุประสงค์:',
-                        value: entry['objective'],
-                        fontSize: _fontSize),
-                    SizedBox(height: 25),
-                  ],
-                ),
+                    buildLabelValueRow('วัตถุประสงค์:', entry['objective'] ?? '', leftPadding: pddingLabel, labelWidth: spaceLabel, labelBold: true),
+                    SizedBox(height: 10),
 
-          // Show people in form
+        // Show people in form
           Container(
             padding: EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Colors.black,
-                width: 1,
-              ),
-              borderRadius: BorderRadius.circular(8),
-            ),
             child: Column(
               children: [
-                SizedBox(
-                  height: 10,
-                ),
                 Row(
                   children: [
                     Expanded(
@@ -1116,10 +1514,391 @@ class _ApprovePageState extends State<ApprovePage> {
               ],
             ),
           ),
-        ],
+
+
+           SizedBox(
+          height: 20,
+        ),
+
+        Row(
+                      children: [
+                        Expanded(
+                          child: Divider(
+                            color: Colors.black,
+                            thickness: 1,
+                            endIndent: 10,
+                          ),
+                        ),
+                        Icon(
+                          Icons.draw_rounded,
+                          color: Colors.black,
+                          size: 36,
+                        ),
+                        Text("ลายเซ็น",
+                            style: TextStyle(
+                                fontSize: _fontSize + 4,
+                                fontWeight: FontWeight.bold)),
+                        Expanded(
+                          child: Divider(
+                            color: Colors.black,
+                            thickness: 1,
+                            indent: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+         SizedBox(
+          height: 10,
+        ),
+        buildSignCard(
+            'ผู้อนุมัติ', entry['appr_sign'], entry['appr_at']),
+          SizedBox(
+          height: 10,
+        ),
+        buildSignCard(
+            'ผู้ตรวจสอบสื่อ', entry['media_sig'], entry['media_at']),
+          SizedBox(
+          height: 10,
+        ),
+          SizedBox(
+          height: 10,
+        ),
+        buildSignCard(
+            'รปภ. (ประตูหน้า)', entry['guard_sign'], entry['guard_at']),
+          SizedBox(
+          height: 10,
+        ),
+        buildSignCard(
+            'รปภ. (การผลิต)', entry['prod_sign'], entry['prod_at']),
+      ],
+    );
+  }
+
+  Widget ContentDetailEmployee(Map<String, dynamic> entry) {
+    double spaceLabel = MediaQuery.of(context).size.width * 0.22;
+    double pddingLabel = MediaQuery.of(context).size.width * 0.01;
+    String objectiveType = {
+      1: 'ออกนอกโรงงาน',
+      2: 'นำสินค้า/สิ่งของออกพื้นที่การผลิต',
+      3: 'นำสินค้า/สิ่งของออกโรงงาน',
+    }[entry['objective_type']] ?? 'ไม่พบข้อมูล';
+
+    final dateOut = DateTime.parse(entry['date_out']).toLocal();
+    final dateIn = DateTime.parse(entry['date_in']).toLocal();
+    final formattedDateOut = DateFormat("d MMM yyyy", "th_TH").format(dateOut);
+    final formattedDateIn = DateFormat("d MMM yyyy", "th_TH").format(dateIn);
+    final timeOut = entry['time_out'].substring(0, 5);
+    final timeIn = entry['time_in'].substring(0, 5);
+    bool isDateSame = formattedDateOut == formattedDateIn;
+    bool isTimeSame = timeOut == timeIn;
+    bool isDateTime = isDateSame && isTimeSame;
+    return Column(
+      children: [
+        SizedBox(height: 10),
+        buildLabelValueRow('ขออนุญาต:', objectiveType, leftPadding: pddingLabel, labelWidth: spaceLabel, labelBold: true),
+                    SizedBox(height: 25),
+                    buildLabelValueRow('เวลาออก:', '$formattedDateOut     $timeOut น.', leftPadding: pddingLabel, labelWidth: spaceLabel, labelBold: true),
+                    SizedBox(height: 25),
+                    if (!isDateTime) ...[
+                      buildLabelValueRow('เวลาออก:', '$formattedDateIn     $timeIn น.', leftPadding: pddingLabel, labelWidth: spaceLabel, labelBold: true),
+                      SizedBox(height: 25),
+                    ],
+                    buildLabelValueRow('วัตถุประสงค์:', entry['objective'] ?? '', leftPadding: pddingLabel, labelWidth: spaceLabel, labelBold: true),
+                    SizedBox(height: 25),
+
+          Container(
+            padding: EdgeInsets.all(5),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                        child: Row(
+                      children: [
+                        SizedBox(
+                          width: 5,
+                        ),
+                        Expanded(
+                          child: Divider(
+                            color: Colors.black,
+                            thickness: 1,
+                          ),
+                        ),
+                        Icon(
+                          Icons.person,
+                          color: Colors.black,
+                          size: 36,
+                        ),
+                        SizedBox(
+                          width: 5,
+                        ),
+                        Text("รายชื่อ",
+                            style: TextStyle(
+                                fontSize: _fontSize + 4,
+                                fontWeight: FontWeight.bold)),
+                        SizedBox(
+                          width: 5,
+                        ),
+                        Expanded(
+                          child: Divider(
+                            color: Colors.black,
+                            thickness: 1,
+                          ),
+                        ),
+                        SizedBox(
+                          width: 5,
+                        ),
+                      ],
+                    )),
+                  ],
+                ),
+                generatePeopleList(entry['people']),
+
+                // Show Item in/out
+                contentItemDisplay(
+                    entry['item_in'], entry['item_out'], entry['request_type']),
+              ],
+            ),
+          ),
+
+          SizedBox(
+          height: 20,
+        ),
+
+        Row(
+                      children: [
+                        Expanded(
+                          child: Divider(
+                            color: Colors.black,
+                            thickness: 1,
+                            endIndent: 10,
+                          ),
+                        ),
+                        Icon(
+                          Icons.draw_rounded,
+                          color: Colors.black,
+                          size: 36,
+                        ),
+                        Text("ลายเซ็น",
+                            style: TextStyle(
+                                fontSize: _fontSize + 4,
+                                fontWeight: FontWeight.bold)),
+                        Expanded(
+                          child: Divider(
+                            color: Colors.black,
+                            thickness: 1,
+                            indent: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+         SizedBox(
+          height: 10,
+        ),
+        buildSignCard(
+            'พนักงาน', entry['emp_sign'], entry['emp_at']),
+          SizedBox(
+          height: 10,
+        ),
+        buildSignCard(
+            'ผู้อนุมัติ', entry['appr_sign'], entry['appr_at']),
+          SizedBox(
+          height: 10,
+        ),
+          SizedBox(
+          height: 10,
+        ),
+        buildSignCard(
+            'ผู้ตรวจสอบสื่อ', entry['media_sign'], entry['media_at']),
+          SizedBox(
+          height: 10,
+        ),
+        buildSignCard(
+            'รปภ. (ประตูหน้า)', entry['guard_sign'], entry['guard_at']),
+      ],
+    );
+  }
+
+  Widget ContentDetailPermission(Map<String, dynamic> entry) {
+    double spaceLabel = MediaQuery.of(context).size.width * 0.22;
+    double pddingLabel = MediaQuery.of(context).size.width * 0.025;
+    String convertReason(String? code) {
+      switch (code) {
+        case 'L':
+          return 'ทำบัตรประจำตัวพนักงานหาย';
+        case 'F':
+          return 'ลืมบัตรประจำตัวพนักงานมา';
+        case 'D':
+          return 'บัตรประจำตัวพนักงานชำรุด';
+        case 'O':
+          return entry['reason_desc'];
+        default:
+          return '';
+      }
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Text(
+              'วันที่ : ${DateFormat('dd/MM/yyyy').format(DateTime.tryParse(entry['doc_date'])!.toLocal())}',
+              style: TextStyle(
+                  fontSize: _fontSize - 2, fontWeight: FontWeight.bold),
+            )
+          ],
+        ),
+        Text("ข้อมูลผู้ขออนุญาต",
+            style: TextStyle(fontSize: _fontSize, fontWeight: FontWeight.bold)),
+        SizedBox(
+          height: 10,
+        ),
+        buildLabelValueRow('ชื่อ:', entry['emp_name'],
+            leftPadding: pddingLabel, labelWidth: spaceLabel),
+        SizedBox(
+          height: 10,
+        ),
+        buildLabelValueRow('แผนก:', entry['emp_dept'],
+            leftPadding: pddingLabel, labelWidth: spaceLabel),
+        SizedBox(
+          height: 10,
+        ),
+        buildLabelValueRow('รหัสพนักงาน:', entry['emp_id'],
+            leftPadding: pddingLabel, labelWidth: spaceLabel),
+        SizedBox(
+          height: 10,
+        ),
+        SizedBox(
+          height: 20,
+        ),
+        Text("รายละเอียด",
+            style: TextStyle(fontSize: _fontSize, fontWeight: FontWeight.bold)),
+        SizedBox(
+          height: 10,
+        ),
+        Padding(
+          padding: EdgeInsets.only(left: pddingLabel),
+          child: Text('เรื่อง   ขออนุญาตเบิกบัตรใช้งานชั่วคราว',
+              style: TextStyle(fontSize: _fontSize)),
+        ),
+        SizedBox(
+          height: 10,
+        ),
+        buildLabelValueRow('เหตุผล:', convertReason(entry['reason']),
+            leftPadding: pddingLabel, labelWidth: spaceLabel),
+        SizedBox(
+          height: 10,
+        ),
+        buildLabelValueRow('ผู้รับเรื่อง:', entry['responsible_by'],
+            leftPadding: pddingLabel, labelWidth: spaceLabel),
+        SizedBox(
+          height: 10,
+        ),
+        buildLabelValueRow('บัตรขอเบิก:', entry['brw_card'],
+            leftPadding: pddingLabel, labelWidth: spaceLabel),
+        SizedBox(
+          height: 10,
+        ),
+        buildLabelValueRow(
+            'วันคืนบัตร:',
+            DateFormat('dd/MM/yyyy')
+                .format(DateTime.tryParse(entry['until_date'])!.toLocal()),
+            leftPadding: pddingLabel,
+            labelWidth: spaceLabel),
+        SizedBox(
+          height: 20,
+        ),
+        buildSignCard('พนักงาน', entry['sign_emp'], entry['sign_emp_at']),
+        SizedBox(
+          height: 10,
+        ),
+        buildSignCard(
+            'ผู้รับเรื่อง', entry['sign_respon'], entry['sign_respon_at']),
+        SizedBox(
+          height: 10,
+        ),
+        buildSignCard(
+            'รปภ. (ขาเข้า)', entry['sign_guardI'], entry['sign_guardI_at']),
+        SizedBox(
+          height: 10,
+        ),
+        buildSignCard(
+            'รปภ. (ขาออก)', entry['sign_guardO'], entry['sign_guardO_at']),
+      ],
+    );
+  }
+
+
+  Widget buildSignCard(
+    String title,
+    String? signUrl,
+    String? signDate,
+  ) {
+    return Card(
+      color: Colors.white,
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+        side: BorderSide(
+          color: Colors.blue,
+          width: 0.5,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: _fontSize,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+
+            Divider(color: Colors.blue, height: 20, thickness: 1),
+
+            //Signature
+            Center(
+              child: signUrl != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        signUrl,
+                        fit: BoxFit.contain,
+                      ),
+                    )
+                  : Text(
+                      'ยังไม่ได้มีการเซ็น',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+            ),
+
+            Divider(color: Colors.blue, height: 20, thickness: 1),
+
+            // Date
+            Center(
+              child: Text(
+                signDate != null
+                    ? DateFormat('dd/MM/yyyy HH:mm น.')
+                        .format(DateTime.tryParse(signDate)!.toLocal())
+                    : "",
+                style: TextStyle(
+                  fontSize: _fontSize,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
+
 
   Widget generatePeopleList(List<dynamic> personList) {
     return personList.isNotEmpty
@@ -1143,9 +1922,9 @@ class _ApprovePageState extends State<ApprovePage> {
                     children: [
                       entry['Signature'] == null
                           ? Icon(Icons.check_box_outline_blank,
-                              color: Colors.black, size: 40)
+                              color: Colors.blue, size: 40)
                           : Icon(Icons.check_box_outlined,
-                              color: Colors.black, size: 40),
+                              color: Colors.blue, size: 40),
                       SizedBox(width: 15),
                       Expanded(
                         child: Text(
@@ -1213,7 +1992,7 @@ class _ApprovePageState extends State<ApprovePage> {
                   children: [
                     SizedBox(width: 5),
                     Expanded(child: Divider(color: Colors.black, thickness: 1)),
-                    Icon(Icons.shopping_bag, color: Colors.black, size: 36),
+                    Icon(Icons.inventory_2, color: Colors.black, size: 36),
                     SizedBox(width: 5),
                     Text(
                       title,
@@ -1311,7 +2090,9 @@ class _ApprovePageState extends State<ApprovePage> {
                 width: 300,
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(15),
                 ),
+                clipBehavior: Clip.hardEdge,
                 child: Image.network(
                   imageUrl,
                   fit: BoxFit.fill,
@@ -1338,7 +2119,9 @@ class _ApprovePageState extends State<ApprovePage> {
                   width: 300,
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(15),
                   ),
+                  clipBehavior: Clip.hardEdge,
                   child: Image.network(
                     imageList[index],
                     fit: BoxFit.fill,
@@ -1354,7 +2137,9 @@ class _ApprovePageState extends State<ApprovePage> {
               width: 300,
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(15),
               ),
+              clipBehavior: Clip.hardEdge,
               child: Image.network(
                 imageList[0],
                 fit: BoxFit.fill,
@@ -1366,50 +2151,42 @@ class _ApprovePageState extends State<ApprovePage> {
       ],
     );
   }
-}
 
-class InfoRow extends StatelessWidget {
-  final String label;
-  final String? value;
-  final double fontSize;
-  final double labelWidth;
-
-  const InfoRow({
-    Key? key,
-    required this.label,
-    required this.value,
-    required this.fontSize,
-    this.labelWidth = 130.0,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
-      children: [
-        SizedBox(width: 10),
-        SizedBox(
-          width: labelWidth,
-          child: Text(
-            label,
-            style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.left,
-            softWrap: true,
-          ),
-        ),
-        SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            value ?? '-',
-            style: TextStyle(fontSize: fontSize),
-            softWrap: true,
-          ),
-        ),
-        SizedBox(width: 10),
-      ],
-    );
+  // ---------------- Tool ----------------
+  //Function Date Picker
+  Future<void> _datePicker(
+    BuildContext context,
+    ValueNotifier<DateTime?> _date,
+  ) async {
+    DateTime initial = _date.value ?? AppDateTime.now();
+    DateTime? picked = await showDatePicker(
+        context: context,
+        initialDate: initial,
+        firstDate: DateTime(AppDateTime.now().year - 7),
+        lastDate: DateTime(AppDateTime.now().year + 7),
+        builder: (BuildContext context, Widget? child) {
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+                textScaler: TextScaler.linear(
+                    MediaQuery.of(context).size.width > 799 ? 1.5 : 1.0)),
+            child: Theme(
+              data: ThemeData.light().copyWith(
+                primaryColor: Colors.blue,
+                colorScheme: ColorScheme.light(
+                  primary: Colors.blue,
+                  onPrimary: Colors.white,
+                  onSurface: Colors.black,
+                ),
+                dialogBackgroundColor: Colors.white,
+              ),
+              child: child!,
+            ),
+          );
+        });
+    if (picked != null) {
+      _date.value = picked;
+      _controller.filterRequestList();
+    }
   }
 }
 

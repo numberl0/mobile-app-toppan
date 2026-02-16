@@ -1,27 +1,45 @@
-import 'dart:io';
-
-import 'package:device_info_plus/device_info_plus.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:uuid/uuid.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 // Like LocalStorage
 class UserEntity {
+
+  static const _secureStorage = FlutterSecureStorage();
 
   //Key
   String app_version = 'app_version';
 
   String username = 'username';
   String displayName = 'displayName';
-  String token = 'token';
   String roles_visitorService = 'roles_visitorService'; // list<String> = []
-
   String device_id = "device_id";
   String device_name = "device_name";
-  String fcm_token = "fcm_token";
-  String created_token_at = "created_token_at";
+
+  // ---------- Secure Storage (Token) ----------
+
+  Future<void> saveAccessToken(String token) async {
+    await _secureStorage.write(key: 'accessToken', value: token);
+  }
+
+  Future<void> saveRefreshToken(String token) async {
+    await _secureStorage.write(key: 'refreshToken', value: token);
+  }
+
+  Future<String?> getAccessToken() async {
+    return await _secureStorage.read(key: 'accessToken');
+  }
+
+  Future<String?> getRefreshToken() async {
+    return await _secureStorage.read(key: 'refreshToken');
+  }
+
+  Future<void> deleteTokens() async {
+    await _secureStorage.delete(key: 'accessToken');
+    await _secureStorage.delete(key: 'refreshToken');
+  }
+
+   // ---------- Shared Preferences (General Data) ----------
 
   //Setter
   Future<void> setUserPerfer(String key, dynamic value) async {
@@ -104,38 +122,6 @@ class UserEntity {
     }
   }
 
-  Future<void> generateInfoDeviceToken() async {
-    try{
-      //uuid
-      String devie_id = Uuid().v4();
-
-      // Device Name
-      String device_name = '';
-      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-      if(Platform.isAndroid) {
-        AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-        device_name = androidInfo.name;
-      } else if (Platform.isIOS) {
-        IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
-        device_name = iosInfo.utsname.machine;
-      }
-
-      //token
-      String? fcm_token = await FirebaseMessaging.instance.getToken();
-
-      // Created_at
-      String datetime_now =  DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
-
-      await setUserPerfer(this.device_id, devie_id);
-      await setUserPerfer(this.device_name, device_name);
-      await setUserPerfer(this.fcm_token, fcm_token);
-      await setUserPerfer(this.created_token_at, datetime_now);
-
-    } catch (err) {
-      throw err;
-    }
-  }
-
   Future<void> printAllSharedPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     final keys = await prefs.getKeys();
@@ -154,6 +140,7 @@ class UserEntity {
       String savedVersion = await getUserPerfer(this.app_version);
 
       if (savedVersion != currentVersion) {
+        await deleteTokens();
         await clearUserPerfer();
         await setUserPerfer(this.app_version, currentVersion);
       }
@@ -183,6 +170,13 @@ class UserEntity {
       throw err;
     }
     return status;
+  }
+
+  // ---------- Clear All Storage ----------
+
+  Future<void> ClearStorage() async {
+    await deleteTokens();
+    await clearUserPerfer();
   }
 
 }

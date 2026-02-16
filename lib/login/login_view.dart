@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:toppan_app/config/api_config.dart';
 
 import 'login_controller.dart';
 
@@ -11,23 +12,18 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   LoginController _controller = LoginController();
 
+  double _fontSize = ApiConfig.fontSize;
+  bool isPhoneScale = false;
+
    @override
   void initState() {
     super.initState();
-    loginCheck();
-  }
-
-  void loginCheck() async {
-    try {
-      await _controller.isTokenValid(context);
-    } catch (err, stacktree) {
-      print("Error during login check: $err");
-      print("Stacktree : $stacktree");
-    }
   }
 
   @override
   Widget build(BuildContext context) {
+    _fontSize = ApiConfig.getFontSize(context);
+    isPhoneScale = ApiConfig.getPhoneScale(context);
     return Container(
         decoration:  const BoxDecoration(
           gradient: LinearGradient(
@@ -65,13 +61,13 @@ class _LoginPageState extends State<LoginPage> {
               _icon(),
               const SizedBox(height: 50),
               InputField(
-                hintText: "Username",
+                hintText: "ชื่อผู้ใช้...",
                 controller: _controller.usernameController,
                 isPassword: false,
               ),
               const SizedBox(height: 30),
               InputField(
-                hintText: "Password",
+                hintText: "รหัสผ่าน...",
                 controller: _controller.passwordController,
                 isPassword: true,
               ),
@@ -152,7 +148,7 @@ class _PasswordInputFieldState extends State<InputField> {
       obscureText: widget.isPassword ? _obscureText : false,
       decoration: InputDecoration(
         hintText: widget.hintText,
-        hintStyle: const TextStyle(color: Colors.white),
+        hintStyle: const TextStyle(color: Colors.white, fontStyle: FontStyle.italic, fontSize: 18),
         enabledBorder: border,
         focusedBorder: border,
         suffixIcon: widget.isPassword
@@ -163,7 +159,7 @@ class _PasswordInputFieldState extends State<InputField> {
                 ),
                 onPressed: () {
                   setState(() {
-                    _obscureText = !_obscureText; // Toggle password visibility
+                    _obscureText = !_obscureText;
                   });
                 },
               )

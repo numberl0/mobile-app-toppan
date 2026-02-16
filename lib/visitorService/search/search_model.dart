@@ -1,43 +1,101 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
-
-import 'package:http/http.dart' as http;
-import 'package:toppan_app/userEntity.dart';
-
-import '../../config/api_config.dart';
+import 'package:dio/dio.dart';
+import 'package:toppan_app/api/api_client.dart';
 
 class SearchModule {
-
-  UserEntity userEntity = UserEntity();
-
-  Future<List<dynamic>> getRequestFormByDate(String dateToDay) async {
-    final url = Uri.parse(ApiConfig.apiBaseUrl + '/' + ApiConfig.visitorPipe + '/getRequestFormByDate' + '?dateToDay=${Uri.encodeComponent(dateToDay)}');
-    String token = await userEntity.getUserPerfer(userEntity.token);
-    List<dynamic> data = [];
+  /// -----------------------------
+  /// Get all request forms by date
+  Future<Map<String, List<dynamic>>> getAllRequestForm(
+    String dateToDay,
+  ) async {
     try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${token}'
+      final res = await ApiClient.dio.get(
+        '/document/requests',
+        queryParameters: {
+          'dateToDay': dateToDay,
         },
-      ).timeout(
-        Duration(seconds: 10),
-        onTimeout: () => throw TimeoutException("Timed Out in url : ${url}"),
       );
-      if(response.statusCode >= 200 && response.statusCode <= 299) {
-        var responseDecode = jsonDecode(response.body);
-        if(responseDecode['data'] != null){
-          data = responseDecode['data'];
-        }
-      }else{
-        throw HttpException("Request failed with status: ${response.statusCode}, Body: ${response.body}");
+
+      List<dynamic> getList(String key) {
+        final value = res.data[key];
+        return value is List ? value : [];
       }
-    } catch (err) {
-      throw err;
+
+      return {
+        'visitor': getList('visitor'),
+        'employee': getList('employee'),
+        'permission': getList('permission'),
+        'temporary': getList('temporary'),
+      };
+    } on DioException catch (e) {
+      print('[getAllRequestForm] ${e.message}');
+      rethrow;
+    } catch (e) {
+      rethrow;
     }
-    return data;
+  }
+
+  /// -----------------------------
+  /// Update temporary field
+  Future<bool> updateTemporaryField(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      await ApiClient.dio.patch(
+        '/document/temporary/$id',
+        data: data,
+      );
+      return true;
+    } on DioException catch (e) {
+      print('[updateTemporaryField] ${e.message}');
+      rethrow;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// -----------------------------
+  /// Upload image files (Multipart)
+  Future<bool> uploadImageFiles(
+    String tno,
+    String folderNameForm,
+    Map<String, dynamic> data,
+    String date,
+  ) async {
+    try {
+      final formData = FormData.fromMap({
+        'tno': tno,
+        'date': date,
+        'typeForm': folderNameForm,
+      });
+
+      if (data['approver'] != null) {
+        for (final File? file in data['approver']) {
+          if (file != null) {
+            formData.files.add(
+              MapEntry(
+                'sign[]',
+                await MultipartFile.fromFile(file.path),
+              ),
+            );
+          }
+        }
+      }
+
+      await ApiClient.dio.post(
+        '/upload/image-files',
+        data: formData,
+      );
+
+      return true;
+    } on DioException catch (e) {
+      print('[uploadImageFiles] ${e.message}');
+      rethrow;
+    } catch (e) {
+      rethrow;
+    }
   }
 
 }
