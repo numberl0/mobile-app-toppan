@@ -1,4 +1,4 @@
-const path = require('path');
+const path = require('node:path');
 
 const environment = 'test'; // test, production
 const config = {
@@ -7,7 +7,7 @@ const config = {
     test: {
         domain: `http://192.168.31.193:20509`,
         jwtToken: {
-            key: 'Toppan',
+            key: 'KYg3KIuDxLkrCXqiUeSjE+kvr90wzspS8v5MKgq87as=',
             enable: true,
         },
         ldapConfig: {

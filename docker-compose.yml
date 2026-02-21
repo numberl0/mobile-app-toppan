@@ -6,12 +6,12 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        SERVICE_PATH: service/visitor
+        SERVICE_PATH: src
     image: vmobile-visitor    
     container_name: vmobile-visitor
     ports:
       - "20509:20509"
     volumes:
-      - ./backend/service/visitor/docImage:/app/backend/service/visitor/docImage
-      - ./backend/service/visitor/logError:/app/backend/service/visitor/logError
+      - ./backend/src/docImage:/app/backend/src/docImage
+      - ./backend/src/logError:/app/backend/src/logError
     restart: always

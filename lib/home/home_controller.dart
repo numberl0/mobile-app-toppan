@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:toppan_app/app_logger.dart';
 import 'package:toppan_app/service_manager.dart';
 import 'package:toppan_app/userEntity.dart';
 import 'package:toppan_app/visitorService/center_controller.dart';
@@ -18,13 +18,13 @@ class HomeController {
   bool hasNotification = true;
 
   /// ===== Prepare Home Page =====
-  Future<void> preparePage(BuildContext context) async {
+  Future<bool> preparePage() async {
     try {
       // ===== AUTH CHECK (ศูนย์กลาง) =====
       final authenticated = await _centerController.ensureAuthenticated();
       if (!authenticated) {
-        await _centerController.forceLogout(context);
-        return;
+        await _centerController.forceLogout();
+        return false;
       }
 
       // ===== USER INFO =====
@@ -33,16 +33,17 @@ class HomeController {
 
       await prepareUser();
 
-      // ===== FCM (ไม่เกี่ยวกับ auth) =====
-      await _centerController.updateActiveFCM();
-
       // ===== PERMISSIONS / SERVICES =====
       await serviceManager.preparePermissionsServices();
-    } catch (err, stackTrace) {
+
+      return true;
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
       await _centerController.logError(
         err.toString(),
-        stackTrace.toString());
-    }
+        stack.toString());
+      }
+      return false;
   }
 
   Future<void> prepareUser() async {
@@ -51,18 +52,19 @@ class HomeController {
       List<dynamic> roles = await _model.getRoleByUser(username);
       List<String> roleList = roles.cast<String>();
       await userEntity.setUserPerfer(userEntity.roles_visitorService, roleList);
-      // hasNotification = await _model.hasNotification(username, roleList);
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     }
   }
 
-  Future<bool> logout(BuildContext context) async {
+  Future<bool> logout() async {
     try {
-      await _centerController.forceLogout(context);
+      await _centerController.forceLogout();
       return true;
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
       return false;
     }
   }

@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { db } = require("../config/db");
 
 const { jwtToken } = require('../config/config');
 const jwtSecret = jwtToken.key;
@@ -7,7 +8,8 @@ const JwtEnable = jwtToken.enable;
 // ================================
 // Authentication Middleware
 // ================================
-const authenticateToken = (req, res, next) => {
+const authenticateToken = async (req, res, next) => {
+    try {
     // ถ้า disable JWT (เช่น dev mode)
     if (JwtEnable === false) {
         return next();
@@ -26,27 +28,28 @@ const authenticateToken = (req, res, next) => {
         });
     }
 
-    jwt.verify(token, jwtSecret, (err, decoded) => {
+    const decoded = jwt.verify(token, jwtSecret);
 
-        if (err) {
+    const [rows] = await db.query(
+            `SELECT device_id FROM DEVICE_TOKEN WHERE device_id = ?`,
+            [decoded.deviceId]
+        );
 
-            // 🔥 token หมดอายุ
-            if (err.name === 'TokenExpiredError') {
-                return res.status(401).json({
-                    message: 'Token expired'
-                });
-            }
+    if (!rows.length) {
+        return res.status(401).json({
+            message: 'Session revoked'
+        });
+    }
 
-            // 🔥 token ไม่ถูกต้อง
-            return res.status(401).json({
-                message: 'Invalid token'
-            });
+    req.user = decoded;
+    return next();
+
+    } catch (error) {
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ message: 'Token expired' });
         }
 
-        // แนบข้อมูล user ไปกับ request
-        req.user = decoded;
-
-        next();
-    });
+        return res.status(401).json({ message: 'Invalid token' });
+    }
 };
 module.exports = authenticateToken;

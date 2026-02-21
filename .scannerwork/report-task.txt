@@ -1,6 +1,6 @@
-projectKey=visitor-mobile
-serverUrl=http://localhost:9000
-serverVersion=25.6.0.109173
-dashboardUrl=http://localhost:9000/dashboard?id=visitor-mobile
-ceTaskId=766e3f92-5a02-419f-99fe-a32fd4db6449
-ceTaskUrl=http://localhost:9000/api/ce/task?id=766e3f92-5a02-419f-99fe-a32fd4db6449
+projectKey=Visitor-Mobile
+serverUrl=https://sonarqube.dptf.com
+serverVersion=26.2.0.119303
+dashboardUrl=https://sonarqube.dptf.com/dashboard?id=Visitor-Mobile
+ceTaskId=fa9a62a4-20d4-4c31-b17b-1e1e1d533477
+ceTaskUrl=https://sonarqube.dptf.com/api/ce/task?id=fa9a62a4-20d4-4c31-b17b-1e1e1d533477

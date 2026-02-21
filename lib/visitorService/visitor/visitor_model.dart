@@ -10,33 +10,19 @@ class VisitorModule {
   /// -----------------------------
   /// Agreement text
   Future<Map<String, dynamic>> getAgreementText() async {
-    try {
       final res = await ApiClient.dio.get('/document/agreement');
 
       if (res.data['data'] != null && res.data['data'].isNotEmpty) {
         return res.data['data'][0];
       }
       return {};
-    } on DioException catch (e) {
-      print('[getAgreementText] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
-    }
   }
 
   /// -----------------------------
   /// Building list
   Future<List<dynamic>> getBuilding() async {
-    try {
       final res = await ApiClient.dio.get('/document/building');
       return res.data['data'] ?? [];
-    } on DioException catch (e) {
-      print('[getBuilding] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
-    }
   }
 
   /// -----------------------------
@@ -54,11 +40,8 @@ class VisitorModule {
         },
       );
       return true;
-    } on DioException catch (e) {
-      print('[insertRequestFormV] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -78,11 +61,8 @@ class VisitorModule {
         },
       );
       return true;
-    } on DioException catch (e) {
-      print('[updateRequestFormV] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -126,11 +106,8 @@ class VisitorModule {
       );
 
       return true;
-    } on DioException catch (e) {
-      print('[uploadImageFiles] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -143,18 +120,14 @@ class VisitorModule {
         options: Options(responseType: ResponseType.bytes),
       );
       return Uint8List.fromList(res.data ?? []);
-    } on DioException catch (e) {
-      print('[loadImageAsBytes] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
+    } catch (_) {
+      return null;
     }
   }
 
   /// -----------------------------
   /// Load image to temp file
   Future<File?> loadImageToFile(String imageUrl) async {
-    try {
       final res = await ApiClient.dio.get<List<int>>(
         imageUrl,
         options: Options(responseType: ResponseType.bytes),
@@ -167,43 +140,23 @@ class VisitorModule {
       final file = File(filePath);
       await file.writeAsBytes(res.data ?? []);
       return file;
-    } on DioException catch (e) {
-      print('[loadImageToFile] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
-    }
   }
 
   /// -----------------------------
   /// Departments
   Future<List<String>> getDepartments() async {
-    try {
       final res = await ApiClient.dio.get('/hris/departments');
       return List<String>.from(res.data['data'] ?? []);
-    } on DioException catch (e) {
-      print('[getDepartments] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
-    }
   }
 
   /// -----------------------------
   /// Contact by department
   Future<List<String>> getContactByDept(String dept) async {
-    try {
       final res = await ApiClient.dio.get(
         '/hris/emp-name',
         queryParameters: {'dept': dept},
       );
       return List<String>.from(res.data['data'] ?? []);
-    } on DioException catch (e) {
-      print('[getContactByDept] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
-    }
   }
 
   /// -----------------------------
@@ -211,7 +164,6 @@ class VisitorModule {
   Future<List<Map<String, dynamic>>> getActiveCardByType(
     List<String> cardTypes,
   ) async {
-    try {
       final res = await ApiClient.dio.get(
         '/card/active-by-type',
         queryParameters: {
@@ -219,12 +171,6 @@ class VisitorModule {
         },
       );
       return List<Map<String, dynamic>>.from(res.data['data'] ?? []);
-    } on DioException catch (e) {
-      print('[getActiveCardByType] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
-    }
   }
 
   /// -----------------------------
@@ -232,7 +178,6 @@ class VisitorModule {
   Future<List<Map<String, dynamic>>> getInfoCardFromDoc(
     List<String> cardTypes,
   ) async {
-    try {
       final res = await ApiClient.dio.get(
         '/card/cards-from-doc',
         queryParameters: {
@@ -240,12 +185,6 @@ class VisitorModule {
         },
       );
       return List<Map<String, dynamic>>.from(res.data['data'] ?? []);
-    } on DioException catch (e) {
-      print('[getInfoCardFromDoc] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
-    }
   }
 
 

@@ -11,15 +11,8 @@ class EmployeeModel {
   /// Building
   /// -----------------------------
   Future<List<dynamic>> getBuilding() async {
-    try {
       final res = await ApiClient.dio.get('/document/building');
       return res.data['data'] ?? [];
-    } on DioException catch (e) {
-      print('[getBuilding] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
-    }
   }
 
   /// -----------------------------
@@ -63,11 +56,8 @@ class EmployeeModel {
       );
 
       return true;
-    } on DioException catch (e) {
-      print('[uploadImageFiles] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -87,11 +77,8 @@ class EmployeeModel {
         },
       );
       return true;
-    } on DioException catch (e) {
-      print('[insertRequestFormE] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -112,11 +99,8 @@ class EmployeeModel {
         },
       );
       return true;
-    } on DioException catch (e) {
-      print('[updateRequestFormE] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -130,9 +114,8 @@ class EmployeeModel {
         options: Options(responseType: ResponseType.bytes),
       );
       return Uint8List.fromList(res.data!);
-    } catch (e) {
-      print('[loadImageAsBytes] $e');
-      rethrow;
+    } catch (_) {
+      return null;
     }
   }
 
@@ -140,7 +123,6 @@ class EmployeeModel {
   /// Load image → File
   /// -----------------------------
   Future<File?> loadImageToFile(String imageUrl) async {
-    try {
       final res = await ApiClient.dio.get<List<int>>(
         imageUrl,
         options: Options(responseType: ResponseType.bytes),
@@ -152,35 +134,23 @@ class EmployeeModel {
 
       await file.writeAsBytes(res.data!);
       return file;
-    } catch (e) {
-      print('[loadImageToFile] $e');
-      rethrow;
-    }
   }
 
   /// -----------------------------
   /// Departments
   /// -----------------------------
   Future<List<String>> getDepartments() async {
-    try {
       final res = await ApiClient.dio.get('/hris/getDepartments');
       return (res.data['data'] as List?)
               ?.map((e) => e.toString())
               .toList() ??
           [];
-    } on DioException catch (e) {
-      print('[getDepartments] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
-    }
   }
 
   /// -----------------------------
   /// Contact by Dept
   /// -----------------------------
   Future<List<String>> getContactByDept(String dept) async {
-    try {
       final res = await ApiClient.dio.get(
         '/hris/emp-name',
         queryParameters: {'dept': dept},
@@ -190,19 +160,12 @@ class EmployeeModel {
               ?.map((e) => e.toString())
               .toList() ??
           [];
-    } on DioException catch (e) {
-      print('[getContactByDept] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
-    }
   }
 
   /// -----------------------------
   /// HRIS Emp Info
   /// -----------------------------
   Future<Map<String, String>> getInfoByEmpId(String empId) async {
-    try {
       final res = await ApiClient.dio.get(
         '/hris/emp_info',
         queryParameters: {'empId': empId},
@@ -215,12 +178,6 @@ class EmployeeModel {
         );
       }
       return {};
-    } on DioException catch (e) {
-      print('[getInfoByEmpId] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
-    }
   }
 
 

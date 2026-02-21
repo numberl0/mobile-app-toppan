@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:toppan_app/api/api_client.dart';
-import 'package:toppan_app/config/api_config.dart';
 import 'package:toppan_app/userEntity.dart';
+import '../main.dart';
 
 class AuthInterceptor extends Interceptor {
   bool _isRefreshing = false;
@@ -65,9 +65,8 @@ class AuthInterceptor extends Interceptor {
 
       await userEntity.ClearStorage();
 
-      // // refresh ไม่ผ่าน → logout
-      // await userEntity.clear();
-      // // TODO: navigate to login
+      appRouter.go('/login');
+      return;
     }
 
     handler.next(err);
@@ -96,7 +95,6 @@ class AuthInterceptor extends Interceptor {
 
       return newAccessToken;
     } catch (_) {
-      print(_);
       return null;
     }
   }

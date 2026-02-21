@@ -9,7 +9,6 @@ class SearchModule {
   Future<Map<String, List<dynamic>>> getAllRequestForm(
     String dateToDay,
   ) async {
-    try {
       final res = await ApiClient.dio.get(
         '/document/requests',
         queryParameters: {
@@ -28,12 +27,6 @@ class SearchModule {
         'permission': getList('permission'),
         'temporary': getList('temporary'),
       };
-    } on DioException catch (e) {
-      print('[getAllRequestForm] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
-    }
   }
 
   /// -----------------------------
@@ -48,11 +41,8 @@ class SearchModule {
         data: data,
       );
       return true;
-    } on DioException catch (e) {
-      print('[updateTemporaryField] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -90,11 +80,8 @@ class SearchModule {
       );
 
       return true;
-    } on DioException catch (e) {
-      print('[uploadImageFiles] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
+    } catch (_) {
+      return false;
     }
   }
 

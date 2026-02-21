@@ -4,9 +4,8 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:toppan_app/component/AppDateTime.dart';
+import 'package:toppan_app/app_logger.dart';
 import 'package:toppan_app/loading_dialog.dart';
 import 'package:toppan_app/userEntity.dart';
 import 'package:toppan_app/visitorService/center_controller.dart';
@@ -37,12 +36,10 @@ class LoginController {
 
       // App version
       final PackageInfo info = await PackageInfo.fromPlatform();
-      await userEntity.setUserPerfer(userEntity.app_version, info.version);
 
       // ===== DEVICE ID (create once, reuse forever) =====
       String? device_id = await userEntity.getUserPerfer(userEntity.device_id);
       device_id ??= const Uuid().v4();
-      await userEntity.setUserPerfer(userEntity.device_id, device_id);
 
       String username = usernameController.text;
       String password = passwordController.text;
@@ -60,6 +57,8 @@ class LoginController {
         Map<String,dynamic> response = await loginModel.validateLogin(loginReq);
 
         if(response['canLogin'] == true){
+          await userEntity.setUserPerfer(userEntity.app_version, info.version);
+          await userEntity.setUserPerfer(userEntity.device_id, device_id);
           await userEntity.setUserPerfer(userEntity.username, username);
           await userEntity.setUserPerfer(userEntity.displayName, response['displayName']);
           await userEntity.saveAccessToken(response['accessToken']);
@@ -73,8 +72,8 @@ class LoginController {
           _showErrorLoginDialog(context, response['err'] ?? 'เกิดข้อผิดพลาด');
         }
 
-    } catch (err) {
-      print(err);
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
       _showErrorLoginDialog(context, 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
     } finally {
       await Future.delayed(Duration(seconds: 1));
@@ -110,22 +109,18 @@ class LoginController {
       //token
       String? fcm_token = await FirebaseMessaging.instance.getToken();
 
-      // Created_at
-      String datetime_now =  DateFormat('yyyy-MM-dd HH:mm:ss').format(AppDateTime.now());
-
       Map<String, dynamic> data = {
         'device_name': device_name,
         'roles': roles,
         'fcm_token': fcm_token,
-        'last_active': datetime_now,
       };
 
       await loginModel.updateFCMToken(device_id, data);
       await _centerController.insertActvityLog('User $username has logged in');
-    } catch (err, stackTrace) {
-      print(err);
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
       await userEntity.clearUserPerfer();
-      await _centerModel.logError(err.toString(), stackTrace.toString());
+      await _centerModel.logError(err.toString(), stack.toString());
     }
   }
 

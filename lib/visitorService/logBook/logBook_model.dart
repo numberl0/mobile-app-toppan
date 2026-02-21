@@ -11,7 +11,6 @@ class LogBookModel {
     String startDate,
     String endDate,
   ) async {
-    try {
       final res = await ApiClient.dio.get(
         '/pdf/preview',
         queryParameters: {
@@ -26,12 +25,5 @@ class LogBookModel {
 
       final String base64pdf = res.data['pdfBase64'];
       return base64Decode(base64pdf);
-
-    } on DioException catch (e) {
-      print('[getLogBook] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
-    }
   }
 }

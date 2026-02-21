@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -11,26 +10,46 @@ import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_signaturepad/signaturepad.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
+import 'package:toppan_app/app_logger.dart';
 import 'package:toppan_app/component/AppDateTime.dart';
 import 'package:toppan_app/config/api_config.dart';
 import 'package:toppan_app/visitorService/employee/employee_controller.dart';
 
+import '../../component/BaseScaffold.dart';
 import '../../component/CustomDIalog.dart';
 
-class EmployeeForm {
-  Widget employeeFormWidget(Map<String, dynamic>? docData) {
-    return EmployeeFormPage(documentData: docData);
+class EmployeePage extends StatelessWidget {
+  final Map<String, dynamic>? documentData;
+
+  const EmployeePage({
+    super.key,
+    this.documentData,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return BaseScaffold(
+      title: 'พนักงาน',
+      child: EmployeeContent(
+        documentData: documentData,
+      ),
+    );
   }
 }
 
-class EmployeeFormPage extends StatefulWidget {
+class EmployeeContent extends StatefulWidget {
   final Map<String, dynamic>? documentData;
-  const EmployeeFormPage({super.key, this.documentData});
+
+  const EmployeeContent({
+    super.key,
+    this.documentData,
+  });
+
   @override
-  _EmployeeFormPageState createState() => _EmployeeFormPageState();
+  State<EmployeeContent> createState() => _EmployeeContentState();
 }
 
-class _EmployeeFormPageState extends State<EmployeeFormPage>
+class _EmployeeContentState extends State<EmployeeContent>
     with SingleTickerProviderStateMixin {
   EmployeeController _controller = EmployeeController();
 
@@ -50,12 +69,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
 
     prepareForm();
     prepareAnimations();
-    
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   setState(() {
-
-    //   });
-    // });
+ 
   }
 
   void prepareForm() async {
@@ -551,7 +565,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                               padding: EdgeInsets.all(10.0),
                               decoration: BoxDecoration(
                                 border: Border.all(
-                                  color: Colors.black,
+                                  color: Colors.orange,
                                 ),
                                 borderRadius: BorderRadius.circular(15),
                               ),
@@ -560,13 +574,15 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   Icon(
                                     Icons.assignment_outlined,
                                     size: 50,
-                                    color: Colors.black,
+                                    color: Colors.orange,
                                   ),
                                   Text(
                                     "ลงชื่อ",
                                     style: TextStyle(
                                         fontSize: _fontSize,
-                                        fontWeight: FontWeight.bold),
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.orange,
+                                        ),
                                   ),
                                 ],
                               ),
@@ -613,7 +629,11 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                     ),
                                   );
                                   Future.delayed(const Duration(seconds: 1), () {
-                                    GoRouter.of(context).pushReplacement('/home');
+                                     if(!_controller.flagUpdateForm) {
+                                        GoRouter.of(context).pushReplacement('/home');
+                                      } else {
+                                        GoRouter.of(context)..pop()..pop()..pushReplacement('/search');
+                                      }
                                   });
                                 } else {
                                   showTopSnackBar(
@@ -630,12 +650,12 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                             },
                             style: ElevatedButton.styleFrom(
                               padding: EdgeInsets.symmetric(
-                                  vertical: 16), // Increases button height
+                                  vertical: 16),
                               backgroundColor:
-                                  Colors.orange, // Change color if needed
+                                  Colors.orange,
                               shape: RoundedRectangleBorder(
                                 borderRadius:
-                                    BorderRadius.circular(12), // Rounded corners
+                                    BorderRadius.circular(12),
                               ),
                             ),
                             child: Text(
@@ -672,6 +692,12 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
     TextEditingController signaturesByDisplay = TextEditingController(
         text: _controller.signatureSectionMap[sectionKeys[currentIndex]]?[3] ??
             '');
+    // Lock
+    Map<String, bool> signatureLockMap = {};
+    for (var key in sectionKeys) {
+      signatureLockMap[key] =
+          _controller.signatureSectionMap[key]?[0] != null;
+    }
 
     // clear display
     void clearStateSignature() async {
@@ -739,6 +765,9 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
 
     //HeaderMenu
     Widget _headerMenu(double screenWidth, StateSetter setStateDialog) {
+      final filteredKeys = !_controller.flagUpdateForm
+    ? sectionKeys.where((e) => e.toLowerCase() == "employee").toList()
+    : sectionKeys;
       return Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -759,15 +788,15 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
             ? Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  IconButton(
-                    onPressed: () {
-                      arrowController('L', setStateDialog);
-                    },
-                    icon: Icon(
-                      Icons.arrow_left,
-                      size: 40,
+                    IconButton(
+                      onPressed: () {
+                        arrowController('L', setStateDialog);
+                      },
+                      icon: Icon(
+                        Icons.arrow_left,
+                        size: 40,
+                      ),
                     ),
-                  ),
                   Expanded(
                     child: ConstrainedBox(
                       constraints: BoxConstraints(
@@ -792,7 +821,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                 ),
                                 alignment: Alignment.center,
                                 child: Text(
-                                  sectionKeys[index],
+                                  filteredKeys[index],
                                   style: TextStyle(
                                       color: Colors.black,
                                       fontSize: _fontSize),
@@ -800,28 +829,28 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                               ),
                             );
                           },
-                          childCount: _controller.signatureSectionMap.length,
+                          childCount: filteredKeys.length,
                         ),
                       ),
                     ),
                   ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.arrow_right,
-                      size: 40,
+                    IconButton(
+                      icon: Icon(
+                        Icons.arrow_right,
+                        size: 40,
+                      ),
+                      onPressed: () {
+                        arrowController('R', setStateDialog);
+                      },
                     ),
-                    onPressed: () {
-                      arrowController('R', setStateDialog);
-                    },
-                  ),
                 ],
               )
-            : Container(
-                padding: EdgeInsets.only(bottom: 20),
+            : 
+            Container(
+                padding: EdgeInsets.only(bottom: 15),
                 child: NavigationBar(
                   backgroundColor: Colors.transparent,
-                  destinations:
-                      _controller.signatureSectionMap.entries.map((entry) {
+                  destinations: _controller.signatureSectionMap.entries.map((entry) {
                     int index = _controller.signatureSectionMap.keys
                         .toList()
                         .indexOf(entry.key);
@@ -917,12 +946,13 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                   }).toList(),
                 ),
               ),
+
+
       );
     }
 
     Widget _signPad(StateSetter setStateDialog) {
-      return Stack(
-        children: [
+      return 
           // Signature Card
           IgnorePointer(
             ignoring: _controller.logBook,
@@ -992,7 +1022,6 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                     bottom: 10,
                                     child: GestureDetector(
                                       onTap: () {
-                                        // _controller.signatureGlobalKey.currentState!.clear();
                                         if (_controller.signatureSectionMap[
                                               sectionKeys[currentIndex]]?[0] !=
                                           null &&
@@ -1016,6 +1045,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                                 sectionKeys[currentIndex]]?[3] =
                                             null; // by
                                         clearStateSignature();
+                                        signatureLockMap[sectionKeys[currentIndex]] = false;
                                         Navigator.pop(context);
                                         setStateDialog(() {});
                                       });
@@ -1051,7 +1081,6 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                         width: double.infinity,
                         child: Row(
                           children: [
-                            /// 🔹 ช่องกรอกชื่อ
                             Expanded(
                               child: Container(
                                 height: 52,
@@ -1069,7 +1098,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                     FocusScope.of(context).unfocus();
                                   },
                                   cursorColor: Colors.orange,
-                                  readOnly: signaturesByDisplay.text.isNotEmpty,
+                                  readOnly: signatureLockMap[sectionKeys[currentIndex]] ?? false,
                                   controller: signaturesByDisplay,
                                   maxLines: null,
                                   minLines: 1,
@@ -1084,7 +1113,6 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
 
                             const SizedBox(width: 8),
 
-                            /// 🔹 ปุ่มบันทึก
                             ElevatedButton(
                               onPressed: _controller.signatureSectionMap[
                                               sectionKeys[currentIndex]]?[0] ==
@@ -1107,7 +1135,9 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                           _controller.signatureGlobalKey,
                                         );
 
-                                        setStateDialog(() {});
+                                        setStateDialog(() {
+                                          signatureLockMap[sectionKeys[currentIndex]] = true;
+                                        });
                                       } else {
                                         showTopSnackBar(
                                           Overlay.of(context),
@@ -1126,8 +1156,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                   : null,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: _acceptBtnColor,
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 10),
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -1211,26 +1240,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                 ),
               ),
             ),
-          ),
-
-          // Exit Button (Close)
-          Positioned(
-            top: 0,
-            right: 0,
-            child: IconButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              icon: Icon(
-                Icons.cancel_rounded,
-                color: _cancelBtnColor,
-                size: _isPhoneScale?47:50,
-              ),
-              tooltip: "Close",
-            ),
-          ),
-        ],
-      );
+          );
     }
 
     //show Dialog
@@ -1241,7 +1251,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
       transitionDuration: const Duration(milliseconds: 160),
       pageBuilder: (BuildContext context, Animation<double> animation1,
           Animation<double> animation2) {
-        return Container(); // Required but not used
+        return Container();
       },
       transitionBuilder: (context, a1, a2, widget) {
         double screenWidth = MediaQuery.of(context).size.width;
@@ -1249,56 +1259,55 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () {
-            FocusManager.instance.primaryFocus?.unfocus(); // Dismiss keyboard
-            Navigator.of(context).pop(); // Close dialog 
+            final hasFocus = FocusManager.instance.primaryFocus?.hasFocus ?? false;
+            final isTextFieldFocused = FocusManager.instance.primaryFocus is! FocusScopeNode;
+            if (hasFocus && isTextFieldFocused) {
+              FocusManager.instance.primaryFocus?.unfocus(); // Dismiss keyboard
+            } else {
+              Navigator.of(context).pop(); // Close dialog 
+            }
           },
           child: ScaleTransition(
             scale: Tween<double>(begin: 0.6, end: 1.0).animate(a1),
             child: FadeTransition(
               opacity: Tween<double>(begin: 0.6, end: 1.0).animate(a1),
-              child: MediaQuery(
-                data: MediaQuery.of(context)
-                    .copyWith(viewInsets: EdgeInsets.zero), // Prevent movement
-                child: AlertDialog(
-                  backgroundColor: Colors.transparent,
-                  insetPadding: EdgeInsets.all(16.0),
-                  contentPadding: EdgeInsets.all(0),
-                  content: StatefulBuilder(
-                    builder:
-                        (BuildContext context, StateSetter setStateDialog) {
-                      return Container(
-                        width: double.maxFinite,
-                        child: ScrollConfiguration(
-                          behavior: ScrollConfiguration.of(context).copyWith(
-                            dragDevices: {
-                              PointerDeviceKind.touch,
-                              PointerDeviceKind.mouse,
-                            },
-                            scrollbars: false,
-                          ),
-                          child: Padding(
-                            padding: screenWidth > 799
-                                ? const EdgeInsets.only(
-                                    left: 16.0,
-                                    bottom: 16.0,
-                                    right: 16.0,
-                                    top: 16.0)
-                                : const EdgeInsets.all(10.0),
-                            child: SingleChildScrollView(
-                              controller: controller,
-                              child: Column(
-                                children: [
+              child: AlertDialog(
+                backgroundColor: Colors.transparent,
+                insetPadding: EdgeInsets.all(16.0),
+                contentPadding: EdgeInsets.all(0),
+                content: StatefulBuilder(
+                  builder:
+                      (BuildContext context, StateSetter setStateDialog) {
+                    return Container(
+                      width: double.maxFinite,
+                      child: ScrollConfiguration(
+                        behavior: ScrollConfiguration.of(context).copyWith(
+                          dragDevices: {
+                            PointerDeviceKind.touch,
+                            PointerDeviceKind.mouse,
+                          },
+                          scrollbars: false,
+                        ),
+                        child: Padding(
+                          padding: screenWidth > 799
+                              ? const EdgeInsets.all(16.0)
+                              : const EdgeInsets.all(10.0),
+                          child: SingleChildScrollView(
+                            controller: controller,
+                            child: Column(
+                              children: [
+                                if (_controller.flagUpdateForm) ...[
                                   _headerMenu(screenWidth, setStateDialog),
-                                  SizedBox(height: 20),
-                                  _signPad(setStateDialog),
+                                  SizedBox(height: 15),
                                 ],
-                              ),
+                                _signPad(setStateDialog),
+                              ],
                             ),
                           ),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -1329,7 +1338,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
         }
       });
     } else {
-      print("No Image Picked");
+      AppLogger.debug("No Image Picked");
     }
   }
 
@@ -1599,20 +1608,20 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
     String header = type == 'in' ? 'นำเข้า' : 'นำออก';
     showDialog(
       context: context,
-      barrierDismissible: false, // Prevent closing by tapping outside
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () {
-            FocusManager.instance.primaryFocus?.unfocus(); // Dismiss keyboard
+            FocusManager.instance.primaryFocus?.unfocus();
           },
           child: MediaQuery(
             data: MediaQuery.of(context)
-                .copyWith(viewInsets: EdgeInsets.zero), // Prevent UI shifting
+                .copyWith(viewInsets: EdgeInsets.zero),
             child: Dialog(
               shape: RoundedRectangleBorder(
                 borderRadius:
-                    BorderRadius.circular(24), // Rounded dialog corners
+                    BorderRadius.circular(24),
               ),
               child: Container(
                 constraints: BoxConstraints(
@@ -1620,7 +1629,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                   maxHeight: MediaQuery.of(context).size.height * 0.6,
                 ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min, // Fit to content size
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     // Header Section
                     Stack(
@@ -1652,7 +1661,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                       padding: EdgeInsets.all(20),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min, // Ensures proper height
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
                             'ชื่อสิ่งของ:',
@@ -1697,7 +1706,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                               ),
                             ),
                           ),
-                          SizedBox(width: 10), // Space between buttons
+                          SizedBox(width: 10),
                           Expanded(
                             child: ElevatedButton(
                               onPressed: () async {
@@ -1912,7 +1921,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
         }
       });
     } else {
-      print("No Image Picked");
+      AppLogger.debug("No Image Picked");
     }
   }
 
@@ -2042,25 +2051,11 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
     );
   }
 
-  // Function toggle the visibility of the person list
-  void _togglePersonList() {
-    setState(() {
-      _controller.isExpanded_listPerson = !_controller.isExpanded_listPerson;
-    });
-  }
 
-  // Function toggle the visibility of the Item list
-  void _toggleItemList() {
-    setState(() {
-      _controller.isExpanded_listItem = !_controller.isExpanded_listItem;
-    });
-  }
-
-  //Function clear input controller Employee
   void _clearPersonInfoController() {
     _controller.empNameController.clear();
     _controller.empIdController.clear();
-    _controller.signatureGlobalKey.currentState!.clear(); //signature
+    _controller.signatureGlobalKey.currentState!.clear();
   }
 
   void popUpEditPerson(Map<String, dynamic> entry) {
@@ -2075,11 +2070,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () {
-            FocusManager.instance.primaryFocus?.unfocus(); // Dismiss keyboard
+            FocusManager.instance.primaryFocus?.unfocus();
           },
           child: MediaQuery(
-            data: MediaQuery.of(context)
-                .copyWith(viewInsets: EdgeInsets.zero), // Prevent UI movement
+            data: MediaQuery.of(context).copyWith(viewInsets: EdgeInsets.zero),
             child: Dialog(
               shape: RoundedRectangleBorder(
                 borderRadius:
@@ -2559,35 +2553,6 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                         ],
                                     ],
                                     
-                                    // Row(
-                                    //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    //   children: [
-                                    //     Text(
-                                    //       'รหัสพนักงาน : ${entry['EmployeeId']}',
-                                    //       style: TextStyle(
-                                    //         fontSize: _fontSize - 2,
-                                    //         fontWeight: FontWeight.bold,
-                                    //         color: Colors.black,
-                                    //       ),
-                                    //       overflow: TextOverflow.ellipsis,
-                                    //       maxLines: 1,
-                                    //     ),
-                                    //     if(entry['Department'] != null && entry['Department'].toString().trim().isNotEmpty) ...[
-                                    //       Text(
-                                    //       'แผนก : ${entry['Department']}',
-                                    //         style: TextStyle(
-                                    //           fontSize: _fontSize - 2,
-                                    //           fontWeight: FontWeight.bold,
-                                    //           color: Colors.black,
-                                    //         ),
-                                    //         overflow: TextOverflow.ellipsis,
-                                    //         maxLines: 1,
-                                    //       ),
-                                    //     ],
-                                    //     Container(),
-                                    //     Container(),
-                                    //   ],
-                                    // ),
                                   ],
                                 ),
                               ),
@@ -2642,11 +2607,11 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () {
-            FocusManager.instance.primaryFocus?.unfocus(); // Dismiss keyboard
+            FocusManager.instance.primaryFocus?.unfocus();
           },
           child: MediaQuery(
             data: MediaQuery.of(context)
-                .copyWith(viewInsets: EdgeInsets.zero), // Prevent UI movement
+                .copyWith(viewInsets: EdgeInsets.zero),
             child: Dialog(
               shape: RoundedRectangleBorder(
                 borderRadius:
@@ -2658,12 +2623,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                   maxHeight: MediaQuery.of(context).size.height * 0.6,
                 ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min, // Ensures dialog fits content
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Header Section with Close Button
                     Stack(
                       children: [
-                        // Header Background
                         Container(
                           width: double.infinity,
                           padding: EdgeInsets.all(16),
@@ -2687,12 +2650,11 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                       ],
                     ),
 
-                    // Body Content with Scrollable View
                     Expanded(
                       child: SingleChildScrollView(
                         keyboardDismissBehavior:
                             ScrollViewKeyboardDismissBehavior
-                                .onDrag, // Dismiss keyboard on scroll
+                                .onDrag,
                         child: Padding(
                           padding: EdgeInsets.all(20),
                           child: Column(
@@ -2832,15 +2794,15 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                     decoration: BoxDecoration(
                                       border: Border.all(color: Colors.grey),
                                       borderRadius: BorderRadius.circular(
-                                          12), // Rounded corners
+                                          12),
                                     ),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(
-                                          12), // Ensures child (Signature Pad) is clipped
+                                          12),
                                       child: SfSignaturePad(
                                         key: _controller.signatureGlobalKey,
                                         backgroundColor: Colors
-                                            .transparent, // Set background for better visibility
+                                            .transparent,
                                         strokeColor: Colors.black,
                                         minimumStrokeWidth: 3.0,
                                         maximumStrokeWidth: 6.0,
@@ -2848,7 +2810,6 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                     ),
                                   ),
 
-                                  // Reset Button (Positioned at Bottom-Left)
                                   Positioned(
                                     left: 10,
                                     bottom: 10,
@@ -2856,12 +2817,12 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                                       onTap: () {
                                         _controller
                                             .signatureGlobalKey.currentState!
-                                            .clear(); // Clears signature pad
+                                            .clear();
                                       },
                                       child: CircleAvatar(
                                         radius: 20,
                                         backgroundColor: Colors.black.withOpacity(
-                                            0.5), // Semi-transparent background
+                                            0.5),
                                         child: Icon(
                                           Icons.cached,
                                           color: Colors.white,
@@ -2884,7 +2845,6 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                       padding: EdgeInsets.all(16),
                       child: Row(
                         children: [
-                          // Cancel Button
                           Expanded(
                             child: ElevatedButton(
                               onPressed: () {
@@ -3043,7 +3003,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage>
                               title: Text(
                                 objectiveValue,
                                 style: TextStyle(
-                                    fontSize: _fontSize), // Dynamic font size
+                                    fontSize: _fontSize),
                               ),
                               value: objectiveKey,
                               groupValue: _controller.objTypeSelection,
@@ -3356,9 +3316,9 @@ class _InputFieldState extends State<InputField> {
     _fontSize = ApiConfig.getFontSize(context);
     _isPhoneScale = ApiConfig.getPhoneScale(context);
     return GestureDetector(
-      behavior: HitTestBehavior.opaque, // Ensures taps outside are detected
+      behavior: HitTestBehavior.opaque,
       onTap: () {
-        FocusScope.of(context).unfocus(); // Remove focus when tapping outside
+        FocusScope.of(context).unfocus();
       },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

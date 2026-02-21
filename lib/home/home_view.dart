@@ -14,10 +14,10 @@ import '../component/CustomDIalog.dart';
 
 
 class HomePage extends StatefulWidget {
-  HomePage({super.key});
+  const HomePage({super.key});
 
   @override
-  _HomePageState createState() => _HomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> with RouteAware, SingleTickerProviderStateMixin {
@@ -55,11 +55,6 @@ class _HomePageState extends State<HomePage> with RouteAware, SingleTickerProvid
 
       _rotateController?.repeat(reverse: true);
     }
-
-
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   setState(() { });
-    // });
   }
 
   @override
@@ -77,22 +72,21 @@ class _HomePageState extends State<HomePage> with RouteAware, SingleTickerProvid
 
   @override
   void didPush() {
-    // clearTemp();
-    // reloadPage();
   }
 
   @override
   void didPopNext() {
-    // clearTemp();
     reloadPage();
   }
 
-  // void clearTemp() async {
-  //   await cleartemporary.clearCache();
-  // }
 
-  void preparePage() async {
-    await _controller.preparePage(context);
+  Future<void> preparePage() async {
+    final success = await _controller.preparePage();
+    if (!mounted) return;
+    if (!success) {
+      context.go('/login');
+      return;
+    }
     setState(() {
        _isLoading = false;
     });
@@ -104,7 +98,7 @@ class _HomePageState extends State<HomePage> with RouteAware, SingleTickerProvid
     });
 
     await cleartemporary.clearCache();
-    await _controller.preparePage(context);
+    await _controller.preparePage();
 
     setState(() {
       _isLoading = false;
@@ -202,13 +196,13 @@ class _HomePageState extends State<HomePage> with RouteAware, SingleTickerProvid
     PopupMenuButton<String>(
       onSelected: (value) async {
         if (value == 'logout') {
-          CustomDialog.show(
+          await CustomDialog.show(
             context: context,
             title: 'คำเตือน',
             message: 'คุณแน่ใจว่าต้องการออกจากระบบหรือไม่?',
             type: DialogType.info,
             onConfirm: () async {
-              bool isLogout = await _controller.logout(context);
+              bool isLogout = await _controller.logout();
               if (isLogout) {
                 showTopSnackBar(
                   Overlay.of(context),
@@ -243,7 +237,6 @@ class _HomePageState extends State<HomePage> with RouteAware, SingleTickerProvid
         }
       },
 
-      // ⭐ ตัวที่แสดงบนหน้าจอ (ชื่อผู้ใช้)
       child: Container(
         margin: EdgeInsets.only(right: 12),
         child: Chip(
@@ -271,7 +264,6 @@ class _HomePageState extends State<HomePage> with RouteAware, SingleTickerProvid
         ),
       ),
 
-      // 📋 เมนูที่เด้งออกมา
       itemBuilder: (context) => [
         PopupMenuItem(
           value: 'logout',
@@ -322,34 +314,6 @@ class _HomePageState extends State<HomePage> with RouteAware, SingleTickerProvid
     ),
   ),
 ),
-
-
-// SizedBox(height: 20),
-// Padding(
-//   padding: EdgeInsets.symmetric(
-//     horizontal: MediaQuery.of(context).size.width * 0.05,
-//   ),
-//   child: Column(
-//     crossAxisAlignment: CrossAxisAlignment.start,
-//     children: [
-//       Text(
-//         'เมนูหลัก',
-//         style: TextStyle(
-//           color: Colors.white,
-//           fontSize: _fontSize + 34,
-//           fontWeight: FontWeight.bold,
-//         ),
-//       ),
-//       Text(
-//         'เลือกหัวข้อที่ต้องการได้เลย!!',
-//         style: TextStyle(
-//           color: Colors.white.withOpacity(0.8),
-//           fontSize: _fontSize,
-//         ),
-//       ),
-//     ],
-//   ),
-// ),
 
 
 
@@ -463,7 +427,6 @@ class _HomePageState extends State<HomePage> with RouteAware, SingleTickerProvid
           ),
         ),
 
-            // 🔔 animated notification badge
             if (item['notify'])
             Align(
               alignment: Alignment.topRight,

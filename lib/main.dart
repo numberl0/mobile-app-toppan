@@ -5,16 +5,24 @@ import 'package:go_router/go_router.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:toppan_app/component/AppDateTime.dart';
 import 'package:toppan_app/splash_page.dart';
+import 'package:toppan_app/userEntity.dart';
 
 
 import 'firebase/firebase_message.dart';
 import 'login/login_view.dart';
 import 'home/home_view.dart';
-import 'visitorService/center_view.dart';
+import 'visitorService/approve/approve_view.dart';
+import 'visitorService/permission/permis_view.dart';
 
 import 'package:responsive_framework/responsive_framework.dart';
 
 import 'package:flutter_localizations/flutter_localizations.dart';
+
+import 'visitorService/employee/employee_view.dart';
+import 'visitorService/logBook/logBook_view.dart';
+import 'visitorService/partTime/partTime_view.dart';
+import 'visitorService/search/search_view.dart';
+import 'visitorService/visitor/visitor_view.dart';
 
 final RouteObserver<ModalRoute<void>> routeObserver = RouteObserver<ModalRoute<void>>();
 
@@ -34,9 +42,26 @@ void main() async {
   );
 }
 
-final GoRouter _router =  GoRouter(
+// Global Router
+final GoRouter appRouter =  GoRouter(
   initialLocation: '/splash',
   observers: [routeObserver],
+  /// 🔥 Global redirect protection
+    redirect: (context, state) async {
+      final token = await UserEntity().getAccessToken();
+
+      final loggingIn = state.matchedLocation == '/login';
+
+      if (token == null && !loggingIn) {
+        return '/login';
+      }
+
+      if (token != null && loggingIn) {
+        return '/home';
+      }
+
+      return null;
+    },
   routes: <RouteBase>[
     GoRoute(
       path: '/splash',
@@ -44,22 +69,52 @@ final GoRouter _router =  GoRouter(
     ),
     GoRoute(
       path: '/login',
-      builder: (BuildContext context, GoRouterState state) => const LoginPage(),
+      builder: (context, state) => const LoginPage(),
     ),
     GoRoute(
       path: '/home',
-      builder: (BuildContext context, GoRouterState state) => HomePage(),
+      builder: (context, state) => const HomePage(),
     ),
+
     GoRoute(
       path: '/visitor',
-      builder: (BuildContext context, GoRouterState state) {
-        final String? selectedOption = state.uri.queryParameters['option'];
-        final Map<String, dynamic>? dataDoc = state.extra as Map<String, dynamic>?;
-        return VisitorPage(
-          selectedOption: selectedOption ?? 'Unknown',
-          documentData: dataDoc,
-        );
-      },
+      builder: (context, state) => VisitorPage(
+        documentData: state.extra as Map<String, dynamic>?,
+      ),
+    ),
+
+    GoRoute(
+      path: '/employee',
+      builder: (context, state) => EmployeePage(
+        documentData: state.extra as Map<String, dynamic>?,
+      ),
+    ),
+
+    GoRoute(
+      path: '/search',
+      builder: (context, state) => const SearchPage(),
+    ),
+
+    GoRoute(
+      path: '/approve',
+      builder: (context, state) => const ApprovePage(),
+    ),
+
+    GoRoute(
+      path: '/logBook',
+      builder: (context, state) => const LogBookPage(),
+    ),
+
+    GoRoute(
+      path: '/permis',
+      builder: (context, state) => PermisPage(
+        documentData: state.extra as Map<String, dynamic>?,
+      ),
+    ),
+
+    GoRoute(
+      path: '/partTime',
+      builder: (context, state) => const PartTimePage(),
     ),
   ],
 );
@@ -85,7 +140,7 @@ class MyApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
 
-      routerConfig: _router,
+      routerConfig: appRouter,
       builder: (context, child) => ResponsiveBreakpoints(
         child: child!,
         breakpoints: [

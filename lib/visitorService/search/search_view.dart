@@ -14,20 +14,29 @@ import 'package:toppan_app/component/CustomDIalog.dart';
 import 'package:toppan_app/config/api_config.dart';
 import 'package:toppan_app/main.dart';
 
+import '../../component/BaseScaffold.dart';
 import 'search_controller.dart';
 
-class SearchForm {
-  Widget searchFormWidget(BuildContext context) {
-    return SearchPage();
+class SearchPage extends StatelessWidget {
+  const SearchPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const BaseScaffold(
+      title: 'ค้นหาใบผ่านและใบคำร้อง',
+      child: SearchContent(),
+    );
   }
 }
 
-class SearchPage extends StatefulWidget {
+class SearchContent extends StatefulWidget {
+  const SearchContent({super.key});
+
   @override
-  _SearchPageState createState() => _SearchPageState();
+  State<SearchContent> createState() => _SearchContentState();
 }
 
-class _SearchPageState extends State<SearchPage> with RouteAware {
+class _SearchContentState extends State<SearchContent> with RouteAware {
   Cleartemporary cleartemporary = Cleartemporary();
   double _fontSize = ApiConfig.fontSize;
   bool isPhoneScale = false;
@@ -61,8 +70,11 @@ class _SearchPageState extends State<SearchPage> with RouteAware {
 
   @override
   void didPopNext() {
+    super.didPopNext();
+
     imageCache.clear();
     imageCache.clearLiveImages();
+
   }
 
   @override
@@ -71,7 +83,7 @@ class _SearchPageState extends State<SearchPage> with RouteAware {
     super.dispose();
   }
 
-  void preparePage() async {
+  Future<void> preparePage() async {
     _controller.selectedType = _controller.typeOptions[0];
     await _controller.preparePage(context);
     setState(() {
@@ -726,6 +738,7 @@ class _SearchPageState extends State<SearchPage> with RouteAware {
   Widget ItemRequestVE(int index, Map<String, dynamic> entry) {
     String timeRanges = '';
     String formattedDate = '';
+    bool isFinish = false;
     // DateTime
     initializeDateThaiFormatting();
     final dateIn = DateTime.parse(entry['date_in']).toLocal();
@@ -739,6 +752,7 @@ class _SearchPageState extends State<SearchPage> with RouteAware {
     if (entry['request_type'] == 'VISITOR') {
       formattedDate = DateFormat("d MMM yyyy", "th_TH").format(dateIn);
       timeRanges = '$timeIn น. - $timeOut น.';
+      isFinish = entry['appr_status'] == 1 && entry['guard_status'] == 1;
     } else if (entry['request_type'] == 'EMPLOYEE') {
       formattedDate = DateFormat("d MMM yyyy", "th_TH").format(dateOut);
       if (sameDate && sameTime) {
@@ -746,8 +760,10 @@ class _SearchPageState extends State<SearchPage> with RouteAware {
       } else {
         timeRanges = '$timeOut น. - $timeIn น.';
       }
+      isFinish = entry['emp_status'] == 1 && entry['appr_status'] == 1 && entry['guard_status'] == 1;
     }
     bool isApproved = entry['appr_status'] == 1;
+
 
     return AnimatedContainer(
       margin: EdgeInsets.all(0),
@@ -768,7 +784,7 @@ class _SearchPageState extends State<SearchPage> with RouteAware {
                   offset: Offset(0, 5),
                 ),
                 BoxShadow(
-                  color: Colors.blue,
+                  color: isFinish ? Colors.green : Colors.grey,
                   offset: Offset(-5, 0),
                 ),
               ],
@@ -793,11 +809,30 @@ class _SearchPageState extends State<SearchPage> with RouteAware {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
-                                Icon(
-                                    Icons.description,
-                                    color: Colors.blue,
-                                    size: isPhoneScale? 50 : 90,
-                                  ),
+                                ShaderMask(
+                                shaderCallback: (Rect bounds) {
+                                  return LinearGradient(
+                                    colors:isFinish
+                                    ? const [
+                                        Color(0xFF66BB6A),
+                                        Color(0xFF43A047),
+                                        Color(0xFF1B5E20),
+                                      ]
+                                    : const [
+                                        Color(0xFFE0E0E0),
+                                        Color(0xFFBDBDBD),
+                                        Color(0xFF9E9E9E),
+                                      ],
+                                    begin: Alignment.topRight,
+                                    end: Alignment.bottomLeft,
+                                  ).createShader(bounds);
+                                },
+                                child: Icon(
+                                  Icons.description,
+                                  size: isPhoneScale ? 50 : 90,
+                                  color: Colors.white, // จะถูกแทนที่ด้วย gradient
+                                ),
+                              ),
                                 SizedBox(
                                   width: isPhoneScale? 5 : 20,
                                 ),
@@ -807,7 +842,11 @@ class _SearchPageState extends State<SearchPage> with RouteAware {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        '${entry['request_type'].toString().toUpperCase() == 'EMPLOYEE' ? 'TETH' : entry['company']}',
+                                        '${entry['request_type']?.toString().toUpperCase() == 'EMPLOYEE'
+    ? (entry['people'] != null && entry['people'].isNotEmpty
+        ? '${entry['people'][0]['TitleName'] ?? ''} ${entry['people'][0]['FullName'] ?? ''}'.trim()
+        : '')
+    : (entry['company'] ?? '')}',
                                         style: TextStyle(
                                           fontSize: _fontSize + 4,
                                           color: Colors.black,
@@ -818,7 +857,7 @@ class _SearchPageState extends State<SearchPage> with RouteAware {
                                         softWrap: true,
                                       ),
                                       Divider(
-                                        color: Colors.blue,
+                                        color: isFinish ? Colors.green : Colors.grey,
                                         thickness: 2,
                                         height: 4,
                                       ),
@@ -903,7 +942,6 @@ class _SearchPageState extends State<SearchPage> with RouteAware {
                         ),
                       ),
                       onTap: () {
-                        // popUpShowInformationForm(entry);
                         showDialogDetailDocument(entry);
                       },
                                       ),
@@ -917,10 +955,7 @@ class _SearchPageState extends State<SearchPage> with RouteAware {
                             decoration: BoxDecoration(
                               color: isApproved ? Colors.green : Colors.red,
                               borderRadius: BorderRadius.only(
-                                // topRight: Radius.circular(16),
-                                // bottomLeft: Radius.circular(8),
                                   topLeft: Radius.circular(16),
-                                  // bottomLeft: Radius.circular(8),
                               ),
                             ),
                             child: Text(
@@ -949,7 +984,7 @@ class _SearchPageState extends State<SearchPage> with RouteAware {
 
     final timeRanges = "$formattedDateStart  -  $formattedDateUntil";
 
-    bool isApproved = entry['approved_status'] == 1;
+    bool isApproved = entry['sign_respon_status'] == 1;
 
     return AnimatedContainer(
       margin: EdgeInsets.all(0),
@@ -970,7 +1005,7 @@ class _SearchPageState extends State<SearchPage> with RouteAware {
                   offset: Offset(0, 5),
                 ),
                 BoxShadow(
-                  color: Colors.blue,
+                  color: Colors.grey,
                   offset: Offset(-5, 0),
                 ),
               ],
@@ -995,11 +1030,33 @@ class _SearchPageState extends State<SearchPage> with RouteAware {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
-                                Icon(
+                                ShaderMask(
+                                  shaderCallback: (Rect bounds) {
+                                    return LinearGradient(
+                                      colors: [
+                                        // Color.fromARGB(255, 132, 194, 252),
+                                        // Color.fromARGB(255, 45, 152, 240),
+                                        // Color.fromARGB(255, 48, 114, 236),
+                                        // Color.fromARGB(255, 0, 93, 199),
+
+                                        Color(0xFFE0E0E0),
+                                        Color(0xFFBDBDBD),
+                                        Color(0xFF9E9E9E),
+
+                                        // Color(0xFFEF5350),
+                                        // Color(0xFFD32F2F),
+                                        // Color(0xFF8E0000),
+                                      ],
+                                      begin: Alignment.topRight,
+                                      end: Alignment.bottomLeft,
+                                    ).createShader(bounds);
+                                  },
+                                  child: Icon(
                                     Icons.description,
-                                    color: Colors.blue,
                                     size: isPhoneScale ? 50 : 90,
+                                    color: Colors.white, // จะถูกแทนที่ด้วย gradient
                                   ),
+                                ),
                                 SizedBox(
                                   width: isPhoneScale? 5: 20,
                                 ),
@@ -1031,7 +1088,7 @@ class _SearchPageState extends State<SearchPage> with RouteAware {
                                         softWrap: true,
                                       ),
                                       Divider(
-                                        color: Colors.blue,
+                                        color: Colors.grey,
                                         thickness: 2,
                                       ),
                                       Row(
@@ -1080,7 +1137,6 @@ class _SearchPageState extends State<SearchPage> with RouteAware {
                        
                       ),
                       onTap: () async {
-                        // await GoRouter.of(context).push('/visitor?option=cardOff', extra: entry);
                         showDialogDetailDocument(entry);
                       },
                                       ),
@@ -1094,10 +1150,7 @@ class _SearchPageState extends State<SearchPage> with RouteAware {
                             decoration: BoxDecoration(
                               color: isApproved ? Colors.green : Colors.red,
                               borderRadius: BorderRadius.only(
-                                // topRight: Radius.circular(16),
-                                // bottomLeft: Radius.circular(8),
                                   topLeft: Radius.circular(16),
-                                  // bottomLeft: Radius.circular(8),
                               ),
                             ),
                             child: Text(
@@ -1109,6 +1162,27 @@ class _SearchPageState extends State<SearchPage> with RouteAware {
                             ),
                           ),
                         ),
+
+                        // Positioned(
+                        //   bottom: 0,
+                        //   right: 0,
+                        //   child: Container(
+                        //     padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        //     decoration: BoxDecoration(
+                        //       color: isApproved ? Colors.green : Colors.red,
+                        //       borderRadius: BorderRadius.only(
+                        //           topLeft: Radius.circular(16),
+                        //       ),
+                        //     ),
+                        //     child: Text(
+                        //       isApproved ? 'อนุมัติแล้ว' : 'ยังไม่ได้อนุมัติ',
+                        //       style: TextStyle(
+                        //           color: Colors.white,
+                        //           fontSize: _fontSize-4,
+                        //           fontWeight: FontWeight.bold),
+                        //     ),
+                        //   ),
+                        // ),
                     ],
                   )),
             ),
@@ -1415,25 +1489,31 @@ Positioned(
     height: MediaQuery.of(context).size.height * 0.05,
     child: ElevatedButton(
       onPressed: () async {
-         switch (entry['request_type']
-                                .toString()
-                                .toLowerCase()) {
-                              case 'visitor':
-                                await GoRouter.of(context).push(
-                                    '/visitor?option=visitor',
-                                    extra: entry);
-                                break;
-                              case 'employee':
-                                await GoRouter.of(context).push(
-                                    '/visitor?option=employee',
-                                    extra: entry);
-                                break;
-                              case 'permission':
-                                await GoRouter.of(context).push(
-                                    '/visitor?option=cardOff',
-                                    extra: entry);
-                                break;
-                            }
+        switch (entry['request_type']
+            .toString()
+            .toLowerCase()) {
+
+          case 'visitor':
+            await context.push(
+              '/visitor',
+              extra: entry,
+            );
+            break;
+
+          case 'employee':
+            await context.push(
+              '/employee',
+              extra: entry,
+            );
+            break;
+
+          case 'permission':
+            await context.push(
+              '/permis',
+              extra: entry,
+            );
+            break;
+        }
       },
       style: ElevatedButton.styleFrom(
         elevation: 8,
@@ -1626,7 +1706,7 @@ Positioned(
           height: 10,
         ),
         buildSignCard(
-            'ผู้ตรวจสอบสื่อ', entry['media_sig'], entry['media_at']),
+            'ผู้ตรวจสอบสื่อ', entry['media_sign'], entry['media_at']),
           SizedBox(
           height: 10,
         ),

@@ -120,60 +120,6 @@ router.patch(`/device-token/:device_id`, authenticateToken, async (req, res, nex
   }
 });
 
-// Update last active FCM Token
-router.patch(`/active-token/:device_id`, authenticateToken, async (req, res, next) => {
-  try {
-    const { device_id } = req.params;
-    if (!device_id) {
-      return res.status(400).json({ message: 'Missing device_id in URL' });
-    }
-
-
-    const { last_active} = req.body;
-
-    if (!device_id || !last_active) {
-      return next(new ApiError(400, 'Missing device_id or last_active'));
-    }
-
-    const query = `UPDATE DEVICE_TOKEN SET last_active = ? WHERE device_id = ?`;
-    const [result] = await db.query(query, [last_active, device_id]);
-
-    if (!result || result.affectedRows === 0) {
-      return next(new ApiError(400, 'Update Failed'));
-    }
-
-    res.status(200).json({ message: 'FCM Token last_active updated successfully' });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// // ---------------------------------------------- Delete ---------------------------------------------- //
-// router.delete(`/fcm_token/:fcm_token`, authenticateToken, async (req, res, next) => {
-//   try {
-//     const { fcm_token } = req.params;
-
-//     if (!fcm_token) {
-//       return next(new ApiError(400, 'Missing fcm_token.'));
-//     }
-
-//     const selectQuery = `SELECT * FROM DEVICE_TOKEN WHERE fcm_token = ?`;
-//     const [rows] = await db.query(selectQuery, [fcm_token]);
-
-//     if (rows.length === 0) {
-//       console.warn("[WARN] FCM Token not found in database.");
-//       return res.status(200).json({ message: "FCM Token deleted successfully" });
-//     }
-
-//     // ถ้าเจอ token ให้ลบ
-//     const deleteQuery = `DELETE FROM DEVICE_TOKEN WHERE fcm_token = ?`;
-//     await db.query(deleteQuery, [fcm_token]);
-
-//     res.status(200).json({ message: "Token deleted successfully" });
-//   } catch (err) {
-//     next(err);
-//   }
-// });
 
 router.get(`/check-token`, authenticateToken, async (req, res, next) => {
   try {

@@ -7,13 +7,16 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_signaturepad/signaturepad.dart';
+import 'package:toppan_app/app_logger.dart';
 import 'package:toppan_app/component/AppDateTime.dart';
-import 'package:toppan_app/visitorService/cardOff/permis_model.dart';
+import 'package:toppan_app/visitorService/permission/permis_model.dart';
 import 'package:toppan_app/visitorService/center_controller.dart';
 
-class CardOffController {
+import '../../loading_dialog.dart';
 
-  CardoffModel cardoffModel = CardoffModel();
+class PermisController {
+
+  PermisModel permisModel = PermisModel();
 
   CenterController _centerController = CenterController();
 
@@ -58,17 +61,34 @@ class CardOffController {
   //Global SignPad
   final signatureGlobalKey = GlobalKey<SfSignaturePadState>();
 
+  final LoadingDialog _loadingDialog = LoadingDialog();
+
   Future<void> initalNewPage(BuildContext context) async {
-    cardList = await cardoffModel.getActiveCardByType('Permanent');
-    managerList = await cardoffModel.getManagerRole();
-    managerNames = getManagerNameList(managerList);
+
+    try {
+      _loadingDialog.show(context);
+
+      cardList = await permisModel.getActiveCardByType('Permanent');
+      managerList = await permisModel.getManagerRole();
+      managerNames = getManagerNameList(managerList);
+
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
+    } finally {
+      await Future.delayed(Duration(seconds: 1));
+      _loadingDialog.hide();
+    }
   }
 
   Future<void> initalLoadPage(BuildContext context,  Map<String, dynamic>? loadData) async {
-    flagUpdateForm = true;
+    try {
+      _loadingDialog.show(context);
+
+      flagUpdateForm = true;
     logBook = loadData?['logBook'] == true;
-    cardList = await cardoffModel.getActiveCardByType('Permanent');
-    managerList = await cardoffModel.getManagerRole();
+    cardList = await permisModel.getActiveCardByType('Permanent');
+    managerList = await permisModel.getManagerRole();
     managerNames = getManagerNameList(managerList);
 
     Map<String, dynamic> data = loadData!;
@@ -106,7 +126,7 @@ class CardOffController {
       for (var key in fieldMappings.keys) {
         // Signature 
         if (data[fieldMappings[key]![0]] != null && data[fieldMappings[key]![0]] is String) {
-          Uint8List? signatureBytes = await cardoffModel.loadImageAsBytes(data[fieldMappings[key]![0]]);
+          Uint8List? signatureBytes = await permisModel.loadImageAsBytes(data[fieldMappings[key]![0]]);
           signatureSectionMap[key]![0] = signatureBytes;
         } else {
           signatureSectionMap[key]![0] = data[fieldMappings[key]![0]];
@@ -116,6 +136,14 @@ class CardOffController {
         // Signed by
         signatureSectionMap[key]![3] = data[fieldMappings[key]![2]];
       }
+
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
+    } finally {
+      await Future.delayed(Duration(seconds: 1));
+      _loadingDialog.hide();
+    }
   }
 
   List<String> getManagerNameList(List<dynamic> managerList) {
@@ -134,7 +162,7 @@ class CardOffController {
   Future<bool> searchInfoByPid(String empId) async {
     bool status = false;
     try {
-       empInfo = await cardoffModel.getInfoByEmpId(empId);
+       empInfo = await permisModel.getInfoByEmpId(empId);
       if (empInfo.isEmpty) {
         empInfo.clear();
         reqNameController.clear();
@@ -146,9 +174,8 @@ class CardOffController {
       reqEmpIdController.text = empId;
 
       status = true;
-    } catch (err, stackTrace) {
-      print("[Error] " + err.toString());
-      print(stackTrace);
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
       empInfo.clear();
       reqNameController.clear();
       reqDeptController.clear();
@@ -229,20 +256,17 @@ class CardOffController {
         'sign_guardO_by' : guardOutSign[3],
         'sign_guardO_at' : guardOutSign[2] != null ? guardOutSign[2].toString() : null,
       };
-
-      // print(const JsonEncoder.withIndent('  ').convert(data));
       
        if(!flagUpdateForm) {
-        status = await cardoffModel.insertForm(data); // Insert
+        status = await permisModel.insertForm(data); // Insert
         await _centerController.insertActvityLog('Insert PERMISSION Request [ ${tno_pass} ]');
       } else {
-        status = await cardoffModel.updateForm(tno_pass, data); // Update
+        status = await permisModel.updateForm(tno_pass, data); // Update
         await _centerController.insertActvityLog('Update PERMISSION Request [ ${tno_pass} ]');
       }
 
-    } catch (err, stackTrace) {
-      print("[Error] " + err.toString());
-      print(stackTrace);
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
       return status;
     }
     return status;
@@ -268,8 +292,9 @@ class CardOffController {
           signatureMapping[3]
         ];
       }
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     }
     return data;
   }
@@ -300,7 +325,7 @@ class CardOffController {
             : signatureApprover, //approver signature
       };
 
-      await cardoffModel.uploadImageFiles(tno_pass, folderName, dataFileImage, date);   // <------- Upload Image
+      await permisModel.uploadImageFiles(tno_pass, folderName, dataFileImage, date);   // <------- Upload Image
 
       //prepare approver filename
       List<String?> approverFilenames = signatureApprover
@@ -320,12 +345,20 @@ class CardOffController {
       data = {
         'approver[]': [approverMap],
       };
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
       throw err;
     }
     return data;
   }
+
+
+  bool hasSignature() {
+    return signatureSectionMap['Employee']?[0] != null;
+  }
+
+
 }
 
 enum CardReason {

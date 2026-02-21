@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_signaturepad/signaturepad.dart';
+import 'package:toppan_app/app_logger.dart';
 import 'package:toppan_app/clear_temporary.dart';
 import 'package:toppan_app/component/AppDateTime.dart';
 import 'package:toppan_app/loading_dialog.dart';
@@ -205,8 +206,9 @@ class VisitorFormController {
 
       timeInController.text = formatTime(flagTimeIn!);
 
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     } finally {
       await Future.delayed(Duration(seconds: 1));
       _loadingDialog.hide();
@@ -399,8 +401,9 @@ class VisitorFormController {
             data[fieldMappings[key]![2]]; // Signed by
       }
 
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     } finally {
       await Future.delayed(Duration(seconds: 1));
       _loadingDialog.hide();
@@ -442,8 +445,9 @@ class VisitorFormController {
       
       await expandedPerson();
       await clearPersonController();
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     }
     
   }
@@ -487,8 +491,9 @@ class VisitorFormController {
       if (signatureGlobalKey.currentState!.toPathList().isNotEmpty) {
         entry['Signature'] = signatureData;
       }
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     }
   }
 
@@ -506,8 +511,9 @@ class VisitorFormController {
         itemNameController.clear();
         await expandedItemList();
       }
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     }
   }
 
@@ -543,8 +549,9 @@ class VisitorFormController {
       final outDate = DateTime(flagDateOut!.year, flagDateOut!.month, flagDateOut!.day);
       final inDate = DateTime(flagDateIn!.year, flagDateIn!.month, flagDateIn!.day);
       return inDate.isBefore(outDate);
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
       return false;
     }
   }
@@ -561,8 +568,9 @@ class VisitorFormController {
           return !dateTimeOut.isBefore(dateTimeIn);
         }
     return false;
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
       return false;
     }
   }
@@ -577,8 +585,9 @@ class VisitorFormController {
         }
       }
       return true;
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
       return false;
     }
   }
@@ -705,9 +714,9 @@ class VisitorFormController {
         await _centerController.insertActvityLog('Update VISITOR FORM [ ${tno_pass} ]');
       }
 
-    }catch (err, stackTrace){
-      print('Error: $err');
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     }
     return status;
   }
@@ -860,8 +869,8 @@ class VisitorFormController {
         'item_out': item_Out_Filenames.isEmpty ? null : item_Out_Filenames,
         'approver[]': [approverMap],
       };
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
     }
     return data;
   }

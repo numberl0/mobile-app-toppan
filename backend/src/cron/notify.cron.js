@@ -139,7 +139,7 @@ const sendNotification = async (fcm_tokens) => {
     try {
       const query = `
         DELETE FROM DEVICE_TOKEN
-        WHERE last_active < NOW() - INTERVAL 15 DAY
+        WHERE refresh_expires_at <= NOW()
       `;
       const [result] = await db.query(query);
       console.log(`✅ Deleted ${result.rowCount || result.affectedRows} expired FCM tokens.`);

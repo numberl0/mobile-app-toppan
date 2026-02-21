@@ -1,8 +1,5 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -12,26 +9,46 @@ import 'package:syncfusion_flutter_signaturepad/signaturepad.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
+import 'package:toppan_app/app_logger.dart';
 import 'package:toppan_app/clear_temporary.dart';
 import 'package:toppan_app/component/AppDateTime.dart';
 import 'package:toppan_app/config/api_config.dart';
+import '../../component/BaseScaffold.dart';
 import '../../component/CustomDIalog.dart';
 import 'visitor_controller.dart';
 
-class VisitorForm {
-  Widget visitorFormWidget(Map<String, dynamic>? docData) {
-    return VisitorFormPage(documentData: docData);
+class VisitorPage extends StatelessWidget {
+  final Map<String, dynamic>? documentData;
+
+  const VisitorPage({
+    super.key,
+    this.documentData,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return BaseScaffold(
+      title: 'ผู้มาติดต่อ',
+      child: VisitorContent(
+        documentData: documentData,
+      ),
+    );
   }
 }
 
-class VisitorFormPage extends StatefulWidget {
+class VisitorContent extends StatefulWidget {
   final Map<String, dynamic>? documentData;
-  const VisitorFormPage({super.key, this.documentData});
+
+  const VisitorContent({
+    super.key,
+    this.documentData,
+  });
+
   @override
-  _VisitorFormPageState createState() => _VisitorFormPageState();
+  State<VisitorContent> createState() => _VisitorContentState();
 }
 
-class _VisitorFormPageState extends State<VisitorFormPage> {
+class _VisitorContentState extends State<VisitorContent> {
   VisitorFormController _controller = VisitorFormController();
   Color? _cancelBtnColor = Colors.red;
   Color? _acceptBtnColor = Colors.blue;
@@ -44,12 +61,6 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
   void initState() {
     super.initState();
     prepareForm();
-
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   setState(() {
-    //     _fontSize = ApiConfig.getFontSize(context);
-    //   });
-    // });
   }
 
   @override
@@ -66,13 +77,13 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
       await _controller.prepareNewForm(context);
     }
     if(!_controller.logBook) {
-      await _showAgreementWarning(context, false);
+      await _showAgreementWarning(context);
     }
     setState(() {});
   }
 
   // Function to show the pop-up dialog PDPA
-  Future<void> _showAgreementWarning(BuildContext context, bool firstLoad) async {
+  Future<void> _showAgreementWarning(BuildContext context) async {
     ScrollController _scrollController = ScrollController();
     bool _isScrolledToEnd = false;
     String _selectedLanguage = 'Thai'; // Default language
@@ -174,10 +185,8 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                               ? 'Thai'
                               : 'English';
 
-                          // Reset scrolling state
                           _isScrolledToEnd = false;
 
-                          // Reset scroll to top
                           _scrollController.animateTo(
                             0,
                             duration: Duration(milliseconds: 500),
@@ -197,20 +206,8 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                   ],
                 ),
               ),
-              actionsAlignment: MainAxisAlignment.spaceBetween,
+              actionsAlignment: MainAxisAlignment.end,
               actions: [
-                firstLoad
-                    ? TextButton(
-                        onPressed: () {
-                          GoRouter.of(context).pushReplacement('/home');
-                        },
-                        child: Text(
-                          'ยกเลิก',
-                          style: TextStyle(
-                              color: _cancelBtnColor, fontSize: _fontSize),
-                        ),
-                      )
-                    : SizedBox.shrink(),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
@@ -239,7 +236,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
   Widget build(BuildContext context) {
     _fontSize = ApiConfig.getFontSize(context);
     _isPhoneScale = ApiConfig.getPhoneScale(context);
-    //Back ground
+
     return Container(
       width: double.infinity,
       height: double.infinity,
@@ -300,7 +297,6 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Tno Display
                         if (_controller.flagUpdateForm && (_controller.formatSequenceRunning?.isNotEmpty ?? false) ) ...[
                           Container(
                             key: _controller.inputSectionKey,
@@ -628,48 +624,51 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                   ),
 
                   SizedBox(height: 25),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () {
-                              popUpSignatureApproved();
-                            },
-                            splashColor: Colors.green.withOpacity(0.3),
-                            highlightColor: Colors.green.withOpacity(0.1),
-                            child: Container(
-                              padding: EdgeInsets.all(10.0),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: Colors.black,
+                  if (_controller.flagUpdateForm) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {
+                                popUpSignatureApproved();
+                              },
+                              splashColor: Colors.green.withOpacity(0.3),
+                              highlightColor: Colors.green.withOpacity(0.1),
+                              child: Container(
+                                padding: EdgeInsets.all(10.0),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: Colors.green,
+                                  ),
+                                  borderRadius: BorderRadius.circular(15),
                                 ),
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              child: Column(
-                                children: [
-                                  Icon(
-                                    Icons.assignment_outlined,
-                                    size: 50,
-                                    color: Colors.black,
-                                  ),
-                                  Text(
-                                    "ลงชื่อ",
-                                    style: TextStyle(
-                                        fontSize: _fontSize,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                ],
+                                child: Column(
+                                  children: [
+                                    Icon(
+                                      Icons.assignment_outlined,
+                                      size: 50,
+                                      color: Colors.green,
+                                    ),
+                                    Text(
+                                      "ลงชื่อ",
+                                      style: TextStyle(
+                                          fontSize: _fontSize,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.green,
+                                          ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
 
                   SizedBox(height: 20),
                   if (!_controller.logBook)
@@ -707,8 +706,11 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                   );
                                   Future.delayed(const Duration(seconds: 1),
                                       () {
-                                    GoRouter.of(context)
-                                        .pushReplacement('/home');
+                                      if(!_controller.flagUpdateForm) {
+                                        GoRouter.of(context).pushReplacement('/home');
+                                      } else {
+                                        GoRouter.of(context)..pop()..pop()..pushReplacement('/search');
+                                      }
                                   });
                                 } else {
                                   showTopSnackBar(
@@ -979,6 +981,13 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
         text: _controller.signatureSectionMap[sectionKeys[currentIndex]]?[3] ??
             '');
 
+    // Lock
+    Map<String, bool> signatureLockMap = {};
+    for (var key in sectionKeys) {
+      signatureLockMap[key] =
+          _controller.signatureSectionMap[key]?[0] != null;
+    }
+
     // clear display
     void clearStateSignature() async {
       signatureDisplay = null;
@@ -1013,14 +1022,12 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
       _controller.signatureSectionMap[sectionKeys[currentIndex]] = [
         signatureData,
         dateTime,
-        _controller.signatureSectionMap[sectionKeys[currentIndex]]
-            ?[2], //same data in index 2
+        _controller.signatureSectionMap[sectionKeys[currentIndex]]?[2],
         signaturesByDisplay.text,
       ];
       setStateSignature();
     }
 
-    //Function controller arrow for next menu by mobile scale
     void arrowController(String turn, StateSetter setStateDialog) {
       setState(() {
         if (turn == 'R') {
@@ -1224,329 +1231,302 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
     }
 
     Widget _signPad(StateSetter setStateDialog) {
-      return Stack(
-        children: [
-          // Signature Card
-          IgnorePointer(
-            ignoring: _controller.logBook,
-            child: Container(
-              width: double.infinity,
-              child: Card(
-                color: Colors.white,
-                elevation: 6.0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(
-                    color: Colors.black.withOpacity(0.5),
-                    width: 0.5,
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
+      return IgnorePointer(
+        ignoring: _controller.logBook,
+        child: Container(
+          width: double.infinity,
+          child: Card(
+            color: Colors.white,
+            elevation: 6.0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(
+                color: Colors.black.withOpacity(0.5),
+                width: 0.5,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            _controller.signatureSectionMap[
-                                sectionKeys[currentIndex]]?[2],
-                            style: TextStyle(
-                              fontSize: _fontSize + 4,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blueGrey[800],
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 10),
-            
-                      // Signature Pad
-                      Container(
-                        constraints: BoxConstraints(maxHeight: 250),
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey[300]!),
-                          borderRadius: BorderRadius.circular(8),
-                          color: Colors.grey[50],
+                      Text(
+                        _controller.signatureSectionMap[
+                            sectionKeys[currentIndex]]?[2],
+                        style: TextStyle(
+                          fontSize: _fontSize + 4,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blueGrey[800],
                         ),
-                        child: _controller.signatureSectionMap[
-                                        sectionKeys[currentIndex]]?[0] !=
-                                    null &&
-                                _controller.signatureSectionMap[
-                                        sectionKeys[currentIndex]]?[1] !=
-                                    null
-                            ? Image.memory(signatureDisplay!)
-                            : SfSignaturePad(
-                                key: _controller.signatureGlobalKey,
-                                backgroundColor: Colors.transparent,
-                                strokeColor: Colors.black,
-                                minimumStrokeWidth: 3.0,
-                                maximumStrokeWidth: 6.0,
-                              ),
-                      ),
-            
-                      SizedBox(
-                        height: 10,
-                      ),
-                      Container(
-                        height: 52,
-                        margin: EdgeInsets.only(top: 2.5),
-                        padding: EdgeInsets.only(left: 10),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Colors.grey,
-                            width: 1.5,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextFormField(
-                                onEditingComplete: () {
-                                  FocusScope.of(context)
-                                      .unfocus(); // Also remove focus on enter
-                                },
-                                cursorColor: Colors.green.shade600,
-                                readOnly: signaturesByDisplay.text.isNotEmpty,
-                                autofocus: false,
-                                controller: signaturesByDisplay,
-                                maxLines: null,
-                                minLines: 1,
-                                decoration: InputDecoration(
-                                  hintText: 'ลงชื่อ*',
-                                  border: InputBorder.none,
-                                ),
-                                style: TextStyle(fontSize: _fontSize-2),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                        height: 10,
-                      ),
-            
-                      // Buttons
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          double screenWidth = constraints.maxWidth;
-                          double buttonPadding = screenWidth < 799 ? 10.0 : 20.0;
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              ElevatedButton(
-                                onPressed: () {
-                                  if (_controller.signatureSectionMap[
-                                              sectionKeys[currentIndex]]?[0] !=
-                                          null &&
-                                      _controller.signatureSectionMap[
-                                              sectionKeys[currentIndex]]?[1] !=
-                                          null &&
-                                      _controller.signatureSectionMap[
-                                              sectionKeys[currentIndex]]?[3] !=
-                                          null) {
-                                    warningDialog(
-                                        'คุณต้องการจะลบลายเซ็น ${sectionKeys[currentIndex]} ใช่หรือไม่?',
-                                        () {
-                                      setState(() {
-                                        _controller.signatureSectionMap[
-                                                sectionKeys[currentIndex]]?[0] =
-                                            null; // signatures
-                                        _controller.signatureSectionMap[
-                                                sectionKeys[currentIndex]]?[1] =
-                                            null; // date
-                                        _controller.signatureSectionMap[
-                                                sectionKeys[currentIndex]]?[3] =
-                                            null; // by
-                                        clearStateSignature();
-                                        setStateDialog(() {});
-                                        Navigator.of(context).pop();
-                                      });
-                                    });
-                                  } else if (_controller
-                                      .signatureGlobalKey.currentState!
-                                      .toPathList()
-                                      .isNotEmpty) {
-                                    _controller.signatureGlobalKey.currentState!
-                                        .clear();
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: _cancelBtnColor,
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: buttonPadding, vertical: 10),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.cleaning_services_outlined,
-                                        color: Colors.white, size: _fontSize),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'ล้าง',
-                                      style: TextStyle(
-                                          fontSize: _fontSize,
-                                          color: Colors.white),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              ElevatedButton(
-                                onPressed: _controller.signatureSectionMap[
-                                                sectionKeys[currentIndex]]?[0] ==
-                                            null &&
-                                        _controller.signatureSectionMap[
-                                                sectionKeys[currentIndex]]?[1] ==
-                                            null &&
-                                        _controller.signatureSectionMap[
-                                                sectionKeys[currentIndex]]?[3] ==
-                                            null
-                                    ? () async {
-                                        if (_controller
-                                                .signatureGlobalKey.currentState!
-                                                .toPathList()
-                                                .isNotEmpty &&
-                                            signaturesByDisplay.text.isNotEmpty) {
-                                          await stampSignatureApprove(
-                                              AppDateTime.now(),
-                                              _controller.signatureGlobalKey);
-                                          setStateDialog(() {});
-                                        } else {
-                                          showTopSnackBar(
-                                            Overlay.of(context),
-                                            CustomSnackBar.error(
-                                              backgroundColor:
-                                                  Colors.red.shade700,
-                                              icon: Icon(
-                                                  Icons.sentiment_very_satisfied,
-                                                  color: Colors.red.shade900,
-                                                  size: 120),
-                                              message:
-                                                  "กรุณากรอกข้อมูลให้ครบถ้วน",
-                                            ),
-                                          );
-                                        }
-                                      }
-                                    : null, // Disable button
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: _acceptBtnColor,
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: buttonPadding, vertical: 10),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.save_as_rounded,
-                                        color: Colors.white, size: _fontSize),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'บันทึก',
-                                      style: TextStyle(
-                                          fontSize: _fontSize,
-                                          color: Colors.white),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-            
-                      SizedBox(height: 10),
-            
-                      // Time and Date Fields
-                      Row(
-                        children: [
-                          Expanded(
-                            child: InputField(
-                              title: 'เวลา',
-                              hint: '',
-                              controller: TextEditingController(
-                                  text: dateTimeSignDisplay == null
-                                      ? ''
-                                      : DateFormat('HH:mm')
-                                          .format(dateTimeSignDisplay!)),
-                              widget: IgnorePointer(
-                                ignoring: true,
-                                child: MouseRegion(
-                                  child: IconButton(
-                                    onPressed: () {},
-                                    icon: Icon(Icons.access_time_rounded,
-                                        color: Colors.grey[600]),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: InputField(
-                              title: 'วันที่',
-                              hint: '',
-                              controller: TextEditingController(
-                                  text: dateTimeSignDisplay == null
-                                      ? ''
-                                      : DateFormat('yyyy-MM-dd')
-                                          .format(dateTimeSignDisplay!)),
-                              widget: IgnorePointer(
-                                ignoring: true,
-                                child: MouseRegion(
-                                  child: IconButton(
-                                    onPressed: () {},
-                                    icon: Icon(Icons.calendar_month,
-                                        color: Colors.grey[600]),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
                     ],
                   ),
-                ),
+                  SizedBox(height: 10),
+        
+                  Stack(
+                            children: [
+                               // Signature Pad
+                  Container(
+                    constraints: BoxConstraints(maxHeight: 250),
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.grey[50],
+                    ),
+                    child: _controller.signatureSectionMap[
+                                    sectionKeys[currentIndex]]?[0] !=
+                                null &&
+                            _controller.signatureSectionMap[
+                                    sectionKeys[currentIndex]]?[1] !=
+                                null
+                        ? Image.memory(signatureDisplay!)
+                        : SfSignaturePad(
+                            key: _controller.signatureGlobalKey,
+                            backgroundColor: Colors.transparent,
+                            strokeColor: Colors.black,
+                            minimumStrokeWidth: 3.0,
+                            maximumStrokeWidth: 6.0,
+                          ),
+                  ),
+      
+                              // Reset Button (Positioned at Bottom-Left)
+                              Positioned(
+                                left: 10,
+                                bottom: 10,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    // _controller.signatureGlobalKey.currentState!.clear();
+                                    if (_controller.signatureSectionMap[
+                                          sectionKeys[currentIndex]]?[0] !=
+                                      null &&
+                                  _controller.signatureSectionMap[
+                                          sectionKeys[currentIndex]]?[1] !=
+                                      null &&
+                                  _controller.signatureSectionMap[
+                                          sectionKeys[currentIndex]]?[3] !=
+                                      null) {
+                                warningDialog(
+                                    'คุณต้องการจะลบลายเซ็น ${sectionKeys[currentIndex]} ใช่หรือไม่?',
+                                    () {
+                                  setState(() {
+                                    _controller.signatureSectionMap[
+                                            sectionKeys[currentIndex]]?[0] =
+                                        null; // signatures
+                                    _controller.signatureSectionMap[
+                                            sectionKeys[currentIndex]]?[1] =
+                                        null; // date
+                                    _controller.signatureSectionMap[
+                                            sectionKeys[currentIndex]]?[3] =
+                                        null; // by
+                                    clearStateSignature();
+                                    signatureLockMap[sectionKeys[currentIndex]] = false;
+                                    Navigator.pop(context);
+                                    setStateDialog(() {});
+                                  });
+                                });
+                              } else if (_controller
+                                  .signatureGlobalKey.currentState!
+                                  .toPathList()
+                                  .isNotEmpty) {
+                                _controller.signatureGlobalKey.currentState!
+                                    .clear();
+                              }
+                                  },
+                                  child: CircleAvatar(
+                                    radius: 20,
+                                    backgroundColor: Colors.black.withOpacity(
+                                        0.5),
+                                    child: Icon(
+                                      Icons.cached,
+                                      color: Colors.white,
+                                      size: 24,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+        
+                  SizedBox(
+                    height: 10,
+                  ),
+      
+                  SizedBox(
+                    width: double.infinity,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 52,
+                            margin: const EdgeInsets.only(top: 2.5),
+                            padding: const EdgeInsets.only(left: 10),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Colors.grey,
+                                width: 1.5,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: TextFormField(
+                              onEditingComplete: () {
+                                FocusScope.of(context).unfocus();
+                              },
+                              cursorColor: Colors.blue,
+                              readOnly: signatureLockMap[sectionKeys[currentIndex]] ?? false,
+                              controller: signaturesByDisplay,
+                              maxLines: null,
+                              minLines: 1,
+                              decoration: const InputDecoration(
+                                hintText: 'ลงชื่อ*',
+                                border: InputBorder.none,
+                              ),
+                              style: TextStyle(fontSize: _fontSize - 2),
+                            ),
+                          ),
+                        ),
+      
+                        const SizedBox(width: 8),
+      
+                        ElevatedButton(
+                          onPressed: _controller.signatureSectionMap[
+                                          sectionKeys[currentIndex]]?[0] ==
+                                      null &&
+                                  _controller.signatureSectionMap[
+                                          sectionKeys[currentIndex]]?[1] ==
+                                      null &&
+                                  _controller.signatureSectionMap[
+                                          sectionKeys[currentIndex]]?[3] ==
+                                      null
+                              ? () async {
+                                  if (_controller
+                                          .signatureGlobalKey.currentState!
+                                          .toPathList()
+                                          .isNotEmpty &&
+                                      signaturesByDisplay.text.isNotEmpty) {
+      
+                                    await stampSignatureApprove(
+                                      AppDateTime.now(),
+                                      _controller.signatureGlobalKey,
+                                    );
+      
+                                    setStateDialog(() {
+                                      signatureLockMap[sectionKeys[currentIndex]] = true;
+                                    });
+                                  } else {
+                                    showTopSnackBar(
+                                      Overlay.of(context),
+                                      CustomSnackBar.error(
+                                        backgroundColor: Colors.red.shade700,
+                                        icon: Icon(
+                                          Icons.sentiment_very_satisfied,
+                                          color: Colors.red.shade900,
+                                          size: 120,
+                                        ),
+                                        message: "กรุณากรอกข้อมูลให้ครบถ้วน",
+                                      ),
+                                    );
+                                  }
+                                }
+                              : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _acceptBtnColor,
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.save_as_rounded,
+                                color: Colors.white,
+                                size: _fontSize,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'บันทึก',
+                                style: TextStyle(
+                                  fontSize: _fontSize,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+        
+                  SizedBox(height: 10),
+        
+                  // Time and Date Fields
+                  Row(
+                    children: [
+                      Expanded(
+                        child: InputField(
+                          title: 'เวลา',
+                          hint: '',
+                          controller: TextEditingController(
+                              text: dateTimeSignDisplay == null
+                                  ? ''
+                                  : DateFormat('HH:mm')
+                                      .format(dateTimeSignDisplay!)),
+                          widget: IgnorePointer(
+                            ignoring: true,
+                            child: MouseRegion(
+                              child: IconButton(
+                                onPressed: () {},
+                                icon: Icon(Icons.access_time_rounded,
+                                    color: Colors.grey[600]),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: InputField(
+                          title: 'วันที่',
+                          hint: '',
+                          controller: TextEditingController(
+                              text: dateTimeSignDisplay == null
+                                  ? ''
+                                  : DateFormat('yyyy-MM-dd')
+                                      .format(dateTimeSignDisplay!)),
+                          widget: IgnorePointer(
+                            ignoring: true,
+                            child: MouseRegion(
+                              child: IconButton(
+                                onPressed: () {},
+                                icon: Icon(Icons.calendar_month,
+                                    color: Colors.grey[600]),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
-
-          // Exit Button (Close)
-          Positioned(
-            top: 0,
-            right: 0,
-            child: IconButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              icon: Icon(
-                Icons.cancel_rounded,
-                color: _cancelBtnColor,
-                size: _isPhoneScale?47:50,
-              ),
-              tooltip: "Close",
-            ),
-          ),
-        ],
+        ),
       );
     }
 
     //show Dialog
     showGeneralDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: true,
       barrierLabel: '',
       transitionDuration: const Duration(milliseconds: 160),
-      pageBuilder: (BuildContext context, Animation<double> animation1,
-          Animation<double> animation2) {
+      pageBuilder: (BuildContext context, Animation<double> animation1,Animation<double> animation2) {
         return Container(); // Required but not used
       },
       transitionBuilder: (context, a1, a2, widget) {
@@ -1555,55 +1535,57 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () {
-            FocusManager.instance.primaryFocus?.unfocus(); // Dismiss keyboard
+            final hasFocus = FocusManager.instance.primaryFocus?.hasFocus ?? false;
+            final isTextFieldFocused = FocusManager.instance.primaryFocus is! FocusScopeNode;
+            if (hasFocus && isTextFieldFocused) {
+              FocusManager.instance.primaryFocus?.unfocus(); // Dismiss keyboard
+            } else {
+              Navigator.of(context).pop(); // Close dialog 
+            }
           },
           child: ScaleTransition(
             scale: Tween<double>(begin: 0.6, end: 1.0).animate(a1),
             child: FadeTransition(
               opacity: Tween<double>(begin: 0.6, end: 1.0).animate(a1),
-              child: MediaQuery(
-                data: MediaQuery.of(context)
-                    .copyWith(viewInsets: EdgeInsets.zero), // Prevent movement
-                child: AlertDialog(
-                  backgroundColor: Colors.transparent,
-                  insetPadding: EdgeInsets.all(16.0),
-                  contentPadding: EdgeInsets.all(0),
-                  content: StatefulBuilder(
-                    builder:
-                        (BuildContext context, StateSetter setStateDialog) {
-                      return Container(
-                        width: double.maxFinite,
-                        child: ScrollConfiguration(
-                          behavior: ScrollConfiguration.of(context).copyWith(
-                            dragDevices: {
-                              PointerDeviceKind.touch,
-                              PointerDeviceKind.mouse,
-                            },
-                            scrollbars: false,
-                          ),
-                          child: Padding(
-                            padding: screenWidth > 799
-                                ? const EdgeInsets.only(
-                                    left: 16.0,
-                                    bottom: 16.0,
-                                    right: 16.0,
-                                    top: 16.0)
-                                : const EdgeInsets.all(10.0),
-                            child: SingleChildScrollView(
-                              controller: controller,
-                              child: Column(
-                                children: [
-                                  _headerMenu(screenWidth, setStateDialog),
-                                  SizedBox(height: 20),
-                                  _signPad(setStateDialog),
-                                ],
-                              ),
+              child: AlertDialog(
+                backgroundColor: Colors.transparent,
+                insetPadding: EdgeInsets.all(16.0),
+                contentPadding: EdgeInsets.all(0),
+                content: StatefulBuilder(
+                  builder:
+                      (BuildContext context, StateSetter setStateDialog) {
+                    return Container(
+                      width: double.maxFinite,
+                      child: ScrollConfiguration(
+                        behavior: ScrollConfiguration.of(context).copyWith(
+                          dragDevices: {
+                            PointerDeviceKind.touch,
+                            PointerDeviceKind.mouse,
+                          },
+                          scrollbars: false,
+                        ),
+                        child: Padding(
+                          padding: screenWidth > 799
+                              ? const EdgeInsets.only(
+                                  left: 16.0,
+                                  bottom: 16.0,
+                                  right: 16.0,
+                                  top: 16.0)
+                              : const EdgeInsets.all(10.0),
+                          child: SingleChildScrollView(
+                            controller: controller,
+                            child: Column(
+                              children: [
+                                _headerMenu(screenWidth, setStateDialog),
+                                SizedBox(height: 20),
+                                _signPad(setStateDialog),
+                              ],
                             ),
                           ),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -1613,7 +1595,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
     );
   }
 
-//Function create content item in/out display by list
+
   Widget _contentItemList() {
     return Column(
       children: [
@@ -1754,7 +1736,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
     );
   }
 
-//Function create content item in/out display by image
+
   Widget _contentItemImage(List<File?> _imageList) {
     double screenWidth = MediaQuery.of(context).size.width;
     return Container(
@@ -1879,20 +1861,6 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
     );
   }
 
-  // Function toggle the visibility of the visitor list
-  void _togglePersonList() {
-    setState(() {
-      _controller.isExpanded_listPerson = !_controller.isExpanded_listPerson;
-    });
-  }
-
-  // Function toggle the visibility of the Item list
-  void _toggleItemList() {
-    setState(() {
-      _controller.isExpanded_listItem = !_controller.isExpanded_listItem;
-    });
-  }
-
   void popUpAddPerson() {
     final Set<String> cardIds = _controller.personList
       .map((person) => person['Card_Id'].toString())
@@ -1955,7 +1923,6 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                       ],
                     ),
 
-                    // Body Content with Scrollable View
                     Expanded(
                       child: SingleChildScrollView(
                         keyboardDismissBehavior:
@@ -1985,14 +1952,6 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                               SizedBox(height: 20),
 
                               // Card ID
-                              // InputField(
-                              //   title: 'หมายเลขบัตร Visitor:',
-                              //   hint: '',
-                              //   controller: _controller.cardIdController,
-                              //   // isRequired: true,
-                              // ),
-
-                              // Card ID
                               Text('หมายเลขบัตร :',
                                   style: TextStyle(
                                       fontWeight: FontWeight.bold,
@@ -2009,7 +1968,6 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                               SizedBox(height: 5),
                               Stack(
                                 children: [
-                                  // Signature Pad Container with Rounded Corners
                                   Container(
                                     constraints: BoxConstraints(maxHeight: 200),
                                     width: double.infinity,
@@ -2031,7 +1989,6 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                     ),
                                   ),
 
-                                  // Reset Button (Positioned at Bottom-Left)
                                   Positioned(
                                     left: 10,
                                     bottom: 10,
@@ -2062,7 +2019,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                   IconButton(
                                     onPressed: () async {
                                       await _showAgreementWarning(
-                                          context, false);
+                                          context);
                                     },
                                     icon: Icon(
                                       Icons.content_paste_search_rounded,
@@ -2088,7 +2045,6 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                       ),
                     ),
 
-                    // Full-Width "เพิ่ม" Button
                     Padding(
                       padding: EdgeInsets.all(16),
                       child: Row(
@@ -2150,7 +2106,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: _acceptBtnColor,
                                 padding: EdgeInsets.symmetric(
-                                    vertical: 14), // Button height
+                                    vertical: 14),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -2327,7 +2283,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
                                   IconButton(
                                     onPressed: () async {
                                       await _showAgreementWarning(
-                                          context, false);
+                                          context);
                                     },
                                     icon: Icon(
                                       Icons.content_paste_search_rounded,
@@ -3258,7 +3214,7 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
         }
       });
     } else {
-      print("No Image Picked");
+      AppLogger.debug("No Image Picked");
     }
   }
 
@@ -3284,11 +3240,10 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
           }
         });
       } else {
-        print("No Image Picked");
+        AppLogger.debug("No Image Picked");
       }
-    } catch (err, stackTrace) {
-      print("Error taking photo: $err");
-      print(stackTrace);
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
     }
   }
 
@@ -3301,9 +3256,8 @@ class _VisitorFormPageState extends State<VisitorFormPage> {
         _imageList[index]!.deleteSync();
         _imageList.removeAt(index);
           
-      } catch (err, stackTrace) {
-        print("Error deleting file: $err");
-        print("StackTrace: $stackTrace");
+      } catch (err, stack) {
+        AppLogger.error('Error: $err\n$stack');
       }
     }
     setState(() {});
@@ -3411,7 +3365,7 @@ class _InputFieldState extends State<InputField> {
                     ],
                     onChanged: (value) => _validateInput(),
                     onEditingComplete: () => FocusScope.of(context).unfocus(),
-                    cursorColor: Colors.green.shade600,
+                    cursorColor: Colors.blue,
                     readOnly: widget.widget != null,
                     autofocus: false,
                     controller: widget.controller,

@@ -3,12 +3,11 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:toppan_app/api/api_client.dart';
 
-class CardoffModel {
+class PermisModel {
   /// -----------------------------
   /// Active Card by Type
   /// -----------------------------
   Future<List<Map<String, dynamic>>> getActiveCardByType(String cardType) async {
-    try {
       final res = await ApiClient.dio.get(
         '/card/active-by-type',
         queryParameters: {
@@ -21,16 +20,12 @@ class CardoffModel {
         return List<Map<String, dynamic>>.from(list);
       }
       return [];
-    } on DioException {
-      rethrow;
-    }
   }
 
   /// -----------------------------
   /// HRIS Emp Info
   /// -----------------------------
   Future<Map<String, String>> getInfoByEmpId(String empId) async {
-    try {
       final res = await ApiClient.dio.get(
         '/hris/emp_info',
         queryParameters: {
@@ -45,21 +40,14 @@ class CardoffModel {
         );
       }
       return {};
-    } on DioException {
-      rethrow;
-    }
   }
 
   /// -----------------------------
   /// Manager Role
   /// -----------------------------
   Future<List<dynamic>> getManagerRole() async {
-    try {
       final res = await ApiClient.dio.get('/user/manager-role');
       return res.data['data'] ?? [];
-    } on DioException {
-      rethrow;
-    }
   }
 
   /// -----------------------------
@@ -98,9 +86,8 @@ class CardoffModel {
       );
 
       return true;
-    } on DioException catch (e) {
-      print('[UPLOAD ERROR] ${e.message}');
-      rethrow;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -116,8 +103,8 @@ class CardoffModel {
         },
       );
       return true;
-    } on DioException {
-      rethrow;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -131,8 +118,8 @@ class CardoffModel {
         data: data,
       );
       return true;
-    } on DioException {
-      rethrow;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -158,7 +145,6 @@ class CardoffModel {
     required String actionType,
     required List<String> cardIds,
   }) async {
-    try {
       await ApiClient.dio.post(
         '/card/card-action',
         data: {
@@ -166,9 +152,7 @@ class CardoffModel {
           'list_card': cardIds.map((id) => {'card_id': id}).toList(),
         },
       );
-    } on DioException {
-      rethrow;
-    }
+
   }
 
 }

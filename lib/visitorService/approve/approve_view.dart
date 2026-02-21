@@ -9,20 +9,30 @@ import 'package:toppan_app/component/AppDateTime.dart';
 import 'package:toppan_app/config/api_config.dart';
 import 'package:toppan_app/visitorService/approve/approve_controller.dart';
 
+import '../../component/BaseScaffold.dart';
 import '../../component/CustomDIalog.dart';
 
-class ApproveView {
-  Widget approveFormWidget(BuildContext context) {
-    return ApprovePage();
+class ApprovePage extends StatelessWidget {
+  const ApprovePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const BaseScaffold(
+      title: 'อนุมัติคำร้อง',
+      child: ApproveContent(),
+    );
   }
 }
 
-class ApprovePage extends StatefulWidget {
+class ApproveContent extends StatefulWidget {
+  const ApproveContent({super.key});
+
   @override
-  _ApprovePageState createState() => _ApprovePageState();
+  State<ApproveContent> createState() => _ApproveContentState ();
 }
 
-class _ApprovePageState extends State<ApprovePage> {
+
+class _ApproveContentState  extends State<ApproveContent> {
   ApproveController _controller = ApproveController();
 
   double _fontSize = ApiConfig.fontSize;
@@ -37,18 +47,11 @@ class _ApprovePageState extends State<ApprovePage> {
         _controller.startAnimation = true;
       });
     });
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   setState(() {
-    //     _fontSize = ApiConfig.getFontSize(context);
-    //   });
-    // });
-    // Clear Flutter's image cache
     imageCache.clear();
     imageCache.clearLiveImages();
   }
 
   void preparePage() async {
-    // _controller.selectedType = _controller.typeOptions[0];
     await _controller.preparePage(context);
 
     setState(() {
@@ -73,35 +76,25 @@ class _ApprovePageState extends State<ApprovePage> {
   Widget build(BuildContext context) {
     _fontSize = ApiConfig.getFontSize(context);
     isPhoneScale = ApiConfig.getPhoneScale(context);
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      backgroundColor: Colors.transparent,
-      body: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () {
-          FocusManager.instance.primaryFocus?.unfocus();
-        },
-        child: Column(
-          children: [
-            SizedBox(
-              height: 5,
-            ),
-            Padding(
-              padding: EdgeInsets.all(16.0),
-              child: SearchInputBar(),
-            ),
-            Expanded(
-              child: Container(
-                margin: EdgeInsets.fromLTRB(0, 0, 0, 20),
-                padding: EdgeInsets.all(16),
-                child: listRequest(),
-              ),
-            ),
-          ],
+
+    return Column(
+      children: [
+        const SizedBox(height: 5),
+        Padding(
+          padding: EdgeInsets.all(16.0),
+          child: SearchInputBar(),
         ),
-      ),
+        Expanded(
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(0, 0, 0, 20),
+            padding: const EdgeInsets.all(16),
+            child: listRequest(),
+          ),
+        ),
+      ],
     );
   }
+
 
   Widget SearchInputBar() {
     final ScrollController controller = ScrollController();
@@ -343,75 +336,7 @@ class _ApprovePageState extends State<ApprovePage> {
                                               );
 
                                             }
-                                    // CustomDialog.show(
-                                    //   context: context,
-                                    //   title: 'คำเตือน',
-                                    //   message:
-                                    //       'คุณต้องการอนุมัติคำร้อง ${_controller.selectedType!.name } ทั้งหมดใช่หรือไม่',
-                                    //   type: DialogType.info,
-                                    //   onConfirm: () async {
-                                    
-                                    //       bool isAdmin = await _controller.isAdmin();
-                                    //       if (isAdmin) {
-                                    //         showTopSnackBar(
-                                    //             Overlay.of(context),
-                                    //             CustomSnackBar.error(
-                                    //               backgroundColor:
-                                    //                   Colors.red.shade700,
-                                    //               icon: Icon(
-                                    //                   Icons
-                                    //                       .sentiment_very_satisfied,
-                                    //                   color:
-                                    //                       Colors.red.shade900,
-                                    //                   size: 120),
-                                    //               message:
-                                    //                   'ผู้ดูแลระบบไม่มีสิทธิ์อนุมัติเอกสาร',
-                                    //             ),
-                                    //           );
-                                    //       } else {
-                                    //         var response = await _controller.approvedAllDocumentByList();
-                                    //         if (!response['success']) {
-                                    //           showTopSnackBar(
-                                    //             Overlay.of(context),
-                                    //             CustomSnackBar.error(
-                                    //               backgroundColor:
-                                    //                   Colors.red.shade700,
-                                    //               icon: Icon(
-                                    //                   Icons
-                                    //                       .sentiment_very_satisfied,
-                                    //                   color:
-                                    //                       Colors.red.shade900,
-                                    //                   size: 120),
-                                    //               message: 'อนุมัติไม่สำเร็จ',
-                                    //             ),
-                                    //           );
-                                    //         } else {
-                                    //           setState(() {
-                                    //             preparePage();
-                                    //           });
-                                    //           showTopSnackBar(
-                                    //             Overlay.of(context),
-                                    //             CustomSnackBar.success(
-                                    //               backgroundColor:
-                                    //                   Colors.green.shade500,
-                                    //               icon: Icon(
-                                    //                   Icons
-                                    //                       .sentiment_very_satisfied,
-                                    //                   color:
-                                    //                       Colors.green.shade600,
-                                    //                   size: 120),
-                                    //               message: 'อนุมัติเรียบร้อย',
-                                    //             ),
-                                    //           );
-                                    //           Navigator.pop(context);
-                                    //         }
-                                    //       }
-                                       
-                                    //   },
-                                    //   onCancel: () {
-                                    //     Navigator.pop(context);
-                                    //   },
-                                    // );
+                                
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.blue,
@@ -874,7 +799,11 @@ class _ApprovePageState extends State<ApprovePage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    '${entry['request_type'].toString().toUpperCase() == 'EMPLOYEE' ? 'TETH' : entry['company']}',
+                                    '${entry['request_type']?.toString().toUpperCase() == 'EMPLOYEE'
+    ? (entry['people'] != null && entry['people'].isNotEmpty
+        ? '${entry['people'][0]['TitleName'] ?? ''} ${entry['people'][0]['FullName'] ?? ''}'.trim()
+        : '')
+    : (entry['company'] ?? '')}',
                                     style: TextStyle(
                                       fontSize: _fontSize + 4,
                                       color: Colors.black,
@@ -1201,15 +1130,6 @@ class _ApprovePageState extends State<ApprovePage> {
   void initializeDateThaiFormatting() async {
     await initializeDateFormatting('th_TH', null);
   }
-
-  void notApproveDocument() {
-    print("Not Approve");
-  }
-
-  void approveDocument() {
-    print("Approve");
-  }
-
 
   void showDialogDetailDocument(Map<String, dynamic> entry) {
     String HeaderTitle(String? code) {
@@ -1556,7 +1476,7 @@ Positioned(
           height: 10,
         ),
         buildSignCard(
-            'ผู้ตรวจสอบสื่อ', entry['media_sig'], entry['media_at']),
+            'ผู้ตรวจสอบสื่อ', entry['media_sign'], entry['media_at']),
           SizedBox(
           height: 10,
         ),
@@ -2185,7 +2105,7 @@ Positioned(
         });
     if (picked != null) {
       _date.value = picked;
-      _controller.filterRequestList();
+      await _controller.filterRequestList();
     }
   }
 }

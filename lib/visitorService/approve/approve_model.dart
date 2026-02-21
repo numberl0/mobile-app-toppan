@@ -1,11 +1,9 @@
 import 'dart:async';
-import 'package:dio/dio.dart';
 import 'package:toppan_app/api/api_client.dart';
 
 class ApproveModel {
 
   Future<String> getFirstnameApprover(String username) async {
-    try {
       final res = await ApiClient.dio.get(
         '/user/get-firstname',
         queryParameters: {
@@ -14,12 +12,6 @@ class ApproveModel {
       );
 
       return res.data['first_name'] ?? '';
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 404) {
-        return '';
-      }
-      rethrow;
-    }
   }
 
 
@@ -27,7 +19,6 @@ class ApproveModel {
     String username,
     List<String> buildingCard,
   ) async {
-    try {
       final res = await ApiClient.dio.get(
         '/approval/requests',
         queryParameters: {
@@ -48,9 +39,6 @@ class ApproveModel {
         'employee': getList('employee'),
         'permission': getList('permission'),
       };
-    } on DioException {
-      rethrow;
-    }
   }
 
     Future<Map<String, dynamic>> approvedDocument(
@@ -60,7 +48,6 @@ class ApproveModel {
     Map<String, dynamic> signInfo,
     String username,
   ) async {
-    try {
       final res = await ApiClient.dio.patch(
         '/approval/document/$tno',
         data: {
@@ -72,9 +59,6 @@ class ApproveModel {
       );
 
       return _mapApproveResponse(res.data);
-    } on DioException {
-      rethrow;
-    }
   }
 
   Future<Map<String, dynamic>> approvedList(
@@ -83,7 +67,6 @@ class ApproveModel {
     Map<String, dynamic> signInfo,
     String username,
   ) async {
-    try {
       final res = await ApiClient.dio.patch(
         '/approval/list_document',
         data: {
@@ -95,9 +78,6 @@ class ApproveModel {
       );
 
       return _mapApproveResponse(res.data);
-    } on DioException {
-      rethrow;
-    }
   }
 
   /// -----------------------------

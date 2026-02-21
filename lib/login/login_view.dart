@@ -128,12 +128,11 @@ class InputField extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _PasswordInputFieldState createState() => _PasswordInputFieldState();
+  State<InputField> createState() => _InputFieldState();
 }
 
-class _PasswordInputFieldState extends State<InputField> {
-  bool _obscureText = true; // Initially hide password
-
+class _InputFieldState extends State<InputField> {
+  bool _obscureText = true;
   @override
   Widget build(BuildContext context) {
     var border = OutlineInputBorder(

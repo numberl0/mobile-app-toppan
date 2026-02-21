@@ -135,7 +135,8 @@ router.get(`/notify-request`, authenticateToken, async (req, res, next) => {
     const queries = [];
 
     if(isIntermediate) {
-      queries.push({
+      queries.push(
+      {
         key: 'V',
         sql: `
           SELECT COUNT(*) AS total
@@ -143,9 +144,8 @@ router.get(`/notify-request`, authenticateToken, async (req, res, next) => {
           WHERE pr.appr_status = 0 AND pr.date_out BETWEEN ? AND ?
         `,
         params: [datePrevDay, dateToDay]
-      });
-
-      queries.push({
+      },
+      {
         key: 'E',
         sql: `
           SELECT COUNT(*) AS total
@@ -153,19 +153,18 @@ router.get(`/notify-request`, authenticateToken, async (req, res, next) => {
           WHERE pr.appr_status = 0 AND pr.date_out BETWEEN ? AND ?
         `,
         params: [datePrevDay, dateToDay]
-      });
-
-      queries.push({
+      },
+      {
         key: 'P',
         sql: `
           SELECT COUNT(*) AS total
           FROM PASS_REQ_P
-          WHERE sign_respon_status != 1 AND (responsible_user IS NULL OR responsible_user = '')
+          WHERE sign_respon_status != 1 
+            AND (responsible_user IS NULL OR responsible_user = '')
         `,
         params: []
-      });
-
-      queries.push({
+      },
+      {
         key: 'T',
         sql: `
           SELECT COUNT(*) AS total
@@ -173,10 +172,12 @@ router.get(`/notify-request`, authenticateToken, async (req, res, next) => {
           WHERE ret_status != 1 AND brw_at BETWEEN ? AND ?
         `,
         params: [datePrevDay, dateToDay]
-      });
+      }
+    );
 
     } else if(isManager) {
-      queries.push({
+      queries.push(
+      {
         key: 'V',
         sql: `
           SELECT COUNT(*) AS total
@@ -185,9 +186,8 @@ router.get(`/notify-request`, authenticateToken, async (req, res, next) => {
           WHERE pr.appr_status = 0 AND pr.building_card IN (?)
         `,
         params: [building_card]
-      });
-
-      queries.push({
+      },
+      {
         key: 'E',
         sql: `
           SELECT COUNT(*) AS total
@@ -196,9 +196,8 @@ router.get(`/notify-request`, authenticateToken, async (req, res, next) => {
           WHERE pr.appr_status = 0 AND pr.building_card IN (?)
         `,
         params: [building_card]
-      });
-
-      queries.push({
+      },
+      {
         key: 'P',
         sql: `
           SELECT COUNT(*) AS total
@@ -206,7 +205,8 @@ router.get(`/notify-request`, authenticateToken, async (req, res, next) => {
           WHERE sign_respon_status = 0 AND responsible_user = ?
         `,
         params: [username]
-      });
+      }
+    );
 
     } else {
       res.status(200).json({

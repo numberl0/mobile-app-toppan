@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
+import 'package:toppan_app/app_logger.dart';
 import 'package:toppan_app/component/AppDateTime.dart';
 import 'package:toppan_app/loading_dialog.dart';
 import 'package:toppan_app/userEntity.dart';
@@ -51,8 +52,9 @@ class LogBookController {
       sDateControl.text = DateFormat('yyyy-MM-dd').format(AppDateTime.now());          // Example: 2025-03-14
       eDateControl.text = DateFormat('yyyy-MM-dd').format(AppDateTime.now());
 
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     } finally {
       await Future.delayed(Duration(seconds: 1));
       _loadingDialog.hide();
@@ -67,10 +69,10 @@ class LogBookController {
       pdfBytes = await docLogModel.getLogBook(selectedType!.toLowerCase(), formatStartDate, formatEndDate);
       String pdf_name = "LogBook_" + "${selectedType}_" + "${DateFormat('yyyy-MM-dd').format(startDate!)}" + "_to_" + "${DateFormat('yyyy-MM-dd').format(endDate!)}" + ".pdf";
       return pdf_name;
-    } catch (err, stackTrace) {
-      print("Error loading PDF: $err");
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
       pdfBytes = null;
-      await _centerController.logError(err.toString(), stackTrace.toString());
+      await _centerController.logError(err.toString(), stack.toString());
       return '';
     }
   }
@@ -80,8 +82,9 @@ class LogBookController {
       final outDate = DateTime(endDate!.year, endDate!.month, endDate!.day);
       final inDate = DateTime(startDate!.year, startDate!.month, startDate!.day);
       return !inDate.isAfter(outDate);
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
       return false;
     }
   }
@@ -113,8 +116,9 @@ class LogBookController {
         }
         return true;
       }).toList();
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     }
   }
 

@@ -10,7 +10,6 @@ class PartTimeModel {
   Future<List<Map<String, dynamic>>> getActiveCardByType(
     List<String> cardTypes,
   ) async {
-    try {
       final res = await ApiClient.dio.get(
         '/card/active-by-type',
         queryParameters: {
@@ -19,29 +18,16 @@ class PartTimeModel {
       );
 
       return List<Map<String, dynamic>>.from(res.data['data'] ?? []);
-    } on DioException catch (e) {
-      print('[getActiveCardByType] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
-    }
   }
 
   /// -----------------------------
   /// Get temporary pass since yesterday
   Future<List<Map<String, dynamic>>> getTemporarySinceYesterday() async {
-    try {
       final res = await ApiClient.dio.get(
         '/document/temporary-since-yesterday',
       );
 
       return List<Map<String, dynamic>>.from(res.data['data'] ?? []);
-    } on DioException catch (e) {
-      print('[getTemporarySinceYesterday] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
-    }
   }
 
   /// -----------------------------
@@ -78,11 +64,8 @@ class PartTimeModel {
       );
 
       return true;
-    } on DioException catch (e) {
-      print('[uploadImageFiles] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -99,11 +82,8 @@ class PartTimeModel {
         },
       );
       return true;
-    } on DioException catch (e) {
-      print('[insertTemporaryPass] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -119,11 +99,8 @@ class PartTimeModel {
         data: data,
       );
       return true;
-    } on DioException catch (e) {
-      print('[updateTemporaryField] ${e.message}');
-      rethrow;
-    } catch (e) {
-      rethrow;
+    } catch (_) {
+      return false;
     }
   }
 }

@@ -5,10 +5,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_signaturepad/signaturepad.dart';
+import 'package:toppan_app/app_logger.dart';
 import 'package:toppan_app/component/AppDateTime.dart';
 import 'package:toppan_app/visitorService/partTime/partTime_model.dart';
 import 'package:toppan_app/visitorService/center_controller.dart';
 import 'package:uuid/uuid.dart';
+
+import '../../loading_dialog.dart';
 
 enum Signer { borrowerIn, guardIn, borrowerOut, guardOut }
 String getKeyFromSigner(Signer signer) {
@@ -67,8 +70,12 @@ class PartTimeController {
 
   List<Map<String, dynamic>> temporaryList = [];
 
+  final LoadingDialog _loadingDialog = LoadingDialog();
+
   Future<void> initalPage(BuildContext context) async {
     try{
+      _loadingDialog.show(context);
+
       await reloadCard();
       temporaryList = await partTimeModel.getTemporarySinceYesterday();
       filteredTemporaryList = temporaryList;
@@ -76,8 +83,12 @@ class PartTimeController {
       remarkController.clear();
       nameFilterController.clear();
       signatures.updateAll((key, value) => null);
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
+    } finally {
+      await Future.delayed(Duration(seconds: 1));
+      _loadingDialog.hide();
     }
   }
 
@@ -91,8 +102,9 @@ class PartTimeController {
         } else {
           selectedCard = '';
         }
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     }
   }
 
@@ -101,7 +113,8 @@ class PartTimeController {
       cardList = await partTimeModel.getActiveCardByType(cardTypeMap.keys.toList());
       filterCardList = cardList;
       filterCardType();
-    } catch (_) {
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
       rethrow;
     }
   }
@@ -171,8 +184,9 @@ class PartTimeController {
       };
 
       status = await partTimeModel.insertTemporaryPass(data);
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     }
     return status;
   }
@@ -188,8 +202,9 @@ class PartTimeController {
           filteredTemporaryList[index]['remark'] = remark;
         }
       }
-    }catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     }
   }
 
@@ -212,7 +227,6 @@ class PartTimeController {
       String filename = basename(file.path);
       
 
-      // for display mock update ui
       final key = getKeyFromSigner(signer);
       final index = filteredTemporaryList.indexWhere((e) => e['id'] == entry['id']);
       if (index != -1) {
@@ -234,8 +248,9 @@ class PartTimeController {
       status = await partTimeModel.updateTemporaryField(entry['id'], data);
       signatures[signer] = null;
       await reloadCard();
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     }
     return status;
   }
@@ -254,7 +269,8 @@ class PartTimeController {
           filename[key],
         ];
       }
-    } catch (_) {
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
       rethrow;
     }
     return data;
@@ -297,7 +313,8 @@ class PartTimeController {
         },
       );
       data = {'approver[]': [approverMap]};
-    } catch (_) {
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
       rethrow;
     }
     return data;

@@ -10,7 +10,6 @@ class HomeModel {
   Future<List<dynamic>> getRoleByUser(String username) async {
     try {
       final response = await ApiClient.dio.get('/user/role-by-user',queryParameters: {'username': username,},);
-      print(response.data['data']);
       return response.data['data'] ?? [];
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {

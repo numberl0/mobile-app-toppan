@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_signaturepad/signaturepad.dart';
+import 'package:toppan_app/app_logger.dart';
 import 'package:toppan_app/component/AppDateTime.dart';
 import 'package:toppan_app/loading_dialog.dart';
 import 'package:toppan_app/visitorService/search/search_model.dart';
@@ -119,8 +120,9 @@ class SearchFormController {
       filterNameController.clear();
       filteredCardNo.clear();
       filteredDate.value = null;
-    }catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     }
   }
 
@@ -217,8 +219,9 @@ class SearchFormController {
         default:
 
      }
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     }
   }
 
@@ -235,8 +238,9 @@ class SearchFormController {
           filteredTemporaryList[index]['remark'] = remark;
         }
       }
-    }catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     }
   }
 
@@ -278,11 +282,12 @@ class SearchFormController {
         };
       }
 
-      print(const JsonEncoder.withIndent('  ').convert(data));
+      AppLogger.debug(const JsonEncoder.withIndent('  ').convert(data));
       status = await searchModule.updateTemporaryField(entry['id'], data);
       signatures[signer] = null;
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     }
     return status;
   }

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:toppan_app/app_logger.dart';
 
 class Cleartemporary {
 
@@ -10,8 +11,8 @@ class Cleartemporary {
       tempDir.listSync().forEach((file) {
         try {
           file.deleteSync();
-        } catch (e) {
-          print("Error deleting file: $e");
+        } catch (err, stack) {
+          AppLogger.error('Error: $err\n$stack');
         }
       });
     }
@@ -22,19 +23,19 @@ class Cleartemporary {
       final cacheDir = await getTemporaryDirectory();
       if (cacheDir.existsSync()) {
         cacheDir.deleteSync(recursive: true);
-        print("Cache cleared successfully!");
+        AppLogger.debug("Cache cleared successfully!");
       } else {
-        print("Cache directory does not exist.");
+        AppLogger.debug("Cache directory does not exist.");
       }
-    } catch (e) {
-      print("Error clearing cache: $e");
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
     }
   }
 
   Future<void> checkFileSystemStorage() async {
     final tempDir = await getTemporaryDirectory();
     final stat = await tempDir.stat();
-    print("Temp Directory Size: ${stat.size} bytes");
+    AppLogger.debug("Temp Directory Size: ${stat.size} bytes");
   }
 
   Future<void> listCacheFiles() async {
@@ -44,15 +45,15 @@ class Cleartemporary {
     List<FileSystemEntity> files = cacheDir.listSync(); // List all files
 
     if (files.isNotEmpty) {
-      print("Files in Cache Directory:");
+      AppLogger.debug("Files in Cache Directory:");
       for (var file in files) {
-        print(file.path); // Print file path
+        AppLogger.debug(file.path);
       }
     } else {
-      print("Cache is empty.");
+      AppLogger.debug("Cache is empty.");
     }
   } else {
-    print("Cache directory does not exist.");
+     AppLogger.debug("Cache directory does not exist.");
   }
 }
 }

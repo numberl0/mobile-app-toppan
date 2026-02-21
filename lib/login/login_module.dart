@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 import 'package:toppan_app/api/api_client.dart';
 import '../config/api_config.dart';
@@ -43,17 +42,10 @@ class LoginModule {
   }
 
    Future<void> updateFCMToken(String deviceId, Map<String, dynamic> data) async {
-    try {
       await ApiClient.dio.patch(
         '/user/device-token/$deviceId',
         data: data,
       );
-
-      print("[SUCCESS] Insert FCM Token Successfully");
-    } on DioException catch (e) {
-      print("[ERROR] Failed to insert FCM Token: ${e.message}");
-      rethrow;
-    }
   }
   
 }

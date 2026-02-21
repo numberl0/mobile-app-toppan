@@ -1,6 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:toppan_app/app_logger.dart';
 
 // Like LocalStorage
 class UserEntity {
@@ -47,7 +48,7 @@ class UserEntity {
       final SharedPreferences _prefs = await SharedPreferences.getInstance();
 
       if (value == null) {
-        print('Value cannot be null');
+        AppLogger.debug('Value cannot be null');
         return;
       }
 
@@ -79,13 +80,13 @@ class UserEntity {
       isSaved = true;
       
     } else {
-      print('Error: Unsupported type for SharedPreferences.');
+      AppLogger.debug('Error: Unsupported type for SharedPreferences.');
     }
     if (isSaved) {
-      print('Successfully saved $key: '+value.toString());
+      AppLogger.debug('Successfully saved $key: '+value.toString());
     }
-    } catch (err) {
-      print('Error saving preference for key $key: $err');
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
     }
   }
 
@@ -95,8 +96,8 @@ class UserEntity {
       final SharedPreferences _prefs = await SharedPreferences.getInstance();
       if (!_prefs.containsKey(key)) return null;
       return _prefs.get(key);
-    } catch (err) {
-      print('Error retrieving preference for key $key: $err');
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
       return null;
     }
   }
@@ -105,9 +106,9 @@ class UserEntity {
     try {
       final SharedPreferences _prefs = await SharedPreferences.getInstance();
       await _prefs.remove(key);
-      print('Remove UserEntity : $key');
-    } catch (err) {
-      print('Error retrieving preference for key $key: $err');
+      AppLogger.debug('Remove UserEntity : $key');
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
       return null;
     }
   }
@@ -116,9 +117,10 @@ class UserEntity {
     try {
       final SharedPreferences _prefs = await SharedPreferences.getInstance();
       await _prefs.clear();
-      print("Clear All SharedPreferences");
-    } catch (err) {
-      throw err;
+      AppLogger.debug("Clear All SharedPreferences");
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      rethrow;
     }
   }
 
@@ -126,9 +128,9 @@ class UserEntity {
     final prefs = await SharedPreferences.getInstance();
     final keys = await prefs.getKeys();
 
-    print('SharedPreferences contents:');
+    AppLogger.debug('SharedPreferences contents:');
     for (String key in keys) {
-      print('$key: ${prefs.get(key)}');
+      AppLogger.debug('$key: ${prefs.get(key)}');
     }
   }
 
@@ -144,8 +146,9 @@ class UserEntity {
         await clearUserPerfer();
         await setUserPerfer(this.app_version, currentVersion);
       }
-    } catch (err) {
-      throw err;
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      rethrow;
     }
   }
 
@@ -166,8 +169,9 @@ class UserEntity {
       } else {
         status = false;
       }
-    } catch (err) {
-      throw err;
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      rethrow;
     }
     return status;
   }

@@ -1,5 +1,4 @@
 import 'dart:ui';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -12,18 +11,28 @@ import 'package:toppan_app/component/CustomDIalog.dart';
 import 'package:toppan_app/config/api_config.dart';
 import 'package:toppan_app/visitorService/partTime/partTime_controller.dart';
 
-class PartTimePage {
-  Widget buildPartTimeForm(BuildContext context) {
-    return PartTimeForm();
+import '../../component/BaseScaffold.dart';
+
+class PartTimePage extends StatelessWidget {
+  const PartTimePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const BaseScaffold(
+      title: 'ล็อกบุ๊คพนักงานชั่วคราวและอื่นๆ',
+      child: PartTimeContent(),
+    );
   }
 }
 
-class PartTimeForm extends StatefulWidget {
+class PartTimeContent extends StatefulWidget {
+  const PartTimeContent({super.key});
+
   @override
-    _PartTimeFormState createState() => _PartTimeFormState ();
+  State<PartTimeContent> createState() => _PartTimeContentState();
 }
 
-class _PartTimeFormState  extends State<PartTimeForm>with SingleTickerProviderStateMixin {
+class _PartTimeContentState  extends State<PartTimeContent>with SingleTickerProviderStateMixin {
   PartTimeController _controller = PartTimeController();
 
   Color? _cancelBtnColor = Colors.red;
@@ -60,27 +69,11 @@ class _PartTimeFormState  extends State<PartTimeForm>with SingleTickerProviderSt
     });
   }
 
-   @override
+  @override
   Widget build(BuildContext context) {
     _fontSize = ApiConfig.getFontSize(context);
     isPhoneScale = ApiConfig.getPhoneScale(context);
-    //Back ground
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
-      decoration: const BoxDecoration(
-          gradient: LinearGradient(
-        begin: Alignment.topRight,
-        end: Alignment.bottomLeft,
-        colors: [
-            Color.fromARGB(255, 132, 194, 252),
-            Color.fromARGB(255, 45, 152, 240),
-            Color.fromARGB(255, 48, 114, 236),
-            Color.fromARGB(255, 0, 93, 199),
-        ],
-      )),
-      child: _getPageContent(context),
-    );
+    return _getPageContent(context);
   }
 
   Widget _getPageContent(BuildContext context) {
@@ -1370,7 +1363,7 @@ void PopUpInsertTemporaryWidget() {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
             ),
-            child: IntrinsicWidth( // ✅ ปรับให้ขนาดตาม content
+            child: IntrinsicWidth(
               child: IntrinsicHeight(
                 child: StatefulBuilder(
                   builder: (context, setStateDialog) {

@@ -38,7 +38,7 @@ class ServiceManager {
      taskServices = [
     {'key': 'visitor', 'label': 'ผู้ติดต่อ', 'description': 'ใบผ่านบุคคลภายนอก', 'icon': Icons.person, 'enable': true, 'notify': false},
     {'key': 'employee', 'label': 'พนักงาน', 'description': 'ใบผ่านพนักงาน', 'icon': Icons.engineering, 'enable': true, 'notify': false},
-    {'key': 'cardOff', 'label': 'ลืมบัตร', 'description': 'ใบคำร้องกรณีบัตรหาย/ชำรุด', 'icon': Icons.credit_card_off_outlined, 'enable': true, 'notify': false},
+    {'key': 'permis', 'label': 'ลืมบัตร', 'description': 'ใบคำร้องกรณีบัตรหาย/ชำรุด', 'icon': Icons.credit_card_off_outlined, 'enable': true, 'notify': false},
     {'key': 'search', 'label': 'ค้นหา', 'description': 'ค้นหาใบผ่านและใบคำร้อง', 'icon': Icons.content_paste_search, 'enable': true, 'notify': !isAdmin ? status : false},
     {'key': 'partTime', 'label': 'พาร์ทไทม์', 'description': 'พนักงานชั่วคราวและอื่นๆ', 'icon': Icons.transfer_within_a_station_rounded, 'enable': true, 'notify': false},
     {'key': 'approve', 'label': 'อนุมัติ', 'description': 'อนุมัติการเข้า/ออก', 'icon': Icons.fact_check_outlined, 'enable': true, 'notify': isAdmin ? status : false},
@@ -77,39 +77,43 @@ class ServiceManager {
     }
   }
 
-  // Navigate to page
-  void navigateToPage(BuildContext context, String selectedOption) {
-      try {
-        String route;
-        switch (selectedOption) {
-          case 'visitor':
-            route = '/visitor?option=visitor';
-            break;
-          case 'employee':
-            route = '/visitor?option=employee'; 
-            break;
-          case 'search':
-            route = '/visitor?option=search';
-            break;
-          case 'approve':
-            route = '/visitor?option=approve'; 
-            break;
-          case 'logBook':
-            route = '/visitor?option=logBook'; 
-            break;
-          case 'cardOff':
-            route = '/visitor?option=cardOff'; 
-            break;
-          case 'partTime':
-            route = '/visitor?option=partTime'; 
-            break;
-          default:
-            return;
-        }
-        GoRouter.of(context).push(route);
-      } catch (err, stackTrace) {
-        _controllerVisistorServiceCenter.logError(err.toString(), stackTrace.toString());
-      }
+  void navigateToPage(BuildContext context, String selectedOption) async {
+  try {
+    switch (selectedOption) {
+      case 'visitor':
+        context.push('/visitor');
+        break;
+
+      case 'employee':
+        context.push('/employee');
+        break;
+
+      case 'search':
+        context.push('/search');
+        break;
+
+      case 'approve':
+        context.push('/approve');
+        break;
+
+      case 'logBook':
+        context.push('/logBook');
+        break;
+
+      case 'permis':
+        context.push('/permis');
+        break;
+
+      case 'partTime':
+        context.push('/partTime');
+        break;
+
+      default:
+        return;
+    }
+  } catch (err, stackTrace) {
+    await _controllerVisistorServiceCenter.logError(err.toString(), stackTrace.toString());
   }
+}
 
 }

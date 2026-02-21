@@ -78,6 +78,7 @@ router.post('/authentication', async (req, res) => {
           const accessToken = jwt.sign(
             {
               sub: username,
+              deviceId: deviceId,
               type: 'access',
             },
             jwtToken.key,
@@ -94,24 +95,23 @@ router.post('/authentication', async (req, res) => {
 
           
           const expireValue = await loadConfig('LoginExpire');
-          const expireDays = parseInt(expireValue || '30', 10);
+          const expireDays = Number.parseInt(expireValue || '30', 10);
 
           // ===== SAVE / UPDATE TOKEN BY DEVICE =====
           const query = `
-            INSERT INTO DEVICE_TOKEN (device_id, username, refresh_token, last_active, refresh_expires_at)
-            VALUES (?, ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL ? DAY) )
+            INSERT INTO DEVICE_TOKEN (device_id, username, refresh_token, refresh_expires_at)
+            VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL ? DAY) )
             ON DUPLICATE KEY UPDATE
               username = VALUES(username),
               refresh_token = VALUES(refresh_token),
-              last_active = NOW(),
               refresh_expires_at = DATE_ADD(NOW(), INTERVAL ? DAY)
           `;
           await db.query(query, [
             deviceId,
             username,
             refreshTokenHash,
-            expireDays,  // สำหรับ INSERT
-            expireDays   // สำหรับ UPDATE
+            expireDays,
+            expireDays
           ]);
 
           return res.status(200).json({
@@ -185,6 +185,7 @@ router.post('/refresh', async (req, res) => {
       const accessToken = jwt.sign(
         {
           sub: username,
+          deviceId: deviceId,
           type: 'access',
         },
         jwtToken.key,
@@ -201,7 +202,7 @@ router.post('/refresh', async (req, res) => {
       // update token ใหม่ (ค่าใหม่ แต่ session เดิม)
       await db.query(
         `UPDATE DEVICE_TOKEN
-        SET refresh_token = ?, last_active = NOW()
+        SET refresh_token = ?
         WHERE device_id = ?`,
         [newRefreshTokenHash, deviceId]
       );

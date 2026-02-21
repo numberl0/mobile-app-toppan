@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:toppan_app/app_logger.dart';
 import 'package:toppan_app/component/AppDateTime.dart';
 import 'package:toppan_app/loading_dialog.dart';
 import 'package:toppan_app/userEntity.dart';
@@ -72,8 +73,9 @@ class ApproveController {
       listE = result['employee'] ?? [];
       listLC = result['permission'] ?? [];
 
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     } finally {
       await Future.delayed(Duration(seconds: 1));
       _loadingDialog.hide();
@@ -88,8 +90,9 @@ class ApproveController {
       filterNameController.clear();
       filteredCardNo.clear();
       filteredDate = ValueNotifier(null);
-    }catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     }
   }
 
@@ -164,8 +167,9 @@ class ApproveController {
         default:
 
      }
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     }
   }
 
@@ -214,8 +218,9 @@ class ApproveController {
         await _centerController.insertActvityLog('$username approved document TNO_PASS : ${entry['tno_pass']}');
       }
       return status;
-      } catch (err, stackTrace) {
-        await _centerController.logError(err.toString(), stackTrace.toString());
+      } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+        await _centerController.logError(err.toString(), stack.toString());
         return response;
       }
   }
@@ -293,8 +298,9 @@ class ApproveController {
         await _centerController.insertActvityLog('Approved documents : [${tno_listMap.map((e) => e['tno_pass']).join(", ")}]');
       }
       return status;
-      } catch (err, stackTrace) {
-        await _centerController.logError(err.toString(), stackTrace.toString());
+      } catch (err, stack) {
+       AppLogger.error('Error: $err\n$stack');
+        await _centerController.logError(err.toString(), stack.toString());
         return response;
       }
   }
@@ -303,8 +309,9 @@ class ApproveController {
     try {
       List<String> roles = await userEntity.getUserPerfer(userEntity.roles_visitorService);
       return roles.contains('Administrator');
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
       return false;
     }
   }

@@ -93,8 +93,6 @@ async function copyApprovedFile(pathOut, filenameOld) {
     }
 
     const sourceUrl = `${visitorConfig.pathImageSignatureUser}/${filenameOld}`;
-    // const fileExtension = path.extname(filenameOld);
-    // const filenameTarget = `approved${fileExtension}`;
     const targetFolder = path.join(visitorConfig.pathImageDocuments, pathOut, "signatures");
 
     if (!fs.existsSync(targetFolder)) fs.mkdirSync(targetFolder, { recursive: true });
@@ -106,7 +104,7 @@ async function copyApprovedFile(pathOut, filenameOld) {
 
       http.get(sourceUrl, response => {
         if (response.statusCode !== 200) {
-          reject(`Failed to download file: HTTP ${response.statusCode}`);
+          reject(new Error(`Failed to download file: HTTP ${response.statusCode}`));
           return;
         }
 
@@ -115,7 +113,7 @@ async function copyApprovedFile(pathOut, filenameOld) {
         response.on('end', async () => {
           const buffer = Buffer.concat(chunks);
 
-          if (buffer.length === 0) return reject('Downloaded file is empty');
+          if (buffer.length === 0) return reject(new Error('Downloaded file is empty'));
 
           try {
             const image = await Jimp.read(buffer);
@@ -134,7 +132,7 @@ async function copyApprovedFile(pathOut, filenameOld) {
             await image.writeAsync(targetPath); // แปลงเป็น PNG โดยอัตโนมัติ
             resolve('approved.png');
           } catch (err) {
-             reject(`Jimp failed: ${err.message}`);
+             reject(new Error(`Jimp failed: ${err.message}`));
           }
         });
       }).on('error', err => reject(err));

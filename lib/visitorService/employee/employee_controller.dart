@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:syncfusion_flutter_signaturepad/signaturepad.dart';
+import 'package:toppan_app/app_logger.dart';
 import 'package:toppan_app/component/AppDateTime.dart';
 import 'package:toppan_app/loading_dialog.dart';
 import 'package:toppan_app/visitorService/employee/employee_model.dart';
@@ -155,8 +156,9 @@ class EmployeeController {
       flagTimeIn = flagTimeOut;
       timeInController.text = formatTime(flagTimeIn!);
 
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     } finally {
       await Future.delayed(Duration(seconds: 1));
       _loadingDialog.hide();
@@ -334,8 +336,9 @@ class EmployeeController {
         signatureSectionMap[key]![3] =
             data[fieldMappings[key]![2]]; // Signed by
       }
-    } catch (err, stackTrace) {
-      _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     } finally {
       await Future.delayed(Duration(seconds: 1));
       _loadingDialog.hide();
@@ -359,9 +362,8 @@ class EmployeeController {
       empIdController.text = empId;
 
       status = true;
-    } catch (err, stackTrace) {
-      print("[Error] " + err.toString());
-      print(stackTrace);
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
       empInfo.clear();
       empNameController.clear();
       empDeptController.clear();
@@ -401,8 +403,9 @@ class EmployeeController {
       final outDate = DateTime(flagDateOut!.year, flagDateOut!.month, flagDateOut!.day);
       final inDate = DateTime(flagDateIn!.year, flagDateIn!.month, flagDateIn!.day);
       return outDate.isBefore(inDate);
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
       return false;
     }
   }
@@ -419,8 +422,9 @@ class EmployeeController {
           return !dateTimeIn.isBefore(dateTimeOut);
         }
     return false;
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
       return false;
     }
   }
@@ -435,8 +439,9 @@ class EmployeeController {
         }
       }
       return true;
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
       return false;
     }
   }
@@ -470,8 +475,9 @@ class EmployeeController {
       }); 
       expandedPerson();
       await clearPersonController();
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     }
   }
 
@@ -494,8 +500,9 @@ class EmployeeController {
           .isNotEmpty) {
         entry['Signature'] = signatureData;
       }
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     }
   }
 
@@ -671,9 +678,9 @@ class EmployeeController {
         status = await employeeModel.updateRequestFormE(tno_pass ,dataRequest, dataForm); // Update
         await _centerController.insertActvityLog('Update EMPLOYEE FORM [ ${tno_pass} ]');
       }
-    }catch (err, stackTrace){
-      print('Error: $err');
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     }
     return status;
   }
@@ -699,8 +706,9 @@ class EmployeeController {
           signatureMapping[3]
         ];
       }
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
     }
     return data;
   }
@@ -833,8 +841,9 @@ class EmployeeController {
         'item_out': item_Out_Filenames.isEmpty ? null : item_Out_Filenames,
         'approver[]': [approverMap],
       };
-    } catch (err, stackTrace) {
-      await _centerController.logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await _centerController.logError(err.toString(), stack.toString());
       throw err;
     }
     return data;

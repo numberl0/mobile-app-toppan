@@ -1,7 +1,6 @@
-import 'package:flutter/cupertino.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:toppan_app/app_logger.dart';
 import 'package:toppan_app/component/AppDateTime.dart';
 import 'package:toppan_app/userEntity.dart';
 import 'package:toppan_app/visitorService/center_model.dart';
@@ -25,8 +24,9 @@ class CenterController {
       };
       await _model.insertActivityLog(data);
 
-    } catch (err, stackTrace) {
-      await logError(err.toString(), stackTrace.toString());
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
+      await logError(err.toString(), stack.toString());
     }
   }
 
@@ -36,19 +36,7 @@ class CenterController {
   }
 
 
-  Future<void> updateActiveFCM() async {
-    try {
-      String? deviceId = await userEntity.getUserPerfer(userEntity.device_id);
-      if(deviceId != null) {
-        String formatDateTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(AppDateTime.now());
-        await _model.activeToken(deviceId, formatDateTime);
-      }
-    } catch (err, stackTrace) {
-      await logError(err.toString(), stackTrace.toString());
-    }
-  }
-
-  Future<void> forceLogout(BuildContext context) async {
+  Future<void> forceLogout() async {
     try {
       final deviceId = await userEntity.getUserPerfer(userEntity.device_id);
 
@@ -56,11 +44,9 @@ class CenterController {
         await _model.logout(deviceId);
       }
       await userEntity.ClearStorage();
-
-      GoRouter.of(context).go('/login');
-    } catch (err) {
+    } catch (err, stack) {
+      AppLogger.error('Error: $err\n$stack');
       await userEntity.ClearStorage();
-      GoRouter.of(context).go('/login');
     }
   }
 
