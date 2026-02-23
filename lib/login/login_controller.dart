@@ -34,9 +34,6 @@ class LoginController {
     try {
       _loadingDialog.show(context);
 
-      // App version
-      final PackageInfo info = await PackageInfo.fromPlatform();
-
       // ===== DEVICE ID (create once, reuse forever) =====
       String? device_id = await userEntity.getUserPerfer(userEntity.device_id);
       device_id ??= const Uuid().v4();
@@ -57,7 +54,6 @@ class LoginController {
         Map<String,dynamic> response = await loginModel.validateLogin(loginReq);
 
         if(response['canLogin'] == true){
-          await userEntity.setUserPerfer(userEntity.app_version, info.version);
           await userEntity.setUserPerfer(userEntity.device_id, device_id);
           await userEntity.setUserPerfer(userEntity.username, username);
           await userEntity.setUserPerfer(userEntity.displayName, response['displayName']);

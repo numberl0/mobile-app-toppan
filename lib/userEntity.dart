@@ -9,8 +9,6 @@ class UserEntity {
   static const _secureStorage = FlutterSecureStorage();
 
   //Key
-  String app_version = 'app_version';
-
   String username = 'username';
   String displayName = 'displayName';
   String roles_visitorService = 'roles_visitorService'; // list<String> = []
@@ -134,23 +132,6 @@ class UserEntity {
     }
   }
 
-  Future<void> checkAndClearPrefsByVersion() async {
-    try {
-      final PackageInfo info = await PackageInfo.fromPlatform();
-
-      String currentVersion = info.version;
-      String savedVersion = await getUserPerfer(this.app_version);
-
-      if (savedVersion != currentVersion) {
-        await deleteTokens();
-        await clearUserPerfer();
-        await setUserPerfer(this.app_version, currentVersion);
-      }
-    } catch (err, stack) {
-      AppLogger.error('Error: $err\n$stack');
-      rethrow;
-    }
-  }
 
   Future<bool> isKeysEmpty() async {
     bool status = false;
