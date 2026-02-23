@@ -8,9 +8,6 @@ RUN npm install
 
 COPY backend/ .
 
-ARG SERVICE_PATH
-ENV SERVICE_PATH=${SERVICE_PATH}
-
-WORKDIR /app/backend/${SERVICE_PATH}
+WORKDIR /app/backend/src
 
 CMD ["node", "server.js"]

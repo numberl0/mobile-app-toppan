@@ -5,8 +5,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        SERVICE_PATH: src
     image: vmobile-visitor    
     container_name: vmobile-visitor
     ports:
