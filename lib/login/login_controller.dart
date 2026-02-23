@@ -68,6 +68,7 @@ class LoginController {
 
           clearLoginInput();
           GoRouter.of(context).push('/home');
+          await _centerController.insertActvityLog('User logged in');
         } else {
           _showErrorLoginDialog(context, response['err'] ?? 'เกิดข้อผิดพลาด');
         }
@@ -116,7 +117,6 @@ class LoginController {
       };
 
       await loginModel.updateFCMToken(device_id, data);
-      await _centerController.insertActvityLog('User $username has logged in');
     } catch (err, stack) {
       AppLogger.error('Error: $err\n$stack');
       await userEntity.clearUserPerfer();

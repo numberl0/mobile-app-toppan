@@ -259,10 +259,10 @@ class PermisController {
       
        if(!flagUpdateForm) {
         status = await permisModel.insertForm(data); // Insert
-        await _centerController.insertActvityLog('Insert PERMISSION Request [ ${tno_pass} ]');
+        await _centerController.insertActvityLog('Create permission form: ${tno_pass}');
       } else {
         status = await permisModel.updateForm(tno_pass, data); // Update
-        await _centerController.insertActvityLog('Update PERMISSION Request [ ${tno_pass} ]');
+        await _centerController.insertActvityLog('Edit permission form: ${tno_pass}');
       }
 
     } catch (err, stack) {

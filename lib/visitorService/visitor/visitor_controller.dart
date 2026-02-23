@@ -708,10 +708,10 @@ class VisitorFormController {
 
       if(!flagUpdateForm) {
         status = await _module.insertRequestFormV( dataRequest, dataForm); // Insert
-        await _centerController.insertActvityLog('Insert VISITOR FORM [ ${tno_pass} ]');
+        await _centerController.insertActvityLog('Create visitor form: ${tno_pass}');
       } else {
         status = await _module.updateRequestFormV(tno_pass ,dataRequest, dataForm); // Update
-        await _centerController.insertActvityLog('Update VISITOR FORM [ ${tno_pass} ]');
+        await _centerController.insertActvityLog('Edit visitor form: ${tno_pass}');
       }
 
     } catch (err, stack) {

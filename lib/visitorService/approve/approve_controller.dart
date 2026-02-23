@@ -215,7 +215,7 @@ class ApproveController {
       }
       var status = await approveModel.approvedDocument(entry['tno_pass'], entry['request_type'], dateStr, signInfo, username);
       if(status['success']) {
-        await _centerController.insertActvityLog('$username approved document TNO_PASS : ${entry['tno_pass']}');
+        await _centerController.insertActvityLog('Approved document: ${entry['tno_pass']}');
       }
       return status;
       } catch (err, stack) {
@@ -295,7 +295,7 @@ class ApproveController {
 
       var status = await approveModel.approvedList(selectedType!.name.toUpperCase(), tno_listMap, sign_info, username);
       if(status['success']) {
-        await _centerController.insertActvityLog('Approved documents : [${tno_listMap.map((e) => e['tno_pass']).join(", ")}]');
+        await _centerController.insertActvityLog('Approved documents: [${tno_listMap.map((e) => e['tno_pass']).join(", ")}]');
       }
       return status;
       } catch (err, stack) {

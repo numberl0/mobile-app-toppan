@@ -673,10 +673,10 @@ class EmployeeController {
 
       if(!flagUpdateForm) {
         status = await employeeModel.insertRequestFormE( dataRequest, dataForm); // Insert
-        await _centerController.insertActvityLog('Insert EMPLOYEE FORM [ ${tno_pass} ]');
+        await _centerController.insertActvityLog('Create employee form: ${tno_pass}');
       } else {
         status = await employeeModel.updateRequestFormE(tno_pass ,dataRequest, dataForm); // Update
-        await _centerController.insertActvityLog('Update EMPLOYEE FORM [ ${tno_pass} ]');
+        await _centerController.insertActvityLog('Edit employee form: ${tno_pass}');
       }
     } catch (err, stack) {
       AppLogger.error('Error: $err\n$stack');

@@ -44,6 +44,7 @@ class CenterController {
         await _model.logout(deviceId);
       }
       await userEntity.ClearStorage();
+      await insertActvityLog('User logged out');
     } catch (err, stack) {
       AppLogger.error('Error: $err\n$stack');
       await userEntity.ClearStorage();

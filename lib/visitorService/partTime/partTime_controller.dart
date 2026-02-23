@@ -184,6 +184,9 @@ class PartTimeController {
       };
 
       status = await partTimeModel.insertTemporaryPass(data);
+      if(status) {
+        await _centerController.insertActvityLog('Create temporary ID: ${recordId}');
+      }
     } catch (err, stack) {
       AppLogger.error('Error: $err\n$stack');
       await _centerController.logError(err.toString(), stack.toString());
@@ -201,6 +204,7 @@ class PartTimeController {
         if (index != -1) {
           filteredTemporaryList[index]['remark'] = remark;
         }
+        await _centerController.insertActvityLog('Edited temporary ID: ${id}');
       }
     } catch (err, stack) {
       AppLogger.error('Error: $err\n$stack');
@@ -247,6 +251,7 @@ class PartTimeController {
 
       status = await partTimeModel.updateTemporaryField(entry['id'], data);
       signatures[signer] = null;
+      await _centerController.insertActvityLog('Edited temporary ID: ${entry['id']}');
       await reloadCard();
     } catch (err, stack) {
       AppLogger.error('Error: $err\n$stack');

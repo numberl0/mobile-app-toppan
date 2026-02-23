@@ -226,7 +226,7 @@ class SearchFormController {
   }
 
  
-
+  //temporrary
   Future<void> updateRemark(String id, String rawRemark) async {
     try {
       var remark = rawRemark.isEmpty ? null : rawRemark;
@@ -237,6 +237,7 @@ class SearchFormController {
         if (index != -1) {
           filteredTemporaryList[index]['remark'] = remark;
         }
+        await _centerController.insertActvityLog('Edited temporary ID: ${id}');
       }
     } catch (err, stack) {
       AppLogger.error('Error: $err\n$stack');
@@ -244,6 +245,7 @@ class SearchFormController {
     }
   }
 
+  //temporary
   Future<bool> updateSignature(Map<String, dynamic> entry, Signer signer) async {
     bool status = false;
     try {
@@ -285,6 +287,7 @@ class SearchFormController {
       AppLogger.debug(const JsonEncoder.withIndent('  ').convert(data));
       status = await searchModule.updateTemporaryField(entry['id'], data);
       signatures[signer] = null;
+      await _centerController.insertActvityLog('Edited temporary ID: ${entry['id']}');
     } catch (err, stack) {
       AppLogger.error('Error: $err\n$stack');
       await _centerController.logError(err.toString(), stack.toString());
