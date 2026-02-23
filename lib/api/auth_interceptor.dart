@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:toppan_app/api/api_client.dart';
+import 'package:toppan_app/app_logger.dart';
 import 'package:toppan_app/userEntity.dart';
 import '../main.dart';
 
@@ -23,11 +24,11 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    
-    print('❌ ERROR STATUS: ${err.response?.statusCode}');
-    print('❌ ERROR DATA: ${err.response?.data}');
-    print('❌ ERROR PATH: ${err.requestOptions.path}');
-    print('-----------------------------------');
+
+    AppLogger.error('❌ ERROR STATUS: ${err.response?.statusCode}');
+    AppLogger.error('❌ ERROR DATA: ${err.response?.data}');
+    AppLogger.error('❌ ERROR PATH: ${err.requestOptions.path}');
+    AppLogger.error('-----------------------------------');
     
     if (err.requestOptions.path.contains('/auth/refresh')) {
       return handler.next(err);
