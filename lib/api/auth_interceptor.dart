@@ -23,7 +23,13 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-     if (err.requestOptions.path.contains('/auth/refresh')) {
+    
+    print('❌ ERROR STATUS: ${err.response?.statusCode}');
+    print('❌ ERROR DATA: ${err.response?.data}');
+    print('❌ ERROR PATH: ${err.requestOptions.path}');
+    print('-----------------------------------');
+    
+    if (err.requestOptions.path.contains('/auth/refresh')) {
       return handler.next(err);
     }
     

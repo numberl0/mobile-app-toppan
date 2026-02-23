@@ -1,6 +1,6 @@
 const path = require('node:path');
 
-const environment = 'test'; // test, production
+const environment = 'production'; // test, production
 const config = {
 
     // ------------------------------------------------- Test ---------------------------------------------------------- //

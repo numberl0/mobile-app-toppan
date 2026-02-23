@@ -19,7 +19,6 @@ class CenterController {
       Map<String, dynamic> data = {
           "log_date": formattedDate,
           "action": action,
-          "device_id": await userEntity.getUserPerfer(userEntity.device_id),
           "username": await userEntity.getUserPerfer(userEntity.username),
       };
       await _model.insertActivityLog(data);
