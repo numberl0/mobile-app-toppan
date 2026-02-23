@@ -8,6 +8,8 @@ class AppLogger {
   }
 
   static void error(String message) {
-    debugPrint('🔥 ERROR: $message');
+     if (kDebugMode) {
+      debugPrint('🔥 ERROR: $message');
+    }
   }
 }
