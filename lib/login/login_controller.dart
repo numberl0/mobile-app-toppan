@@ -27,13 +27,9 @@ class LoginController {
   TextEditingController usernameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
-  final LoadingDialog _loadingDialog = LoadingDialog();
-
 
   Future<void> login(BuildContext context) async {
     try {
-      _loadingDialog.show(context);
-
       // ===== DEVICE ID (create once, reuse forever) =====
       String? device_id = await userEntity.getUserPerfer(userEntity.device_id);
       device_id ??= const Uuid().v4();
@@ -53,7 +49,7 @@ class LoginController {
         };
         Map<String,dynamic> response = await loginModel.validateLogin(loginReq);
 
-        if(response['canLogin'] == true){
+        if(response['canLogin']){
           await userEntity.setUserPerfer(userEntity.device_id, device_id);
           await userEntity.setUserPerfer(userEntity.username, username);
           await userEntity.setUserPerfer(userEntity.displayName, response['displayName']);
@@ -72,9 +68,6 @@ class LoginController {
     } catch (err, stack) {
       AppLogger.error('Error: $err\n$stack');
       _showErrorLoginDialog(context, 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
-    } finally {
-      await Future.delayed(Duration(seconds: 1));
-      _loadingDialog.hide();
     }
   }
 

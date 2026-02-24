@@ -32,7 +32,7 @@ router.post('/authentication', async (req, res) => {
   client.bind(bindDn, password, (err) => {
     if (err) {
       client.unbind();
-      return res.status(401).json({ message: 'Authentication failed' });
+      return res.status(401).json({ message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' });
     }
 
     const baseDn = ldapConfig.domain
@@ -47,9 +47,11 @@ router.post('/authentication', async (req, res) => {
     };
 
     client.search(baseDn, options,  (err, searchRes) =>  {
-      if (err) {
+       if (err) {
         client.unbind();
-        return res.status(500).json({ message: 'LDAP search failed' });
+        return res.status(500).json({
+          message: 'LDAP search failed'
+        });
       }
 
       let displayName = null;
@@ -63,7 +65,9 @@ router.post('/authentication', async (req, res) => {
 
       searchRes.on('error', (err) => {
         client.unbind();
-        return res.status(500).json({ message: 'LDAP search error' });
+        return res.status(500).json({
+          message: 'LDAP search error'
+        });
       });
 
       searchRes.on('end', async () => {
@@ -74,6 +78,18 @@ router.post('/authentication', async (req, res) => {
         }
 
         try {
+          // ===== CHECK USER IN SYSTEM DATABASE =====
+          const [users] = await db.query(
+            'SELECT username FROM `USER` WHERE username = ?',
+            [username]
+          );
+
+          if (users.length === 0) {
+            return res.status(403).json({
+              message: 'บัญชีผู้ใช้นี้ไม่ได้รับอนุญาตให้เข้าใช้งานระบบ'
+            });
+          }
+
           // ===== ACCESS TOKEN (สั้น) =====
           const accessToken = jwt.sign(
             {
