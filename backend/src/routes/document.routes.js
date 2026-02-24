@@ -14,6 +14,7 @@ dayjs.extend(timezone);
 const { db } = require("../config/db");
 const { transformFilenameToUrlDoc } = require('../utils/fileUntils');
 const { updateCardState } = require('../utils/cardUtil');
+const { visitorConfig } = require('../config/config');
 
 // ---------------------------------------------- Get Information ---------------------------------------------- //
 // Search by date : yyyy-MM-dd
@@ -306,7 +307,7 @@ router.get('/manual', (req, res) => {
   }
 
   const filename = `${visitorConfig.manualFilename}${role}.pdf`;
-  const filePath = path.join(__dirname, 'manual', filename);
+  const filePath = path.join(__dirname, '..' ,'manual', filename);
 
   console.log('Serving file:', filePath);
 
