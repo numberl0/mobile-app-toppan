@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -35,11 +36,13 @@ void main() async {
   ]);
   AppDateTime.initialize();
   runApp(
-    DevicePreview(
-      enabled: true,    // <--- Preview UI
-      builder: (context) => MyApp(),
-    ),
-  );
+  kReleaseMode
+      ? MyApp()
+      : DevicePreview(
+          enabled: true,    // <--- Preview UI
+          builder: (context) => MyApp(),
+        ),
+);
 }
 
 // Global Router
