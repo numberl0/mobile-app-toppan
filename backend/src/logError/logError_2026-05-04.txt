@@ -1,0 +1,293 @@
+
+[2026-05-04 10:07:00] 
+[Error] DioException [bad response]: This exception was thrown because the response has a status code of 404 and RequestOptions.validateStatus was configured to throw for this status code.
+The status code of 404 has the following meaning: "Client error - the request contains bad syntax or cannot be fulfilled"
+Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
+ 
+[Stack Trace]
+#0      DioMixin.fetch (package:dio/src/dio_mixin.dart:523:7)
+<asynchronous suspension>
+#1      EmployeeModel.loadImageToFile (package:toppan_app/visitorService/employee/employee_model.dart:126:19)
+<asynchronous suspension>
+#2      EmployeeController.prepareLoadForm (package:toppan_app/visitorService/employee/employee_controller.dart:207:26)
+<asynchronous suspension>
+#3      _EmployeeContentState.prepareForm (package:toppan_app/visitorService/employee/employee_view.dart:80:7)
+<asynchronous suspension>
+
+-------------------
+[2026-05-04 10:12:42] 
+[Error] FormatException: Invalid radix-10 number (at character 1)
+ทดสอบ
+^
+ 
+[Stack Trace]
+#0      int._handleFormatError (dart:core-patch/integers_patch.dart:127:5)
+#1      int._parseRadix (dart:core-patch/integers_patch.dart:138:16)
+#2      int._parse (dart:core-patch/integers_patch.dart:99:12)
+#3      int.parse (dart:core-patch/integers_patch.dart:61:12)
+#4      EmployeeController.prepareLoadForm (package:toppan_app/visitorService/employee/employee_controller.dart:179:30)
+<asynchronous suspension>
+#5      _EmployeeContentState.prepareForm (package:toppan_app/visitorService/employee/employee_view.dart:80:7)
+<asynchronous suspension>
+
+-------------------
+[2026-05-04 10:12:50] 
+[Error] FormatException: Invalid radix-10 number (at character 1)
+ทดสอบ
+^
+ 
+[Stack Trace]
+#0      int._handleFormatError (dart:core-patch/integers_patch.dart:127:5)
+#1      int._parseRadix (dart:core-patch/integers_patch.dart:138:16)
+#2      int._parse (dart:core-patch/integers_patch.dart:99:12)
+#3      int.parse (dart:core-patch/integers_patch.dart:61:12)
+#4      EmployeeController.prepareLoadForm (package:toppan_app/visitorService/employee/employee_controller.dart:179:30)
+<asynchronous suspension>
+#5      _EmployeeContentState.prepareForm (package:toppan_app/visitorService/employee/employee_view.dart:80:7)
+<asynchronous suspension>
+
+-------------------
+[2026-05-04 10:12:58] 
+[Error] FormatException: Invalid radix-10 number (at character 1)
+ทดสอบ
+^
+ 
+[Stack Trace]
+#0      int._handleFormatError (dart:core-patch/integers_patch.dart:127:5)
+#1      int._parseRadix (dart:core-patch/integers_patch.dart:138:16)
+#2      int._parse (dart:core-patch/integers_patch.dart:99:12)
+#3      int.parse (dart:core-patch/integers_patch.dart:61:12)
+#4      EmployeeController.prepareLoadForm (package:toppan_app/visitorService/employee/employee_controller.dart:179:30)
+<asynchronous suspension>
+#5      _EmployeeContentState.prepareForm (package:toppan_app/visitorService/employee/employee_view.dart:80:7)
+<asynchronous suspension>
+
+-------------------
+[2026-05-04 10:13:05] 
+[Error] FormatException: Invalid radix-10 number (at character 1)
+ทดสอบ
+^
+ 
+[Stack Trace]
+#0      int._handleFormatError (dart:core-patch/integers_patch.dart:127:5)
+#1      int._parseRadix (dart:core-patch/integers_patch.dart:138:16)
+#2      int._parse (dart:core-patch/integers_patch.dart:99:12)
+#3      int.parse (dart:core-patch/integers_patch.dart:61:12)
+#4      EmployeeController.prepareLoadForm (package:toppan_app/visitorService/employee/employee_controller.dart:179:30)
+<asynchronous suspension>
+#5      _EmployeeContentState.prepareForm (package:toppan_app/visitorService/employee/employee_view.dart:80:7)
+<asynchronous suspension>
+
+-------------------
+[2026-05-04 10:16:17] 
+[Error] FormatException: Invalid radix-10 number (at character 1)
+ทดสอบ
+^
+ 
+[Stack Trace]
+#0      int._handleFormatError (dart:core-patch/integers_patch.dart:127:5)
+#1      int._parseRadix (dart:core-patch/integers_patch.dart:138:16)
+#2      int._parse (dart:core-patch/integers_patch.dart:99:12)
+#3      int.parse (dart:core-patch/integers_patch.dart:61:12)
+#4      EmployeeController.prepareLoadForm (package:toppan_app/visitorService/employee/employee_controller.dart:179:30)
+<asynchronous suspension>
+#5      _EmployeeContentState.prepareForm (package:toppan_app/visitorService/employee/employee_view.dart:80:7)
+<asynchronous suspension>
+
+-------------------
+[2026-05-04 10:16:54] 
+[Error] FormatException: Invalid radix-10 number (at character 1)
+ทดสอบ
+^
+ 
+[Stack Trace]
+#0      int._handleFormatError (dart:core-patch/integers_patch.dart:127:5)
+#1      int._parseRadix (dart:core-patch/integers_patch.dart:138:16)
+#2      int._parse (dart:core-patch/integers_patch.dart:99:12)
+#3      int.parse (dart:core-patch/integers_patch.dart:61:12)
+#4      EmployeeController.prepareLoadForm (package:toppan_app/visitorService/employee/employee_controller.dart:179:30)
+<asynchronous suspension>
+#5      _EmployeeContentState.prepareForm (package:toppan_app/visitorService/employee/employee_view.dart:80:7)
+<asynchronous suspension>
+
+-------------------
+[2026-05-04 10:17:19] 
+[Error] FormatException: Invalid radix-10 number (at character 1)
+ทดสอบ
+^
+ 
+[Stack Trace]
+#0      int._handleFormatError (dart:core-patch/integers_patch.dart:127:5)
+#1      int._parseRadix (dart:core-patch/integers_patch.dart:138:16)
+#2      int._parse (dart:core-patch/integers_patch.dart:99:12)
+#3      int.parse (dart:core-patch/integers_patch.dart:61:12)
+#4      EmployeeController.prepareLoadForm (package:toppan_app/visitorService/employee/employee_controller.dart:179:30)
+<asynchronous suspension>
+#5      _EmployeeContentState.prepareForm (package:toppan_app/visitorService/employee/employee_view.dart:80:7)
+<asynchronous suspension>
+
+-------------------
+[2026-05-04 10:18:30] 
+[Error] type 'int' is not a subtype of type 'String' 
+[Stack Trace]
+#0      EmployeeController.prepareLoadForm (package:toppan_app/visitorService/employee/employee_controller.dart:179:40)
+<asynchronous suspension>
+#1      _EmployeeContentState.prepareForm (package:toppan_app/visitorService/employee/employee_view.dart:80:7)
+<asynchronous suspension>
+
+-------------------
+[2026-05-04 10:20:14] 
+[Error] type 'int' is not a subtype of type 'String' 
+[Stack Trace]
+#0      EmployeeController.prepareLoadForm (package:toppan_app/visitorService/employee/employee_controller.dart:179:40)
+<asynchronous suspension>
+#1      _EmployeeContentState.prepareForm (package:toppan_app/visitorService/employee/employee_view.dart:80:7)
+<asynchronous suspension>
+
+-------------------
+[2026-05-04 10:21:52] 
+[Error] type 'int' is not a subtype of type 'String' 
+[Stack Trace]
+#0      EmployeeController.prepareLoadForm (package:toppan_app/visitorService/employee/employee_controller.dart:179:40)
+<asynchronous suspension>
+#1      _EmployeeContentState.prepareForm (package:toppan_app/visitorService/employee/employee_view.dart:80:7)
+<asynchronous suspension>
+
+-------------------
+[2026-05-04 13:44:15] 
+[Error] DioException [bad response]: This exception was thrown because the response has a status code of 404 and RequestOptions.validateStatus was configured to throw for this status code.
+The status code of 404 has the following meaning: "Client error - the request contains bad syntax or cannot be fulfilled"
+Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
+ 
+[Stack Trace]
+#0      DioMixin.fetch (package:dio/src/dio_mixin.dart:523:7)
+<asynchronous suspension>
+#1      VisitorModule.getInfoCardFromDoc (package:toppan_app/visitorService/visitor/visitor_model.dart:181:19)
+<asynchronous suspension>
+#2      VisitorFormController.prepareLoadForm (package:toppan_app/visitorService/visitor/visitor_controller.dart:208:25)
+<asynchronous suspension>
+#3      _VisitorContentState.prepareForm (package:toppan_app/visitorService/visitor/visitor_view.dart:77:7)
+<asynchronous suspension>
+
+-------------------
+[2026-05-04 13:49:07] 
+[Error] DioException [bad response]: This exception was thrown because the response has a status code of 404 and RequestOptions.validateStatus was configured to throw for this status code.
+The status code of 404 has the following meaning: "Client error - the request contains bad syntax or cannot be fulfilled"
+Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
+ 
+[Stack Trace]
+#0      DioMixin.fetch (package:dio/src/dio_mixin.dart:523:7)
+<asynchronous suspension>
+#1      VisitorModule.getInfoCardFromDoc (package:toppan_app/visitorService/visitor/visitor_model.dart:181:19)
+<asynchronous suspension>
+#2      VisitorFormController.prepareLoadForm (package:toppan_app/visitorService/visitor/visitor_controller.dart:210:25)
+<asynchronous suspension>
+#3      _VisitorContentState.prepareForm (package:toppan_app/visitorService/visitor/visitor_view.dart:77:7)
+<asynchronous suspension>
+
+-------------------
+[2026-05-04 14:23:52] 
+[Error] DioException [bad response]: This exception was thrown because the response has a status code of 404 and RequestOptions.validateStatus was configured to throw for this status code.
+The status code of 404 has the following meaning: "Client error - the request contains bad syntax or cannot be fulfilled"
+Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
+ 
+[Stack Trace]
+#0      DioMixin.fetch (package:dio/src/dio_mixin.dart:523:7)
+<asynchronous suspension>
+#1      VisitorModule.getInfoCardFromDoc (package:toppan_app/visitorService/visitor/visitor_model.dart:181:19)
+<asynchronous suspension>
+#2      VisitorFormController.prepareLoadForm (package:toppan_app/visitorService/visitor/visitor_controller.dart:210:27)
+<asynchronous suspension>
+#3      _VisitorContentState.prepareForm (package:toppan_app/visitorService/visitor/visitor_view.dart:77:7)
+<asynchronous suspension>
+
+-------------------
+[2026-05-04 14:24:24] 
+[Error] DioException [bad response]: This exception was thrown because the response has a status code of 404 and RequestOptions.validateStatus was configured to throw for this status code.
+The status code of 404 has the following meaning: "Client error - the request contains bad syntax or cannot be fulfilled"
+Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
+ 
+[Stack Trace]
+#0      DioMixin.fetch (package:dio/src/dio_mixin.dart:523:7)
+<asynchronous suspension>
+#1      VisitorModule.getInfoCardFromDoc (package:toppan_app/visitorService/visitor/visitor_model.dart:181:19)
+<asynchronous suspension>
+#2      VisitorFormController.prepareLoadForm (package:toppan_app/visitorService/visitor/visitor_controller.dart:211:27)
+<asynchronous suspension>
+#3      _VisitorContentState.prepareForm (package:toppan_app/visitorService/visitor/visitor_view.dart:77:7)
+<asynchronous suspension>
+
+-------------------
+[2026-05-04 14:24:50] 
+[Error] DioException [bad response]: This exception was thrown because the response has a status code of 404 and RequestOptions.validateStatus was configured to throw for this status code.
+The status code of 404 has the following meaning: "Client error - the request contains bad syntax or cannot be fulfilled"
+Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
+ 
+[Stack Trace]
+#0      DioMixin.fetch (package:dio/src/dio_mixin.dart:523:7)
+<asynchronous suspension>
+#1      VisitorModule.getInfoCardFromDoc (package:toppan_app/visitorService/visitor/visitor_model.dart:181:19)
+<asynchronous suspension>
+#2      VisitorFormController.prepareLoadForm (package:toppan_app/visitorService/visitor/visitor_controller.dart:211:27)
+<asynchronous suspension>
+#3      _VisitorContentState.prepareForm (package:toppan_app/visitorService/visitor/visitor_view.dart:77:7)
+<asynchronous suspension>
+
+-------------------
+[2026-05-04 14:45:48] 
+[Error] type 'Null' is not a subtype of type 'String' 
+[Stack Trace]
+#0      new Visitor.fromJson (package:toppan_app/entity/visitor_profile.dart:31:52)
+#1      VisitorFormController.prepareLoadForm.<anonymous closure> (package:toppan_app/visitorService/visitor/visitor_controller.dart:273:31)
+#2      MappedListIterable.elementAt (dart:_internal/iterable.dart:425:31)
+#3      ListIterator.moveNext (dart:_internal/iterable.dart:354:26)
+#4      new _GrowableList._ofEfficientLengthIterable (dart:core-patch/growable_array.dart:189:27)
+#5      new _GrowableList.of (dart:core-patch/growable_array.dart:150:28)
+#6      new List.of (dart:core-patch/array_patch.dart:39:18)
+#7      ListIterable.toList (dart:_internal/iterable.dart:224:7)
+#8      VisitorFormController.prepareLoadForm (package:toppan_app/visitorService/visitor/visitor_controller.dart:274:12)
+<asynchronous suspension>
+#9      _VisitorContentState.prepareForm (package:toppan_app/visitorService/visitor/visitor_view.dart:77:7)
+<asynchronous suspension>
+
+-------------------
+[2026-05-04 15:48:51] 
+[Error] DioException [bad response]: This exception was thrown because the response has a status code of 404 and RequestOptions.validateStatus was configured to throw for this status code.
+The status code of 404 has the following meaning: "Client error - the request contains bad syntax or cannot be fulfilled"
+Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
+ 
+[Stack Trace]
+#0      DioMixin.fetch (package:dio/src/dio_mixin.dart:523:7)
+<asynchronous suspension>
+#1      EmployeeModel.loadImageToFile (package:toppan_app/visitorService/employee/employee_model.dart:126:19)
+<asynchronous suspension>
+#2      EmployeeController.prepareLoadForm (package:toppan_app/visitorService/employee/employee_controller.dart:212:26)
+<asynchronous suspension>
+#3      _EmployeeContentState.prepareForm (package:toppan_app/visitorService/employee/employee_view.dart:80:7)
+<asynchronous suspension>
+
+-------------------
+[2026-05-04 15:49:00] 
+[Error] DioException [bad response]: This exception was thrown because the response has a status code of 404 and RequestOptions.validateStatus was configured to throw for this status code.
+The status code of 404 has the following meaning: "Client error - the request contains bad syntax or cannot be fulfilled"
+Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
+ 
+[Stack Trace]
+#0      DioMixin.fetch (package:dio/src/dio_mixin.dart:523:7)
+<asynchronous suspension>
+#1      EmployeeModel.loadImageToFile (package:toppan_app/visitorService/employee/employee_model.dart:126:19)
+<asynchronous suspension>
+#2      EmployeeController.prepareLoadForm (package:toppan_app/visitorService/employee/employee_controller.dart:212:26)
+<asynchronous suspension>
+#3      _EmployeeContentState.prepareForm (package:toppan_app/visitorService/employee/employee_view.dart:80:7)
+<asynchronous suspension>
+
+-------------------

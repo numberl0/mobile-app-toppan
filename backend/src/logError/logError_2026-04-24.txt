@@ -1,0 +1,79 @@
+
+[2026-04-24 10:16:47] 
+[Error] DioException [bad response]: This exception was thrown because the response has a status code of 500 and RequestOptions.validateStatus was configured to throw for this status code.
+The status code of 500 has the following meaning: "Server error - the server failed to fulfil an apparently valid request"
+Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
+ 
+[Stack Trace]
+#0      DioMixin.fetch (package:dio/src/dio_mixin.dart:523:7)
+<asynchronous suspension>
+#1      SearchModule.getAllRequestForm (package:toppan_app/visitorService/search/search_model.dart:12:19)
+<asynchronous suspension>
+#2      SearchFormController.preparePage (package:toppan_app/visitorService/search/search_controller.dart:218:20)
+<asynchronous suspension>
+#3      _SearchContentState.preparePage (package:toppan_app/visitorService/search/search_view.dart:90:5)
+<asynchronous suspension>
+
+-------------------
+[2026-04-24 10:16:52] 
+[Error] DioException [bad response]: This exception was thrown because the response has a status code of 500 and RequestOptions.validateStatus was configured to throw for this status code.
+The status code of 500 has the following meaning: "Server error - the server failed to fulfil an apparently valid request"
+Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
+ 
+[Stack Trace]
+#0      DioMixin.fetch (package:dio/src/dio_mixin.dart:523:7)
+<asynchronous suspension>
+#1      SearchModule.getAllRequestForm (package:toppan_app/visitorService/search/search_model.dart:12:19)
+<asynchronous suspension>
+#2      SearchFormController.preparePage (package:toppan_app/visitorService/search/search_controller.dart:218:20)
+<asynchronous suspension>
+#3      _SearchContentState.preparePage (package:toppan_app/visitorService/search/search_view.dart:90:5)
+<asynchronous suspension>
+
+-------------------
+[2026-04-24 10:17:05] 
+[Error] DioException [bad response]: This exception was thrown because the response has a status code of 500 and RequestOptions.validateStatus was configured to throw for this status code.
+The status code of 500 has the following meaning: "Server error - the server failed to fulfil an apparently valid request"
+Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
+ 
+[Stack Trace]
+#0      DioMixin.fetch (package:dio/src/dio_mixin.dart:523:7)
+<asynchronous suspension>
+#1      SearchModule.getAllRequestForm (package:toppan_app/visitorService/search/search_model.dart:12:19)
+<asynchronous suspension>
+#2      SearchFormController.preparePage (package:toppan_app/visitorService/search/search_controller.dart:218:20)
+<asynchronous suspension>
+#3      _SearchContentState.preparePage (package:toppan_app/visitorService/search/search_view.dart:90:5)
+<asynchronous suspension>
+
+-------------------
+[2026-04-24 10:36:11] 
+[Error] type 'int' is not a subtype of type 'bool' 
+[Stack Trace]
+#0      EmployeeController.prepareLoadForm (package:toppan_app/visitorService/employee/employee_controller.dart:184:7)
+<asynchronous suspension>
+#1      _EmployeeContentState.prepareForm (package:toppan_app/visitorService/employee/employee_view.dart:80:7)
+<asynchronous suspension>
+
+-------------------
+[2026-04-24 10:36:19] 
+[Error] type 'int' is not a subtype of type 'bool' 
+[Stack Trace]
+#0      EmployeeController.prepareLoadForm (package:toppan_app/visitorService/employee/employee_controller.dart:184:7)
+<asynchronous suspension>
+#1      _EmployeeContentState.prepareForm (package:toppan_app/visitorService/employee/employee_view.dart:80:7)
+<asynchronous suspension>
+
+-------------------
+[2026-04-24 10:36:29] 
+[Error] type 'int' is not a subtype of type 'bool' 
+[Stack Trace]
+#0      EmployeeController.prepareLoadForm (package:toppan_app/visitorService/employee/employee_controller.dart:184:7)
+<asynchronous suspension>
+#1      _EmployeeContentState.prepareForm (package:toppan_app/visitorService/employee/employee_view.dart:80:7)
+<asynchronous suspension>
+
+-------------------
