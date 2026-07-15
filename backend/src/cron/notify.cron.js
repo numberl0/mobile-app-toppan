@@ -248,18 +248,62 @@ const notifyOnCreate = async (type, record) => {
     };
 
     const response = await admin.messaging().sendEachForMulticast(message);
-    
-    // --- 4. Cleanup Tokens ---
-    if (response.failureCount > 0) {
-      const badTokens = uniqueTokens.filter((_, i) => 
-        !response.responses[i].success && 
-        response.responses[i].error.code === "messaging/registration-token-not-registered"
-      );
-      if (badTokens.length > 0) {
-        await db.query("DELETE FROM DEVICE_TOKEN WHERE fcm_token IN (?)", [badTokens]);
+
+    console.log(
+      `[Notification Result] Type: ${type}, ` +
+      `Success: ${response.successCount}, ` +
+      `Failure: ${response.failureCount}`
+    );
+
+    response.responses.forEach((resp, index) => {
+      if (resp.success) {
+        console.log(
+          `[FCM Success] Token ${index + 1}: ${resp.messageId}`
+        );
+      } else {
+        console.error(
+          `[FCM Failed] Token ${index + 1}:`,
+          resp.error?.code,
+          resp.error?.message
+        );
       }
-    }
-    console.log(`[Notification Sent] Type: ${type}, Tokens: ${uniqueTokens.length}`);
+    });
+
+    // ลบ Token ที่หมดอายุหรือใช้งานไม่ได้
+if (response.failureCount > 0) {
+  const badTokens = uniqueTokens.filter((_, index) => {
+    const result = response.responses[index];
+
+    return (
+      !result.success &&
+      result.error?.code ===
+        "messaging/registration-token-not-registered"
+    );
+  });
+
+  if (badTokens.length > 0) {
+    await db.query(
+      "DELETE FROM DEVICE_TOKEN WHERE fcm_token IN (?)",
+      [badTokens]
+    );
+
+    console.log(
+      `[FCM Cleanup] Removed ${badTokens.length} invalid tokens`
+    );
+  }
+}
+    
+    // // ลบ Token ที่หมดอายุหรือใช้งานไม่ได้
+    // if (response.failureCount > 0) {
+    //   const badTokens = uniqueTokens.filter((_, i) => 
+    //     !response.responses[i].success && 
+    //     response.responses[i].error.code === "messaging/registration-token-not-registered"
+    //   );
+    //   if (badTokens.length > 0) {
+    //     await db.query("DELETE FROM DEVICE_TOKEN WHERE fcm_token IN (?)", [badTokens]);
+    //   }
+    // }
+    // console.log(`[Notification Sent] Type: ${type}, Tokens: ${uniqueTokens.length}`);
   } catch (error) {
     console.error(`[notifyOnCreate Error]:`, error);
   }

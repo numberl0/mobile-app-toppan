@@ -77,14 +77,27 @@ class LoginController {
       // Uuid
       String device_id = await userEntity.getUserPerfer(userEntity.device_id);
 
-      String device_name = '';
-      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-      if(Platform.isAndroid) {
-        AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-        device_name = androidInfo.model;
-      } else if (Platform.isIOS) {
-        IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
-        device_name = iosInfo.utsname.machine;
+      String? device_name;
+      try {
+        final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+
+        if (Platform.isAndroid) {
+          final AndroidDeviceInfo androidInfo =
+              await deviceInfo.androidInfo;
+
+          device_name = androidInfo.model;
+        } else if (Platform.isIOS) {
+          final IosDeviceInfo iosInfo =
+              await deviceInfo.iosInfo;
+
+          device_name = iosInfo.utsname.machine;
+        }
+      } catch (err, stack) {
+        device_name = null;
+
+        AppLogger.error(
+          'Unable to get device name: $err\n$stack',
+        );
       }
 
       // Username
@@ -97,12 +110,22 @@ class LoginController {
       String roles = (await userEntity.getUserPerfer(userEntity.roles_visitorService)).join(",");
 
       //token
-      String? fcm_token = await FirebaseMessaging.instance.getToken();
+      String? fcmToken;
+
+      try {
+        fcmToken = await FirebaseMessaging.instance.getToken();
+      } catch (err, stack) {
+        fcmToken = null;
+
+        AppLogger.error(
+          'Unable to get FCM token: $err\n$stack',
+        );
+      }
 
       Map<String, dynamic> data = {
         'device_name': device_name,
         'roles': roles,
-        'fcm_token': fcm_token,
+        'fcm_token': fcmToken,
       };
 
       await loginModel.updateFCMToken(device_id, data);

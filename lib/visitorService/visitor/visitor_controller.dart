@@ -127,13 +127,37 @@ class VisitorFormController {
         return entry.key;
       }
     }
-    if (!contactList.contains(contactControl.text)) {
-      return 'รายชื่อผู้ประสานงานไม่ตรงกับระบบ';
+    if (contactControl.text.trim().isEmpty) {
+      return 'กรุณากรอกรายชื่อผู้ประสานงาน';
     }
     if (personList.isEmpty) {
       scrollToSection(visitorSectionKey);
       return 'กรุณาเพิ่มรายชื่อลงในเอกสารอย่างน้อย 1 คน';
     }
+
+    for (int i = 0; i < personList.length; i++) {
+      final Visitor visitor = personList[i];
+      final String visitorName =
+      visitor.fullName?.trim().isNotEmpty == true
+          ? '${visitor.titleName?.trim() ?? ''}${visitor.fullName!.trim()}'
+          : 'ผู้มาติดต่อคนที่ ${i + 1}';
+
+      // ตรวจบัตร
+      if (visitor.cardId == null ||
+          visitor.cardId!.trim().isEmpty) {
+        scrollToSection(visitorSectionKey);
+        return 'กรุณากำหนดบัตรให้ $visitorName';
+      }
+
+      // ตรวจลายเซ็น
+      final bool hasSignatureData = visitor.signatureData != null && visitor.signatureData!.isNotEmpty;
+
+      if (!hasSignatureData) {
+        scrollToSection(visitorSectionKey);
+        return 'กรุณาให้ $visitorName ลงลายเซ็น';
+      }
+    }
+
     if (isExpandedBuilding && otherBuildingController.text.isEmpty) {
       scrollToSection(buildingSectionKey);
       return 'โปรระบุสถานที่';
@@ -236,19 +260,53 @@ class VisitorFormController {
 
       // Building
       buildingList = await _module.getBuilding();
+
       var area = data['area'];
       var card = data['building_card'];
-      if (area != null) {
+
+      //===================================================
+      final int otherIndex = buildingList.indexWhere(
+        (b) => b['building_card'] == 'O',
+      );
+
+      if (area != null && area.toString().trim().isNotEmpty) {
         if (card == 'O') {
           isExpandedBuilding = true;
-          otherBuildingController.text = area;
-          selectedBuilding = buildingList.firstWhere((b) => b['building_card'] == card)['id'];
+          otherBuildingController.text = area.toString();
+          if (otherIndex >= 0) {
+            selectedBuilding = buildingList[otherIndex]['id'];
+          } else {
+            selectedBuilding = buildingList.first['id'];
+          }
         } else {
-          selectedBuilding = buildingList.firstWhere((b) => b['building_name'] == area)['id'];
+          final int buildingIndex = buildingList.indexWhere(
+            (b) => b['building_name'] == area,
+          );
+
+          if (buildingIndex >= 0) {
+            // เจอชื่ออาคารตรงกับ area
+            isExpandedBuilding = false;
+            otherBuildingController.clear();
+            selectedBuilding = buildingList[buildingIndex]['id'];
+          } else {
+            // ไม่เจอชื่ออาคาร ให้ใช้ Other
+            isExpandedBuilding = true;
+            otherBuildingController.text = area.toString();
+
+            if (otherIndex >= 0) {
+              selectedBuilding = buildingList[otherIndex]['id'];
+            } else {
+              selectedBuilding = buildingList.first['id'];
+            }
+          }
         }
       } else {
-        selectedBuilding = buildingList[0]['id'];
+        isExpandedBuilding = false;
+        otherBuildingController.clear();
+        selectedBuilding = buildingList.first['id'];
       }
+      //===================================================
+
 
       //Map Data
       companyController.text = data['company'] != null ? data['company'] : '';
