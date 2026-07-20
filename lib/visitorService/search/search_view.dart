@@ -19,6 +19,7 @@ import '../../formatters/listview_formatter.dart';
 import '../../utils/BaseScaffold.dart';
 import '../../utils/color_utils.dart';
 import '../../utils/date_utils.dart';
+import '../../utils/department_utils.dart';
 import 'search_controller.dart';
 
 class SearchPage extends StatelessWidget {
@@ -1523,7 +1524,7 @@ Positioned(
                   SizedBox(height: 25),
                   buildLabelValueRow('ติดต่อ:', entry['contact'] ?? '', leftPadding: pddingLabel, labelWidth: spaceLabel, labelBold: true),
                   SizedBox(height: 25),
-                  buildLabelValueRow('แผนก:', entry['contact_dept'] ?? '', leftPadding: pddingLabel, labelWidth: spaceLabel, labelBold: true),
+                  buildLabelValueRow('แผนก:', getDepartmentDisplay(entry['contact_dept'] ?? '',_con.deptList), leftPadding: pddingLabel, labelWidth: spaceLabel, labelBold: true),
                   SizedBox(height: 25),
                   buildLabelValueRow('วัตถุประสงค์:', entry['objective'] ?? '', leftPadding: pddingLabel, labelWidth: spaceLabel, labelBold: true),
                   SizedBox(height: 10),
@@ -1561,7 +1562,7 @@ Positioned(
                       SizedBox(
                         height: 10,
                       ),
-                      buildLabelValueRow('แผนก:', entry['emp_dept'],
+                      buildLabelValueRow('แผนก:', getDepartmentDisplay(entry['emp_dept'] ?? '',_con.deptList),
                           leftPadding: pddingLabel, labelWidth: spaceLabel),
                       SizedBox(
                         height: 10,
@@ -2199,48 +2200,88 @@ void signerPopup(String key, String label, Map<String,dynamic> entry) {
                                 child: ElevatedButton(
                                   onPressed: () async {
                                     final padState = _con.signatureGlobalKey.currentState;
-                                    if (padState == null || padState.toPathList().isEmpty) {
+                                    final bool hasSignature = padState != null && padState.toPathList().isNotEmpty;
+                                    final bool requireSignatureName = [
+                                      'VISITOR',
+                                      'EMPLOYEE',
+                                      'PERMISSION',
+                                    ].contains(docType);
+                                    final bool hasSignatureName = _con.signatureByController.text.trim().isNotEmpty;
+
+                                    if (!hasSignature) {
                                       showTopSnackBar(
                                         Overlay.of(context),
                                         CustomSnackBar.error(
                                           backgroundColor: Colors.red.shade700,
-                                          icon: Icon(
+                                          icon: const Icon(
                                             Icons.sentiment_very_dissatisfied,
                                             color: Colors.red,
                                             size: 100,
                                           ),
-                                          message: 'กรุณาเซ็นก่อนบันทึกทุกครั้ง',
+                                          message: 'กรุณาลงลายเซ็น',
                                         ),
                                       );
                                       return;
-                                    }else{
-                                      await CustomDialog.show(
-                                            context: context,
-                                            title: 'คำเตือน',
-                                            message: "คุณต้องการบันทึกลายเซ็นใช่หรือไม่? การดำเนินการนี้จะไม่สามารถย้อนกลับมาแก้ไขได้",
-                                            type: DialogType.info,
-                                            onConfirm: () async {
-                                              final image = await padState.toImage();
-                                              final bytes = await image.toByteData(format: ImageByteFormat.png);
-                                              if (bytes != null) {
-                                                setStateDialog(() { });
-                                                var signature = bytes.buffer.asUint8List();
-                                                await _con.updateSignature(entry, key, signature);
-                                                _con.signatureByController.clear();
-                                              }
-                                              
-                                              // clear signature
-                                              setStateDialog(() {
-                                                _con.signatureGlobalKey = GlobalKey<SfSignaturePadState>();
-                                              });
-                                              Navigator.pop(context);
-                                              Navigator.pop(context);
-                                              setState(() { });
-                                            },
-                                          );
                                     }
-                                    await preparePage();
-                                    setState(() { });
+
+                                    if (requireSignatureName && !hasSignatureName) {
+                                      showTopSnackBar(
+                                        Overlay.of(context),
+                                        CustomSnackBar.error(
+                                          backgroundColor: Colors.red.shade700,
+                                          icon: const Icon(
+                                            Icons.sentiment_very_dissatisfied,
+                                            color: Colors.red,
+                                            size: 100,
+                                          ),
+                                          message: 'กรุณากรอกชื่อผู้ลงลายเซ็น',
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    await CustomDialog.show(
+                                      context: context,
+                                      title: 'คำเตือน',
+                                      message:
+                                          'คุณต้องการบันทึกลายเซ็นใช่หรือไม่? การดำเนินการนี้จะไม่สามารถย้อนกลับมาแก้ไขได้',
+                                      type: DialogType.info,
+                                      onConfirm: () async {
+                                        final image = await padState.toImage();
+
+                                        final bytes = await image.toByteData(
+                                          format: ImageByteFormat.png,
+                                        );
+
+                                        if (bytes != null) {
+                                          final signature = bytes.buffer.asUint8List();
+
+                                          await _con.updateSignature(
+                                            entry,
+                                            key,
+                                            signature,
+                                          );
+
+                                          _con.signatureByController.clear();
+                                        }
+
+                                        setStateDialog(() {
+                                          _con.signatureGlobalKey =
+                                              GlobalKey<SfSignaturePadState>();
+                                        });
+
+                                        if (context.mounted) {
+                                          Navigator.pop(context);
+                                          Navigator.pop(context);
+                                        }
+
+                                        await preparePage();
+
+                                        if (mounted) {
+                                          setState(() {});
+                                        }
+                                      },
+                                    );
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.blue,
@@ -2330,7 +2371,7 @@ void signerPopup(String key, String label, Map<String,dynamic> entry) {
 
                             if (type.toUpperCase() == 'EMPLOYEE') ...[
                               Text(
-                                'แผนก: ${entry['Department']}',
+                                'แผนก: ${getDepartmentDisplay(entry['Department'] ?? '',_con.deptList)}',
                                 style: TextStyle(
                                   fontSize: _fontSize -4,
                                 ),

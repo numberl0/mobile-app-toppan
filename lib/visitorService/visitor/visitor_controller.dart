@@ -20,6 +20,7 @@ import 'package:uuid/uuid.dart';
 
 import 'package:image/image.dart' as img;
 
+import '../../entity/department.dart';
 import '../../entity/signature_section.dart';
 import '../../entity/visitor_profile.dart';
 
@@ -104,7 +105,7 @@ class VisitorFormController {
 
   // Departments
   String selectDept = '';
-  List<String> deptList = [];
+  List<Department> deptList = [];
 
   // Contacts
   TextEditingController contactControl = TextEditingController();
@@ -189,12 +190,16 @@ class VisitorFormController {
           "${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}"
           "${now.second.toString().padLeft(2, '0')}${(now.millisecondsSinceEpoch % 1000).toString().padLeft(3, '0')}";
 
-      // Departments
+      // Departments and Contact
       deptList = await _module.getDepartments();
-      selectDept = deptList[0];
 
-      // Contact
-      contactList = await _module.getContactByDept(selectDept);
+      if (deptList.isNotEmpty) {
+        selectDept = deptList.first.value;
+        contactList = await _module.getContactByDept(selectDept);
+      } else {
+        selectDept = '';
+        contactList = [];
+      }
 
       // Building
       buildingList = await _module.getBuilding();
@@ -616,7 +621,7 @@ class VisitorFormController {
         'company': companyController.text,
         'vehicle_no': vehicleLicenseController.text,
         'datetime_in': datetime_in.toString(),
-        'datetime_out': signatureSection['Security']!.dateTime !=null? signatureSection['Security']!.dateTime.toString(): null,
+        // 'datetime_out': signatureSection['Security']!.dateTime !=null? signatureSection['Security']!.dateTime.toString(): null,
         'contact': contactControl.text,
         'contact_dept': selectDept,
         'objective': objectiveController.text,

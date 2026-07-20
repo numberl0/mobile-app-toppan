@@ -6,6 +6,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:toppan_app/api/api_client.dart';
 import 'package:path/path.dart' as path;
 
+import '../../entity/department.dart';
+
 class VisitorModule {
   /// -----------------------------
   /// Agreement text
@@ -143,11 +145,19 @@ class VisitorModule {
       return file;
   }
 
-  /// -----------------------------
-  /// Departments
-  Future<List<String>> getDepartments() async {
-      final res = await ApiClient.dio.get('/hris/departments');
-      return List<String>.from(res.data['data'] ?? []);
+  // -----------------------------
+  // Departments
+
+  Future<List<Department>> getDepartments() async {
+    final response = await ApiClient.dio.get('/hris/departments');
+    final List<dynamic> data = response.data['data'] ?? [];
+    return data
+        .map(
+          (item) => Department.fromJson(
+            Map<String, dynamic>.from(item),
+          ),
+        )
+        .toList();
   }
 
   /// -----------------------------

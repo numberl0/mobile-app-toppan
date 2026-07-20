@@ -1,36 +1,114 @@
 // routes/hris.routes.js
 const express = require('express');
 const mssql = require('mssql');
-const { getHRIS } = require('../config/db');
+const { db, getHRIS } = require('../config/db');
+
 const authenticateToken = require('../middlewares/authenticateToken');
 const ApiError = require('../utils/apiError');
 
 const router = express.Router();
 
-// Get dept
+// Get departments
 router.get('/departments', authenticateToken, async (req, res, next) => {
   try {
     const dbHRIS = await getHRIS();
-    const query = `
-      SELECT DepartmentName_Thai
+
+    // 1. ดึงแผนกที่ยังมีพนักงานใช้งานอยู่จาก HRIS
+    const hrisQuery = `
+      SELECT
+        LTRIM(RTRIM(DepartmentName_Thai)) AS department_eng
       FROM VIEW_EMPLOYEE_INFO
       WHERE DepartmentName_Thai IS NOT NULL
-        AND DepartmentName_Thai != ''
+        AND LTRIM(RTRIM(DepartmentName_Thai)) != ''
         AND DepartmentName_Thai != 'บริษัท ปันสาร เอเชีย จำกัด'
         AND DepartmentName_Thai != 'Admin'
-      GROUP BY DepartmentName_Thai
-      HAVING SUM(CASE WHEN Status != 'N' THEN 1 ELSE 0 END) > 0
-      ORDER BY DepartmentName_Thai;
+      GROUP BY LTRIM(RTRIM(DepartmentName_Thai))
+      HAVING SUM(
+        CASE
+          WHEN Status != 'N' THEN 1
+          ELSE 0
+        END
+      ) > 0
+      ORDER BY department_eng;
     `;
 
-    const results = await dbHRIS.request().query(query);
+    const hrisResults = await dbHRIS.request().query(hrisQuery);
 
-    if (results.recordset.length === 0) {
+    if (hrisResults.recordset.length === 0) {
       return next(new ApiError(404, 'Departments Not Found'));
     }
 
-    const departments = results.recordset.map(row => row.DepartmentName_Thai);
-    res.status(200).json({ message: 'Departments Found', data: departments });
+    // 2. ดึงข้อมูล Mapping ภาษาไทยจาก Database ระบบ
+    const [deptMapRows] = await db.query(`
+      SELECT
+        dept_eng,
+        dept_thai,
+        site
+      FROM DEPT_MAP
+    `);
+
+    // 3. สร้าง Map สำหรับจับคู่
+    // ใช้ lowercase ป้องกันปัญหาตัวพิมพ์เล็ก-ใหญ่ไม่ตรงกัน
+    const deptMap = new Map(
+      deptMapRows
+        .filter(row => row.dept_eng)
+        .map(row => {
+          const deptEng = row.dept_eng.trim();
+
+          return [
+            deptEng.toLowerCase(),
+            {
+              deptThai: row.dept_thai?.trim() || deptEng,
+              site: row.site?.trim().toLowerCase() || null,
+            },
+          ];
+        })
+    );
+
+    // 4. จับคู่ข้อมูล HRIS กับ DEPT_MAP
+    const departments = hrisResults.recordset
+      .map(row => {
+        const deptEng = row.department_eng?.trim();
+
+        if (!deptEng) {
+          return null;
+        }
+
+        const mapping = deptMap.get(deptEng.toLowerCase());
+
+        // จับคู่ได้และเป็น Office: ไม่ส่งไป Mobile
+        if (mapping?.site === 'office') {
+          return null;
+        }
+
+        // จับคู่ได้และเป็น Factory: ใช้ชื่อไทยจาก DEPT_MAP
+        if (mapping?.site === 'factory') {
+          return {
+            value: deptEng,
+            label: mapping.deptThai,
+          };
+        }
+
+        // จับคู่ไม่ได้:
+        // ใช้ชื่อจาก HRIS เป็นทั้งอังกฤษและชื่อแสดง
+        return {
+          value: deptEng,
+          label: deptEng,
+        };
+      })
+      .filter(department => department !== null)
+      .sort((a, b) => a.label.localeCompare(b.value, 'en'));
+
+    if (departments.length === 0) {
+      return next(
+        new ApiError(404, 'Available Departments Not Found')
+      );
+    }
+
+    return res.status(200).json({
+      message: 'Departments Found',
+      data: departments,
+    });
   } catch (err) {
     next(err);
   }

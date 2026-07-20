@@ -14,6 +14,7 @@ import '../../utils/CustomDIalog.dart';
 import '../../utils/color_utils.dart';
 import '../../utils/date_utils.dart';
 import 'approve_controller.dart';
+import '../../utils/department_utils.dart';
 
 class ApprovePage extends StatelessWidget {
   const ApprovePage({super.key});
@@ -1443,7 +1444,7 @@ class _ApproveContentState extends State<ApproveContent> {
               labelWidth: spaceLabel,
               labelBold: true),
           SizedBox(height: 25),
-          buildLabelValueRow('แผนก:', entry['contact_dept'] ?? '',
+          buildLabelValueRow('แผนก:', getDepartmentDisplay(entry['contact_dept'] ?? '',_con.deptList),
               leftPadding: pddingLabel,
               labelWidth: spaceLabel,
               labelBold: true),
@@ -1501,7 +1502,7 @@ class _ApproveContentState extends State<ApproveContent> {
               SizedBox(
                 height: 10,
               ),
-              buildLabelValueRow('แผนก:', entry['emp_dept'],
+              buildLabelValueRow('แผนก:', getDepartmentDisplay(entry['emp_dept'] ?? '',_con.deptList),
                   leftPadding: pddingLabel, labelWidth: spaceLabel),
               SizedBox(
                 height: 10,
@@ -1795,7 +1796,7 @@ class _ApproveContentState extends State<ApproveContent> {
                             ),
                             if (type.toUpperCase() == 'EMPLOYEE') ...[
                               Text(
-                                'แผนก: ${entry['Department']}',
+                                'แผนก: ${getDepartmentDisplay(entry['Department'] ?? '',_con.deptList)}',
                                 style: TextStyle(
                                   fontSize: _fontSize - 4,
                                 ),

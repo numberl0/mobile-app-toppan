@@ -13,6 +13,8 @@ import 'package:toppan_app/loading_dialog.dart';
 import 'package:toppan_app/visitorService/search/search_model.dart';
 import 'package:toppan_app/visitorService/center_controller.dart';
 
+import '../../entity/department.dart';
+
 
 
 enum RequestType { visitor, employee, permission, temporary }
@@ -46,6 +48,8 @@ class SearchFormController {
   List<dynamic> filteredEmployeeList = [];
   List<dynamic> filteredPermissionList = [];
   List<dynamic> filteredTemporaryList = [];
+
+  List<Department> deptList = [];
   
   TextEditingController filterCompanyController = TextEditingController();
   TextEditingController filterEmployeeIdController = TextEditingController();
@@ -204,6 +208,10 @@ class SearchFormController {
       filteredEmployeeList = listE;
       filteredPermissionList = listLC;
       filteredTemporaryList = listT;
+
+      // Departments and Contact
+      deptList = await _module.getDepartments();
+
     } catch (err, stackTrace) {
       await _centerController.logError(err.toString(), stackTrace.toString());
     } finally {
@@ -451,6 +459,7 @@ class SearchFormController {
       await _centerController.insertActvityLog(
         'SIGN | Document: ${docType} | PK: ${pk} | field: ${item.filename}'
       );
+      signatureByController.clear();
     } catch (err, stack) {
       AppLogger.error('Error: $err\n$stack');
       await _centerController.logError(err.toString(), stack.toString());

@@ -8,12 +8,13 @@ import 'package:toppan_app/userEntity.dart';
 import 'package:toppan_app/visitorService/approve/approve_model.dart';
 import 'package:toppan_app/visitorService/center_controller.dart';
 
+import '../../entity/department.dart';
 import '../search/search_controller.dart';
 
 enum RequestType { visitor, employee, permission}
 
 class ApproveController {
-  ApproveModel approveModel = ApproveModel();
+  ApproveModel _module = ApproveModel();
 
   CenterController _centerController = CenterController();
 
@@ -30,6 +31,8 @@ class ApproveController {
   List<dynamic> filteredVisiorList = [];
   List<dynamic> filteredEmployeeList = [];
   List<dynamic> filteredPermissionList = [];
+
+  List<Department> deptList = [];
   
   TextEditingController filterCompanyController = TextEditingController();
   TextEditingController filterEmployeeIdController = TextEditingController();
@@ -173,10 +176,12 @@ class ApproveController {
 
       await clearSearch();
       String username = await userEntity.getUserPerfer(userEntity.username);
-      var result = await approveModel.getRequestForApproved(username,building_card);
+      var result = await _module.getRequestForApproved(username,building_card);
       listV = result['visitor'] ?? [];
       listE = result['employee'] ?? [];
       listLC = result['permission'] ?? [];
+
+      deptList = await _module.getDepartments();
 
     } catch (err, stack) {
       AppLogger.error('Error: $err\n$stack');
@@ -282,7 +287,7 @@ class ApproveController {
     try {
       final String type = entry['request_type'].toString().toUpperCase();
       final String username = await userEntity.getUserPerfer(userEntity.username);
-      final String firstName = await approveModel.getFirstnameApprover(username);
+      final String firstName = await _module.getFirstnameApprover(username);
       final String now = AppDateTime.now().toString();
 
       const typeConfigs = {
@@ -301,7 +306,7 @@ class ApproveController {
         config[3]: firstName,
       };
 
-      var status = await approveModel.approvedDocument(
+      var status = await _module.approvedDocument(
         entry['tno_pass'], 
         entry['request_type'], 
         dateStr, 
@@ -322,7 +327,7 @@ class ApproveController {
   Future<Map<String, dynamic>> approvedAllDocumentByList() async {
     try {
       final String username = await userEntity.getUserPerfer(userEntity.username);
-      final String firstName = await approveModel.getFirstnameApprover(username);
+      final String firstName = await _module.getFirstnameApprover(username);
       final String now = AppDateTime.now().toString();
 
       final configs = {
@@ -366,7 +371,7 @@ class ApproveController {
         };
       }).toList();
 
-      final status = await approveModel.approvedList(
+      final status = await _module.approvedList(
         selectedType!.name.toUpperCase(), 
         tnoListMap, 
         cfg!['sign'] as Map<String, dynamic>,

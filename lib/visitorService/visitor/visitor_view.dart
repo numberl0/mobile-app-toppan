@@ -14,6 +14,7 @@ import 'package:toppan_app/clear_temporary.dart';
 import 'package:toppan_app/utils/AppDateTime.dart';
 import 'package:toppan_app/config/api_config.dart';
 import 'package:toppan_app/entity/visitor_profile.dart';
+import '../../entity/department.dart';
 import '../../utils/BaseScaffold.dart';
 import '../../utils/CustomDIalog.dart';
 import '../../entity/signature_section.dart';
@@ -671,7 +672,166 @@ class _VisitorContentState extends State<VisitorContent> {
     );
   }
 
-  Widget dropDownDept(List<String> _listDept) {
+  // Widget dropDownDept(List<String> _listDept) {
+  //   return Container(
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Text(
+  //           'แผนกผู้ประสานงาน :',
+  //           style:
+  //               TextStyle(fontSize: _fontSize, fontWeight: FontWeight.bold),
+  //         ),
+
+  //         Container(
+  //           decoration: BoxDecoration(
+  //             border: Border.all(color: Colors.grey, width: 1.5),
+  //             borderRadius: BorderRadius.circular(12),
+  //           ),
+  //           padding: EdgeInsets.symmetric(horizontal: 10),
+  //           child: DropdownMenu(
+  //             requestFocusOnTap: false,
+  //             initialSelection: _con.selectDept,
+  //             width: MediaQuery.of(context).size.width*0.5,
+  //             textStyle: TextStyle(
+  //               fontSize: _fontSize - 2,
+  //             ),
+  //             inputDecorationTheme: InputDecorationTheme(
+  //               border: InputBorder.none,
+  //               isDense: true,
+  //               contentPadding: EdgeInsets.symmetric(
+  //                 horizontal: 0,
+  //                 vertical: 8,
+  //               ),
+  //             ),
+  //             menuStyle: MenuStyle(
+  //               maximumSize: MaterialStateProperty.all<Size>(
+  //                 Size(double.infinity, 300),
+  //               ),
+  //             ),
+  //             dropdownMenuEntries:
+  //                 _listDept.map<DropdownMenuEntry<dynamic>>((item) {
+  //               return DropdownMenuEntry<dynamic>(
+  //                 value: item,
+  //                 label: item,
+  //                 style: ButtonStyle(
+  //                   textStyle: WidgetStatePropertyAll<TextStyle>(
+  //                     TextStyle(
+  //                       color: Colors.black,
+  //                       fontSize: _fontSize - 2,
+  //                       fontFamily: _fontFamily,
+  //                     ),
+  //                   ),
+  //                   backgroundColor: WidgetStatePropertyAll<Color>(
+  //                     Colors.white,
+  //                   ),
+  //                 ),
+  //               );
+  //             }).toList(),
+  //             onSelected: (value) async {
+  //               setState(() {
+  //                 _con.selectDept = value;
+  //               });
+  //               await _con.loadContactByDepartment(value);
+  //               setState(() {});
+  //             },
+  //           ),
+  //         ),
+
+  //         SizedBox(height: 20,),
+
+  //         Text(
+  //           'ผู้ประสานงาน:',
+  //           style:
+  //               TextStyle(fontSize: _fontSize, fontWeight: FontWeight.bold),
+  //         ),
+
+  //         // auto complete
+  //         Container(
+  //           decoration: BoxDecoration(
+  //             border: Border.all(color: Colors.grey, width: 1.5),
+  //             borderRadius: BorderRadius.circular(12),
+  //           ),
+  //           padding: EdgeInsets.symmetric(horizontal: 10),
+  //           child: RawAutocomplete(
+  //             key: ValueKey('${_con.selectDept}-${_con.contactList.length}'),
+  //             textEditingController: _con.contactControl,
+  //             focusNode: _focusNode,
+  //             optionsBuilder: (TextEditingValue textEditingValue) {
+  //               return  _con.contactList.where((String item) {
+  //                 return item.contains(textEditingValue.text);
+  //               });
+  //             },
+  //             fieldViewBuilder: (
+  //               BuildContext context,
+  //               TextEditingController textEditingController,
+  //               FocusNode focusNode,
+  //               VoidCallback onFieldSubmitted,
+  //             ) {
+  //               return Container(
+  //                 child: TextFormField(
+  //                   controller: textEditingController,
+  //                   focusNode: focusNode,
+  //                   style: TextStyle(
+  //                     fontSize: _fontSize,
+  //                     fontFamily: _fontFamily,
+  //                   ),
+  //                   decoration: InputDecoration(
+  //                     border: InputBorder.none,
+  //                   ),
+  //                   onFieldSubmitted: (String value) {
+  //                     onFieldSubmitted();
+  //                   },
+  //                 ),
+  //               );
+  //             },
+  //             optionsViewBuilder: (
+  //               BuildContext context,
+  //               AutocompleteOnSelected<String> onSelected,
+  //               Iterable<String> options,
+  //             ) {
+  //               return Align(
+  //                 alignment: Alignment.topLeft,
+  //                 child: Container(
+  //                   child: Material(
+  //                     color: Colors.white,
+  //                     elevation: 4.0,
+  //                     child: SizedBox(
+  //                       height: 200.0,
+  //                       width: MediaQuery.of(context).size.width*0.6,
+  //                       child: ListView.builder(
+  //                         itemCount: options.length,
+  //                         itemBuilder: (BuildContext context, int index) {
+  //                           final String option = options.elementAt(index);
+  //                           return ListTile(
+  //                             title: Text(
+  //                               option,
+  //                               style: TextStyle(
+  //                                 fontSize: _fontSize - 2,
+  //                                 fontFamily: _fontFamily,
+  //                               ),
+  //                             ),
+  //                            onTap: () {
+  //                               onSelected(option);
+  //                             },
+  //                           );
+  //                         },
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ),
+  //               );
+  //             },
+  //           ),
+  //         ),
+
+
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  Widget dropDownDept(List<Department> _listDept) {
     return Container(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -679,7 +839,8 @@ class _VisitorContentState extends State<VisitorContent> {
           Text(
             'แผนกผู้ประสานงาน :',
             style:
-                TextStyle(fontSize: _fontSize, fontWeight: FontWeight.bold),
+                TextStyle(fontSize: _fontSize,
+                fontWeight: FontWeight.bold),
           ),
 
           Container(
@@ -690,7 +851,9 @@ class _VisitorContentState extends State<VisitorContent> {
             padding: EdgeInsets.symmetric(horizontal: 10),
             child: DropdownMenu(
               requestFocusOnTap: false,
+
               initialSelection: _con.selectDept,
+
               width: MediaQuery.of(context).size.width*0.5,
               textStyle: TextStyle(
                 fontSize: _fontSize - 2,
@@ -708,11 +871,11 @@ class _VisitorContentState extends State<VisitorContent> {
                   Size(double.infinity, 300),
                 ),
               ),
-              dropdownMenuEntries:
-                  _listDept.map<DropdownMenuEntry<dynamic>>((item) {
+
+              dropdownMenuEntries: _listDept.map<DropdownMenuEntry<dynamic>>((item) {
                 return DropdownMenuEntry<dynamic>(
-                  value: item,
-                  label: item,
+                  value: item.value,
+                  label: item.label,
                   style: ButtonStyle(
                     textStyle: WidgetStatePropertyAll<TextStyle>(
                       TextStyle(
@@ -728,8 +891,14 @@ class _VisitorContentState extends State<VisitorContent> {
                 );
               }).toList(),
               onSelected: (value) async {
+                if (value == null) {
+                  return;
+                }
                 setState(() {
+                  // value ยังเป็นชื่ออังกฤษ
                   _con.selectDept = value;
+
+                  // ล้างชื่อผู้ประสานงานเดิม
                 });
                 await _con.loadContactByDepartment(value);
                 setState(() {});
@@ -829,6 +998,10 @@ class _VisitorContentState extends State<VisitorContent> {
       ),
     );
   }
+
+
+
+
 
   Widget dropDownBuilding(List<dynamic> _listBuilding) {
     return DropdownMenu(

@@ -18,11 +18,12 @@ import 'package:uuid/uuid.dart';
 
 import 'package:image/image.dart' as img;
 
+import '../../entity/department.dart';
 import '../../entity/signature_section.dart';
 
 class EmployeeController {
 
-  EmployeeModel employeeModel = EmployeeModel();
+  EmployeeModel _module = EmployeeModel();
 
   CenterController _centerController = CenterController();
 
@@ -31,6 +32,8 @@ class EmployeeController {
   String tno_pass = '';
 
   String? formatSequenceRunning = null;
+
+  DateTime? expectedDateTimeOut;
 
   TextEditingController vehicleLicenseController = TextEditingController();
   TextEditingController deptController = TextEditingController();
@@ -45,6 +48,8 @@ class EmployeeController {
   List<Map<String, String>> listItem_Out = [
     // 'item':
   ];
+
+  List<Department> deptList = [];
   
   bool outOnly = true;
 
@@ -110,7 +115,7 @@ class EmployeeController {
           "${now.second.toString().padLeft(2, '0')}${(now.millisecondsSinceEpoch % 1000).toString().padLeft(3, '0')}";
 
       // Building
-      List<dynamic> rawListBuilding = await employeeModel.getBuilding();
+      List<dynamic> rawListBuilding = await _module.getBuilding();
       buildingList = rawListBuilding
         .map((item) => Map<String, dynamic>.from(item))
         .where((building) {
@@ -118,6 +123,7 @@ class EmployeeController {
         }).toList();
       this.selectedBuilding = this.buildingList[0]['id'];
 
+      deptList = await _module.getDepartments();
 
     } catch (err, stack) {
       AppLogger.error('Error: $err\n$stack');
@@ -158,8 +164,14 @@ class EmployeeController {
       // Sequence Running Number
       formatSequenceRunning = data['sequence_no'] ?? null;
 
+      final rawDateTime = data['datetime_out'];
+      expectedDateTimeOut = rawDateTime != null &&
+              rawDateTime.toString().isNotEmpty
+          ? DateTime.tryParse(rawDateTime.toString())
+          : null;
+
       // Building
-      List<dynamic> rawListBuilding = await employeeModel.getBuilding();
+      List<dynamic> rawListBuilding = await _module.getBuilding();
       buildingList = rawListBuilding
         .map((item) => Map<String, dynamic>.from(item))
         .where((building) {
@@ -190,7 +202,7 @@ class EmployeeController {
       if(data['item_in'] != null) {
         if (data['item_in']['images'] != null && data['item_in']['images'] is List) {
           for (String imageUrl in List<String>.from(data['item_in']['images'])) {
-            File? file = await employeeModel.loadImageToFile(imageUrl);
+            File? file = await _module.loadImageToFile(imageUrl);
             if (file != null) {
               imageList_In.add(file);
             }
@@ -207,7 +219,7 @@ class EmployeeController {
       if(data['item_out'] != null) {
         if (data['item_out']['images'] != null && data['item_out']['images'] is List) {
           for (String imageUrl in List<String>.from(data['item_out']['images'])) {
-            File? file = await employeeModel.loadImageToFile(imageUrl);
+            File? file = await _module.loadImageToFile(imageUrl);
             if (file != null) {
               imageList_Out.add(file);
             }
@@ -244,7 +256,7 @@ class EmployeeController {
         if (signValue != null && signValue is String) {
           section.status = true;
           section.fileName = data[signKey];
-          section.filePath = await employeeModel.loadImageAsBytes(signValue);
+          section.filePath = await _module.loadImageAsBytes(signValue);
         } else {
           section.status = false;
           section.fileName = null;
@@ -264,7 +276,7 @@ class EmployeeController {
         section.by = data[byKey] ?? null;
       }
 
-
+      deptList = await _module.getDepartments();
 
     } catch (err, stack) {
       AppLogger.error('Error: $err\n$stack');
@@ -280,7 +292,7 @@ class EmployeeController {
     // 1.name 2.department 3.empId
     Map<String,String> empInfo = {};
     try {
-       empInfo = await employeeModel.getInfoByEmpId(empId);
+       empInfo = await _module.getInfoByEmpId(empId);
       if (empInfo.isEmpty) {
         empInfo.clear();
         empNameController.clear();
@@ -319,13 +331,15 @@ class EmployeeController {
     if (!signatureSection["Employee"]!.status) {
       return 'กรุณาลงลายเซ็น';
     }
+    if (expectedDateTimeOut == null) {
+      scrollToSection(inputSectionKey);
+      return 'กรุณาเลือกวันที่และเวลาที่คาดว่าจะออก';
+    }
     return '';
   }
 
 
   // ------------------------------------------------- Person ----------------------------------------------- //
-
-  
   Future<void> addPersonInList() async {
     try {
       var uuid = Uuid();
@@ -423,8 +437,7 @@ class EmployeeController {
         'sequence_no': formatSequenceRunning,
         'vehicle_no': vehicleLicenseController.text,
         'out_only': outOnly,
-        'datetime_out': signatureSection['Employee']!.dateTime !=null? signatureSection['Employee']!.dateTime.toString(): null,
-        'datetime_in': signatureSection['Security']!.dateTime !=null? signatureSection['Security']!.dateTime.toString(): null,
+        'datetime_out': expectedDateTimeOut?.toIso8601String(),
         'objective_type': objTypeSelection,
         'obj_desc': typeObjectiveMapping[objTypeSelection] ?? 'ไม่ระบุประเภท',
         'objective': objectiveController.text,
@@ -473,10 +486,10 @@ class EmployeeController {
       // ------------------------------------------------------------------- //
 
       if(!flagUpdateForm) {
-        status = await employeeModel.insertRequestFormE( dataRequest, dataForm); // Insert
+        status = await _module.insertRequestFormE( dataRequest, dataForm); // Insert
         await _centerController.insertActvityLog('Create employee form: ${tno_pass}');
       } else {
-        status = await employeeModel.updateRequestFormE(tno_pass ,dataRequest, dataForm); // Update
+        status = await _module.updateRequestFormE(tno_pass ,dataRequest, dataForm); // Update
         await _centerController.insertActvityLog('Edit employee form: ${tno_pass}');
       }
     } catch (err, stack) {
@@ -558,7 +571,7 @@ class EmployeeController {
       };
 
       // Upload image to server
-      await employeeModel.uploadImageFiles(tno_pass, folderName, dataFileImage, date); //<---------------------------- upload image to server
+      await _module.uploadImageFiles(tno_pass, folderName, dataFileImage, date); //<---------------------------- upload image to server
 
 
       // =========================

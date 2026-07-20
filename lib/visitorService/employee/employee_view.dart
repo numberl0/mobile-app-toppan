@@ -18,6 +18,7 @@ import '../../utils/BaseScaffold.dart';
 import '../../utils/CustomDIalog.dart';
 import '../../entity/employee_profile.dart';
 import '../../entity/signature_section.dart';
+import '../../utils/department_utils.dart';
 import 'employee_controller.dart';
 
 class EmployeePage extends StatelessWidget {
@@ -250,6 +251,201 @@ class _EmployeeContentState extends State<EmployeeContent>
                           ],
                         ),
                       ],
+
+                      SizedBox(height: 15),
+
+                      Container(
+  decoration: BoxDecoration(
+    border: Border.all(
+      color: _con.expectedDateTimeOut != null
+          ? Colors.orange
+          : Colors.grey,
+      width: 1.5,
+    ),
+    borderRadius: BorderRadius.circular(12),
+    color: _con.expectedDateTimeOut != null
+        ? Colors.orange.shade50
+        : Colors.grey.shade50,
+  ),
+  child: ListTile(
+    dense: _isPhoneScale,
+    minTileHeight: _isPhoneScale ? 58 : 74,
+    visualDensity: _isPhoneScale
+        ? const VisualDensity(
+            horizontal: -2,
+            vertical: -1,
+          )
+        : VisualDensity.standard,
+    contentPadding: EdgeInsets.symmetric(
+      horizontal: _isPhoneScale ? 10 : 12,
+      vertical: _isPhoneScale ? 2 : 4,
+    ),
+    title: Text(
+      'วันที่และเวลาที่คาดว่าจะออก',
+      style: TextStyle(
+        fontSize: _isPhoneScale
+            ? _fontSize - 1
+            : _fontSize,
+        fontWeight: FontWeight.bold,
+        color: Colors.black87,
+      ),
+    ),
+    subtitle: Padding(
+      padding: EdgeInsets.only(
+        top: _isPhoneScale ? 5 : 8,
+      ),
+      child: Text(
+        _con.expectedDateTimeOut != null
+            // ? 'วันที่: ${DateFormat('yyyy-MM-dd').format(_con.expectedDateTimeOut!)}   '
+            //   'เวลา: ${DateFormat('HH:mm').format(_con.expectedDateTimeOut!)} น.'
+            ? '${DateFormat('yyyy-MM-dd').format(_con.expectedDateTimeOut!)}   '
+              '${DateFormat('HH:mm').format(_con.expectedDateTimeOut!)} น.'
+            : 'กรุณาเลือกวันและเวลา',
+        style: TextStyle(
+          fontSize: _fontSize - 2,
+          color: _con.expectedDateTimeOut != null
+              ? Colors.orange.shade900
+              : Colors.grey,
+          fontStyle: _con.expectedDateTimeOut != null
+              ? FontStyle.normal
+              : FontStyle.italic,
+          fontWeight: _con.expectedDateTimeOut != null
+              ? FontWeight.bold
+              : FontWeight.normal,
+        ),
+      ),
+    ),
+     trailing: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.calendar_month,
+          color: Colors.orange.shade700,
+          size: _isPhoneScale ? 20 : 24,
+        ),
+        SizedBox(
+          width: _isPhoneScale ? 2 : 4,
+        ),
+        Icon(
+          Icons.chevron_right,
+          color: _con.expectedDateTimeOut != null
+              ? Colors.orange
+              : Colors.grey,
+          size: _isPhoneScale ? 20 : 24,
+        ),
+      ],
+    ),
+    onTap: () async {
+      final now = DateTime.now();
+
+      final selectedDate = await showDatePicker(
+        context: context,
+        initialDate: _con.expectedDateTimeOut ?? now,
+        firstDate: DateTime(
+          now.year,
+          now.month,
+          now.day,
+        ),
+        lastDate: now.add(
+          const Duration(days: 365),
+        ),
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: const ColorScheme.light(
+                primary: Colors.orange,
+                onPrimary: Colors.white,
+                onSurface: Colors.black87,
+              ),
+              datePickerTheme:
+                  const DatePickerThemeData(
+                headerBackgroundColor:
+                    Colors.orange,
+                headerForegroundColor:
+                    Colors.white,
+              ),
+            ),
+            child: child!,
+          );
+        },
+      );
+
+      if (selectedDate == null ||
+          !context.mounted) {
+        return;
+      }
+
+      final selectedTime = await showTimePicker(
+        context: context,
+        initialTime:
+            _con.expectedDateTimeOut != null
+                ? TimeOfDay.fromDateTime(
+                    _con.expectedDateTimeOut!,
+                  )
+                : TimeOfDay.now(),
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme:
+                  const ColorScheme.light(
+                primary: Colors.orange,
+                onPrimary: Colors.white,
+                onSurface: Colors.black87,
+              ),
+              timePickerTheme:
+                  TimePickerThemeData(
+                dialHandColor: Colors.orange,
+                hourMinuteColor:
+                    Colors.orange.shade50,
+                hourMinuteTextColor:
+                    Colors.orange.shade900,
+                dayPeriodColor:
+                    Colors.orange.shade50,
+                dayPeriodTextColor:
+                    Colors.orange.shade900,
+                entryModeIconColor:
+                    Colors.orange,
+              ),
+            ),
+            child: child!,
+          );
+        },
+      );
+
+      if (selectedTime == null ||
+          !context.mounted) {
+        return;
+      }
+
+      final selectedDateTime = DateTime(
+        selectedDate.year,
+        selectedDate.month,
+        selectedDate.day,
+        selectedTime.hour,
+        selectedTime.minute,
+      );
+
+      if (selectedDateTime.isBefore(
+        DateTime.now(),
+      )) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'กรุณาเลือกวันที่และเวลาที่ยังไม่ผ่านมา',
+            ),
+          ),
+        );
+        return;
+      }
+
+      setState(() {
+        _con.expectedDateTimeOut =
+            selectedDateTime;
+      });
+    },
+  ),
+),
+
                       SizedBox(height: 15),
                        Container(
                           key: _con.buildingSectionKey,
@@ -2309,7 +2505,7 @@ class _EmployeeContentState extends State<EmployeeContent>
                                               .trim()
                                               .isNotEmpty) ...[
                                             Text(
-                                            'แผนก : ${entry.department}',
+                                            'แผนก : ${getDepartmentDisplay(entry.department ?? '',_con.deptList)} ',
                                               style: TextStyle(
                                                 fontSize: _fontSize - 2,
                                                 fontWeight: FontWeight.bold,
@@ -2325,7 +2521,7 @@ class _EmployeeContentState extends State<EmployeeContent>
                                       ),
                                     ] else ...[
                                       Text(
-                                          'รหัสพนักงาน : ${entry.employeeId}',
+                                          'รหัสพนักงาน : ${getDepartmentDisplay(entry.employeeId ?? '',_con.deptList)}',
                                           style: TextStyle(
                                             fontSize: _fontSize - 2,
                                             fontWeight: FontWeight.bold,

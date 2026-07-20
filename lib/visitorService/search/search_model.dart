@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:toppan_app/api/api_client.dart';
 
+import '../../entity/department.dart';
+
 class SearchModule {
   /// -----------------------------
   /// Get all request forms by date
@@ -27,6 +29,19 @@ class SearchModule {
         'permission': getList('permission'),
         'temporary': getList('temporary'),
       };
+  }
+
+  
+  Future<List<Department>> getDepartments() async {
+    final response = await ApiClient.dio.get('/hris/departments');
+    final List<dynamic> data = response.data['data'] ?? [];
+    return data
+        .map(
+          (item) => Department.fromJson(
+            Map<String, dynamic>.from(item),
+          ),
+        )
+        .toList();
   }
 
   /// -----------------------------

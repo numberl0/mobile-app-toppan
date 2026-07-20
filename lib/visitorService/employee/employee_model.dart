@@ -6,6 +6,8 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:toppan_app/api/api_client.dart';
 
+import '../../entity/department.dart';
+
 class EmployeeModel {
   /// -----------------------------
   /// Building
@@ -140,12 +142,16 @@ class EmployeeModel {
   /// -----------------------------
   /// Departments
   /// -----------------------------
-  Future<List<String>> getDepartments() async {
-      final res = await ApiClient.dio.get('/hris/getDepartments');
-      return (res.data['data'] as List?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [];
+ Future<List<Department>> getDepartments() async {
+    final response = await ApiClient.dio.get('/hris/departments');
+    final List<dynamic> data = response.data['data'] ?? [];
+    return data
+        .map(
+          (item) => Department.fromJson(
+            Map<String, dynamic>.from(item),
+          ),
+        )
+        .toList();
   }
 
   /// -----------------------------

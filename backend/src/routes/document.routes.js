@@ -846,46 +846,70 @@ router.patch(`/pass-req-p/:tnoPass`, authenticateToken, async (req, res, next) =
   }
 });
 
-// Employee
-router.patch(`/employee/:pk`, authenticateToken, async (req, res, next) => {
+// Employee Update
+router.patch('/employee/:pk', authenticateToken, async (req, res, next) => {
   let connection;
-  try {
-    connection = await db.getConnection(); 
-    await connection.beginTransaction(); 
 
-    const data  = req.body;
+  try {
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+
     const { pk } = req.params;
+    const data = { ...req.body };
+
     if (!data || typeof data !== 'object') {
       throw new ApiError(400, 'Missing or invalid data in request body.');
     }
+
     if (!pk) {
       throw new ApiError(400, 'Missing tnoPass parameter.');
     }
 
+    // ถ้ามี guard_ret_at ให้ datetime_in ใช้ค่าเดียวกัน
+    if ('guard_ret_at' in data) {
+      data.datetime_in = data.guard_ret_at;
+    }
+
     const keys = Object.keys(data);
-    const values = Object.values(data);
 
     if (keys.length === 0) {
       throw new ApiError(400, 'No fields to update.');
     }
 
-    const setClause = keys.map(key => `${key} = ?`).join(', ');
-    const sqlUpdate  = `UPDATE PASS_REQ_E SET ${setClause} WHERE tno_pass = ?`;
-    const [result] = await connection.query(sqlUpdate, [...values, pk]);
+    const values = Object.values(data);
+
+    const setClause = keys
+      .map(key => `${key} = ?`)
+      .join(', ');
+
+    const sqlUpdate = `
+      UPDATE PASS_REQ_E
+      SET ${setClause}
+      WHERE tno_pass = ?
+    `;
+
+    const [result] = await connection.query(
+      sqlUpdate,
+      [...values, pk]
+    );
+
     if (result.affectedRows === 0) {
-      throw new ApiError(404, `Employee record with tno_pass ${pk} not found.`);
+      throw new ApiError(
+        404,
+        `Employee record with tno_pass ${pk} not found.`
+      );
     }
 
     await connection.commit();
 
-    res.status(200).json({ 
-        message: 'Employee updated successfully.', 
+    res.status(200).json({
+      message: 'Employee updated successfully.',
     });
   } catch (err) {
     if (connection) {
-      await connection.rollback(); 
+      await connection.rollback();
     }
-    console.error('Employee transaction error:', err.message);
+
     next(err);
   } finally {
     if (connection) {
@@ -998,7 +1022,6 @@ router.patch(`/signature/:docType/:pk`, authenticateToken, async (req, res, next
           SET 
             datetime_out = CASE
               WHEN guard_status = 1 
-                AND appr_status = 1
               THEN guard_at
               ELSE datetime_out
             END,
@@ -1016,13 +1039,6 @@ router.patch(`/signature/:docType/:pk`, authenticateToken, async (req, res, next
         sqlStatusUpdate = `
           UPDATE PASS_REQ_E
           SET 
-            datetime_in = CASE
-              WHEN guard_status = 1 
-                AND emp_status = 1 
-                AND appr_status = 1
-              THEN guard_at
-              ELSE datetime_in
-            END,
             doc_status = CASE
               WHEN guard_status = 1 
                 AND emp_status = 1 

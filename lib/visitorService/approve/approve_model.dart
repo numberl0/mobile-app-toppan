@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:toppan_app/api/api_client.dart';
 
+import '../../entity/department.dart';
+
 class ApproveModel {
 
   Future<String> getFirstnameApprover(String username) async {
@@ -14,6 +16,17 @@ class ApproveModel {
       return res.data['first_name'] ?? '';
   }
 
+  Future<List<Department>> getDepartments() async {
+    final response = await ApiClient.dio.get('/hris/departments');
+    final List<dynamic> data = response.data['data'] ?? [];
+    return data
+        .map(
+          (item) => Department.fromJson(
+            Map<String, dynamic>.from(item),
+          ),
+        )
+        .toList();
+  }
 
   Future<Map<String, List<dynamic>>> getRequestForApproved(
     String username,
