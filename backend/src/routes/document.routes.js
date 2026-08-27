@@ -31,16 +31,23 @@ router.get(`/requests`, authenticateToken, async (req, res, next) => {
     const datePrevDay = prevDate.toISOString().split('T')[0];
 
     const queryPassReqV = `
-    SELECT
-        pr.*,
-        pf.visitorType,
-        pf.people,
-        pf.item_in,
-        pf.item_out
-    FROM PASS_REQ_V pr
-    LEFT JOIN PASS_FORM pf ON pr.tno_pass = pf.tno_pass
-    WHERE pr.request_type = 'VISITOR' AND DATE(pr.datetime_in) IN (?, ?)
-    ORDER BY pr.datetime_in DESC
+      SELECT
+          pr.*,
+          pf.visitorType,
+          pf.people,
+          pf.item_in,
+          pf.item_out
+      FROM PASS_REQ_V pr
+      LEFT JOIN PASS_FORM pf ON pr.tno_pass = pf.tno_pass
+      WHERE pr.request_type = 'VISITOR'
+      AND (
+          DATE(pr.datetime_in) IN (?, ?)
+          OR (
+              DATE(pr.datetime_in) < ?
+              AND pr.doc_status = 'Pending'
+          )
+      )
+      ORDER BY pr.datetime_in DESC
     `;
 
     const queryVisitorNormal = `
@@ -67,7 +74,7 @@ router.get(`/requests`, authenticateToken, async (req, res, next) => {
       AND NOT EXISTS (SELECT 1 FROM PASS_REQ_V pr WHERE pr.tno_ref = ve.tno);
     `;
 
-     const queryPassReqE = `
+    const queryPassReqE = `
       SELECT
           pr.*,
           pf.visitorType,
@@ -76,7 +83,14 @@ router.get(`/requests`, authenticateToken, async (req, res, next) => {
           pf.item_out
       FROM PASS_REQ_E pr
       LEFT JOIN PASS_FORM pf ON pr.tno_pass = pf.tno_pass
-      WHERE pr.request_type = 'EMPLOYEE' AND DATE(pr.datetime_out) IN (?, ?)
+      WHERE pr.request_type = 'EMPLOYEE'
+      AND (
+          DATE(pr.datetime_out) IN (?, ?)
+          OR (
+              DATE(pr.datetime_out) < ?
+              AND pr.doc_status = 'Pending'
+          )
+      )
       ORDER BY pr.datetime_out DESC
     `;
 
@@ -91,11 +105,11 @@ router.get(`/requests`, authenticateToken, async (req, res, next) => {
     `;
 
     const [[passResV], [normalResults], [expressResults], [passResE], [passResP], [passTemp]] = await Promise.all([
-      db.query(queryPassReqV, [dateToDay, datePrevDay]),
+      db.query(queryPassReqV, [dateToDay, datePrevDay, datePrevDay]),
       db.query(queryVisitorNormal, [dateToDay, datePrevDay]),
       db.query(queryVisitorExpress, [dateToDay, datePrevDay]),
 
-      db.query(queryPassReqE, [dateToDay, datePrevDay]),
+      db.query(queryPassReqE, [dateToDay, datePrevDay, datePrevDay]),
       db.query(queryPassReqP),
       db.query(queryPassTemporary),
     ]);
@@ -1027,7 +1041,6 @@ router.patch(`/signature/:docType/:pk`, authenticateToken, async (req, res, next
             END,
             doc_status = CASE
               WHEN guard_status = 1 
-                AND appr_status = 1 
               THEN 'Completed'
               ELSE doc_status
             END
@@ -1042,7 +1055,6 @@ router.patch(`/signature/:docType/:pk`, authenticateToken, async (req, res, next
             doc_status = CASE
               WHEN guard_status = 1 
                 AND emp_status = 1 
-                AND appr_status = 1
               THEN 'Completed'
               ELSE doc_status
             END
